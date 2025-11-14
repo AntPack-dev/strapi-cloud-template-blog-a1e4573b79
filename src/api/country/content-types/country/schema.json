@@ -21,6 +21,36 @@
       "targetField": "name",
       "required": true,
       "minLength": 1
+    },
+    "link": {
+      "type": "string",
+      "required": true
+    },
+    "alt": {
+      "type": "string",
+      "required": true
+    },
+    "isActive": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
+    "main_categories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::main-category.main-category",
+      "mappedBy": "country"
+    },
+    "articles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::article.article",
+      "mappedBy": "country"
+    },
+    "seo": {
+      "type": "component",
+      "component": "shared.seo",
+      "repeatable": false
     }
   }
 }
