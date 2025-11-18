@@ -34,17 +34,15 @@
       "targetField": "name",
       "required": true
     },
+    "country": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::country.country"
+    },
     "category": {
       "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::category.category",
-      "inversedBy": "sub_categories"
-    },
-    "articles": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::article.article",
-      "mappedBy": "sub_category"
+      "relation": "oneToOne",
+      "target": "api::category.category"
     }
   }
 }

@@ -67,34 +67,30 @@
         "videos"
       ]
     },
+    "country": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::country.country"
+    },
+    "main_category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::main-category.main-category"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::category.category"
+    },
+    "sub_category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::sub-category.sub-category"
+    },
     "author": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::author.author",
-      "inversedBy": "articles"
-    },
-    "country": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::country.country",
-      "inversedBy": "articles"
-    },
-    "main_category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::main-category.main-category",
-      "inversedBy": "articles"
-    },
-    "category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::category.category",
-      "inversedBy": "articles"
-    },
-    "sub_category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::sub-category.sub-category",
       "inversedBy": "articles"
     },
     "seo": {

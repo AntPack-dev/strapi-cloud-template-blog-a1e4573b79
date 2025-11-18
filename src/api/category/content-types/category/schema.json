@@ -22,36 +22,22 @@
         "i18n": {
           "localized": true
         }
-      }
+      },
+      "required": true
     },
     "slug": {
-      "type": "uid"
+      "type": "uid",
+      "required": true
     },
-    "description": {
-      "type": "text",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
-    "articles": {
+    "country": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::article.article",
-      "mappedBy": "category"
+      "relation": "oneToOne",
+      "target": "api::country.country"
     },
     "main_category": {
       "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::main-category.main-category",
-      "inversedBy": "categories"
-    },
-    "sub_categories": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::sub-category.sub-category",
-      "mappedBy": "category"
+      "relation": "oneToOne",
+      "target": "api::main-category.main-category"
     }
   }
 }
