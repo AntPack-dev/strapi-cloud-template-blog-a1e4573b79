@@ -8,7 +8,7 @@ module.exports = ({ env }) => ({
     config: {
       provider: 'aws-s3',
       providerOptions: {
-        baseUrl: env('CDN_BASE_URL'),
+        baseUrl: env('RESOURCES_CDN'),
         s3Options: {
           accessKeyId: env('AWS_ACCESS_KEY_ID'),
           secretAccessKey: env('AWS_ACCESS_SECRET'),
