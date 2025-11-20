@@ -39,6 +39,34 @@
       "targetField": "title",
       "required": true
     },
+    "isFeatured": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "default": false
+    },
+    "isFeaturedMain": {
+      "type": "boolean",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "isFeatured"
+            },
+            true
+          ]
+        }
+      },
+      "default": false
+    },
     "imageCard": {
       "type": "media",
       "pluginOptions": {
@@ -92,6 +120,30 @@
       "relation": "manyToOne",
       "target": "api::author.author",
       "inversedBy": "articles"
+    },
+    "currentStatus": {
+      "type": "enumeration",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true,
+      "default": "draft",
+      "enum": [
+        "draft",
+        "in-review",
+        "rejected",
+        "approved"
+      ]
+    },
+    "Corrections": {
+      "type": "richtext",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "seo": {
       "type": "component",
