@@ -24,6 +24,11 @@
       },
       "required": true
     },
+    "country": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::country.country"
+    },
     "siteDescription": {
       "type": "text",
       "pluginOptions": {
