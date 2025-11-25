@@ -463,7 +463,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    country: Schema.Attribute.Relation<'oneToOne', 'api::country.country'>;
+    country: Schema.Attribute.Relation<'manyToOne', 'api::country.country'>;
     cover: Schema.Attribute.Media<'images' | 'files' | 'videos'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -493,6 +493,10 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 80;
       }>;
+    global_checks: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::global-check.global-check'
+    >;
     imageCard: Schema.Attribute.Media<'images'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -597,7 +601,6 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    country: Schema.Attribute.Relation<'oneToOne', 'api::country.country'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -607,7 +610,7 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
       'api::category.category'
     >;
     main_category: Schema.Attribute.Relation<
-      'oneToOne',
+      'manyToOne',
       'api::main-category.main-category'
     >;
     name: Schema.Attribute.String &
@@ -618,7 +621,11 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
         };
       }>;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    sub_categories: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sub-category.sub-category'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -636,6 +643,7 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -649,6 +657,10 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
       'api::country.country'
     > &
       Schema.Attribute.Private;
+    main_categories: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::main-category.main-category'
+    >;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -741,6 +753,53 @@ export interface ApiFooterFooter extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiGlobalCheckGlobalCheck extends Struct.CollectionTypeSchema {
+  collectionName: 'global_checks';
+  info: {
+    displayName: 'GlobalCheck';
+    pluralName: 'global-checks';
+    singularName: 'global-check';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
+    country: Schema.Attribute.Relation<'oneToOne', 'api::country.country'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::global-check.global-check'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiMainCategoryMainCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'main_categories';
@@ -758,7 +817,11 @@ export interface ApiMainCategoryMainCategory
     };
   };
   attributes: {
-    country: Schema.Attribute.Relation<'oneToOne', 'api::country.country'>;
+    categories: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::category.category'
+    >;
+    countries: Schema.Attribute.Relation<'manyToMany', 'api::country.country'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -768,6 +831,15 @@ export interface ApiMainCategoryMainCategory
       'api::main-category.main-category'
     >;
     name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    order: Schema.Attribute.Enumeration<
+      ['first', 'second', 'third', 'fourth']
+    > &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -863,8 +935,7 @@ export interface ApiSubCategorySubCategory extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    category: Schema.Attribute.Relation<'oneToOne', 'api::category.category'>;
-    country: Schema.Attribute.Relation<'oneToOne', 'api::country.country'>;
+    category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1409,6 +1480,7 @@ declare module '@strapi/strapi' {
       'api::category.category': ApiCategoryCategory;
       'api::country.country': ApiCountryCountry;
       'api::footer.footer': ApiFooterFooter;
+      'api::global-check.global-check': ApiGlobalCheckGlobalCheck;
       'api::main-category.main-category': ApiMainCategoryMainCategory;
       'api::metadata-page.metadata-page': ApiMetadataPageMetadataPage;
       'api::sub-category.sub-category': ApiSubCategorySubCategory;

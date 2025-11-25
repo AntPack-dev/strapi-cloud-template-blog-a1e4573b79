@@ -27,17 +27,20 @@
     },
     "slug": {
       "type": "uid",
+      "targetField": "name",
       "required": true
-    },
-    "country": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::country.country"
     },
     "main_category": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::main-category.main-category"
+      "relation": "manyToOne",
+      "target": "api::main-category.main-category",
+      "inversedBy": "categories"
+    },
+    "sub_categories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::sub-category.sub-category",
+      "mappedBy": "category"
     }
   }
 }

@@ -15,15 +15,6 @@
     }
   },
   "attributes": {
-    "name": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
     "slug": {
       "type": "uid",
       "pluginOptions": {
@@ -34,10 +25,41 @@
       "targetField": "name",
       "required": true
     },
-    "country": {
+    "name": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
+    },
+    "countries": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::country.country"
+      "relation": "manyToMany",
+      "target": "api::country.country",
+      "mappedBy": "main_categories"
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::category.category",
+      "mappedBy": "main_category"
+    },
+    "order": {
+      "type": "enumeration",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true,
+      "enum": [
+        "first",
+        "second",
+        "third",
+        "fourth"
+      ]
     }
   }
 }
