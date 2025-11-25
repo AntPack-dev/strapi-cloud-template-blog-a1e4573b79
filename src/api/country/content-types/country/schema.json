@@ -35,6 +35,18 @@
       "type": "component",
       "component": "shared.seo",
       "repeatable": false
+    },
+    "main_categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::main-category.main-category",
+      "inversedBy": "countries"
+    },
+    "articles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::article.article",
+      "mappedBy": "country"
     }
   }
 }

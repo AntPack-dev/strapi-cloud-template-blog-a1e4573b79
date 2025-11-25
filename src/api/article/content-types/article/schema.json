@@ -97,8 +97,9 @@
     },
     "country": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::country.country"
+      "relation": "manyToOne",
+      "target": "api::country.country",
+      "inversedBy": "articles"
     },
     "main_category": {
       "type": "relation",
@@ -168,6 +169,12 @@
         "shared.rich-text",
         "shared.slider"
       ]
+    },
+    "global_checks": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::global-check.global-check",
+      "inversedBy": "articles"
     }
   }
 }
