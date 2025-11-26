@@ -7,10 +7,12 @@
   "options": {},
   "attributes": {
     "title": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "body": {
-      "type": "text"
+      "type": "richtext",
+      "required": true
     }
   }
 }
