@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-11-26T21:07:47.198Z"
+    "x-generation-date": "2025-12-01T21:44:42.433Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -7043,6 +7043,9 @@
                 "slug": {
                   "type": "string"
                 },
+                "order": {
+                  "type": "integer"
+                },
                 "link": {
                   "type": "string"
                 },
@@ -9751,6 +9754,9 @@
                       "slug": {
                         "type": "string"
                       },
+                      "order": {
+                        "type": "integer"
+                      },
                       "link": {
                         "type": "string"
                       },
@@ -10737,6 +10743,9 @@
                     },
                     "slug": {
                       "type": "string"
+                    },
+                    "order": {
+                      "type": "integer"
                     },
                     "link": {
                       "type": "string"
@@ -11864,6 +11873,7 @@
             "required": [
               "name",
               "slug",
+              "order",
               "link",
               "isActive"
             ],
@@ -11874,6 +11884,9 @@
               },
               "slug": {
                 "type": "string"
+              },
+              "order": {
+                "type": "integer"
               },
               "link": {
                 "type": "string"
@@ -11973,6 +11986,7 @@
         "required": [
           "name",
           "slug",
+          "order",
           "link",
           "isActive"
         ],
@@ -11988,6 +12002,9 @@
           },
           "slug": {
             "type": "string"
+          },
+          "order": {
+            "type": "integer"
           },
           "link": {
             "type": "string"
@@ -12031,6 +12048,9 @@
                       },
                       "slug": {
                         "type": "string"
+                      },
+                      "order": {
+                        "type": "integer"
                       },
                       "link": {
                         "type": "string"
@@ -13888,6 +13908,9 @@
               "slug": {
                 "type": "string"
               },
+              "order": {
+                "type": "integer"
+              },
               "link": {
                 "type": "string"
               },
@@ -15540,6 +15563,9 @@
               "slug": {
                 "type": "string"
               },
+              "order": {
+                "type": "integer"
+              },
               "link": {
                 "type": "string"
               },
@@ -16823,6 +16849,9 @@
                 "slug": {
                   "type": "string"
                 },
+                "order": {
+                  "type": "integer"
+                },
                 "link": {
                   "type": "string"
                 },
@@ -18096,6 +18125,9 @@
               },
               "slug": {
                 "type": "string"
+              },
+              "order": {
+                "type": "integer"
               },
               "link": {
                 "type": "string"
@@ -19702,6 +19734,9 @@
                         },
                         "slug": {
                           "type": "string"
+                        },
+                        "order": {
+                          "type": "integer"
                         },
                         "link": {
                           "type": "string"
