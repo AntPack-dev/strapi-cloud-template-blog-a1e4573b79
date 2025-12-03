@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_shared_articles",
+  "info": {
+    "displayName": "Articles"
+  },
+  "options": {},
+  "attributes": {
+    "articles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::article.article"
+    }
+  },
+  "config": {}
+}
