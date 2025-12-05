@@ -768,7 +768,7 @@ export interface ApiFooterFooter extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    privacyPolicyLink: Schema.Attribute.Component<'shared.link', false> &
+    privacyPolicyLink: Schema.Attribute.Component<'shared.link-file', false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -790,7 +790,7 @@ export interface ApiFooterFooter extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    termsOfUseLink: Schema.Attribute.Component<'shared.link', false> &
+    termsOfUseLink: Schema.Attribute.Component<'shared.link-file', false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;

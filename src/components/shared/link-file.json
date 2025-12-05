@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_shared_link_files",
+  "info": {
+    "displayName": "Link File"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    },
+    "file": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "files"
+      ]
+    }
+  },
+  "config": {}
+}

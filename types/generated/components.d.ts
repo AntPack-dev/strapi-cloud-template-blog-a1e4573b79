@@ -21,6 +21,17 @@ export interface SharedLink extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedLinkFile extends Struct.ComponentSchema {
+  collectionName: 'components_shared_link_files';
+  info: {
+    displayName: 'Link File';
+  };
+  attributes: {
+    file: Schema.Attribute.Media<'files'> & Schema.Attribute.Required;
+    text: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedMedia extends Struct.ComponentSchema {
   collectionName: 'components_shared_media';
   info: {
@@ -100,6 +111,7 @@ declare module '@strapi/strapi' {
     export interface ComponentSchemas {
       'shared.articles': SharedArticles;
       'shared.link': SharedLink;
+      'shared.link-file': SharedLinkFile;
       'shared.media': SharedMedia;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;
