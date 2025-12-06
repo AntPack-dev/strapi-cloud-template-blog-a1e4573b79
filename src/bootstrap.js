@@ -246,6 +246,39 @@ async function importSeedData() {
     about: ['find', 'findOne'],
   });
 
+  // Allow access to marketing endpoint
+  const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+    where: {
+      type: 'public',
+    },
+  });
+
+  if (publicRole) {
+    // Permisos para marketing
+    const marketingPermissions = [
+      'api::marketing.marketing.sendNewsletter',
+      'api::marketing.marketing.contact',
+    ];
+
+    for (const action of marketingPermissions) {
+      const existingPermission = await strapi.query('plugin::users-permissions.permission').findOne({
+        where: {
+          action: action,
+          role: publicRole.id,
+        },
+      });
+
+      if (!existingPermission) {
+        await strapi.query('plugin::users-permissions.permission').create({
+          data: {
+            action: action,
+            role: publicRole.id,
+          },
+        });
+      }
+    }
+  }
+
   // Create all entries
   await importCategories();
   await importAuthors();

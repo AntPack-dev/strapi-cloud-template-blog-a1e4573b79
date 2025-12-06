@@ -9,9 +9,11 @@
     "develop": "strapi develop",
     "seed:example": "node ./scripts/seed.js",
     "start": "strapi start",
+    "start:dev": "npm run build && strapi start",
     "strapi": "strapi"
   },
   "dependencies": {
+    "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@strapi/plugin-cloud": "5.28.0",
     "@strapi/plugin-documentation": "^5.31.0",
     "@strapi/plugin-users-permissions": "5.28.0",
