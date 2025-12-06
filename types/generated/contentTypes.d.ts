@@ -535,8 +535,8 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         };
       }>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
-    sub_category: Schema.Attribute.Relation<
-      'oneToOne',
+    sub_categories: Schema.Attribute.Relation<
+      'manyToMany',
       'api::sub-category.sub-category'
     >;
     title: Schema.Attribute.String &
@@ -984,6 +984,7 @@ export interface ApiSubCategorySubCategory extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
