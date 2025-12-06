@@ -535,8 +535,8 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         };
       }>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
-    sub_category: Schema.Attribute.Relation<
-      'oneToOne',
+    sub_categories: Schema.Attribute.Relation<
+      'manyToMany',
       'api::sub-category.sub-category'
     >;
     title: Schema.Attribute.String &
@@ -768,7 +768,7 @@ export interface ApiFooterFooter extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    privacyPolicyLink: Schema.Attribute.Component<'shared.link', false> &
+    privacyPolicyLink: Schema.Attribute.Component<'shared.link-file', false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -790,7 +790,7 @@ export interface ApiFooterFooter extends Struct.CollectionTypeSchema {
           localized: true;
         };
       }>;
-    termsOfUseLink: Schema.Attribute.Component<'shared.link', false> &
+    termsOfUseLink: Schema.Attribute.Component<'shared.link-file', false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -984,6 +984,7 @@ export interface ApiSubCategorySubCategory extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
