@@ -111,10 +111,11 @@
       "relation": "oneToOne",
       "target": "api::category.category"
     },
-    "sub_category": {
+    "sub_categories": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::sub-category.sub-category"
+      "relation": "manyToMany",
+      "target": "api::sub-category.sub-category",
+      "inversedBy": "articles"
     },
     "author": {
       "type": "relation",
