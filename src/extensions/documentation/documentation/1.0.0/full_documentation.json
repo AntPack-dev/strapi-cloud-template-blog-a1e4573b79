@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-12-09T14:33:55.412Z"
+    "x-generation-date": "2025-12-09T19:06:46.920Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -8063,7 +8063,7 @@
                 "isActive": {
                   "type": "boolean"
                 },
-                "disabled": {
+                "isHidden": {
                   "type": "boolean"
                 },
                 "seo": {
@@ -10643,7 +10643,7 @@
                       "isActive": {
                         "type": "boolean"
                       },
-                      "disabled": {
+                      "isHidden": {
                         "type": "boolean"
                       },
                       "seo": {
@@ -11616,7 +11616,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -13004,7 +13004,7 @@
                     "isActive": {
                       "type": "boolean"
                     },
-                    "disabled": {
+                    "isHidden": {
                       "type": "boolean"
                     },
                     "seo": {
@@ -14161,7 +14161,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -14282,7 +14282,7 @@
           "isActive": {
             "type": "boolean"
           },
-          "disabled": {
+          "isHidden": {
             "type": "boolean"
           },
           "seo": {
@@ -14331,7 +14331,7 @@
                       "isActive": {
                         "type": "boolean"
                       },
-                      "disabled": {
+                      "isHidden": {
                         "type": "boolean"
                       },
                       "seo": {
@@ -16206,7 +16206,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -18001,7 +18001,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -19364,7 +19364,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -20666,7 +20666,7 @@
                 "isActive": {
                   "type": "boolean"
                 },
-                "disabled": {
+                "isHidden": {
                   "type": "boolean"
                 },
                 "seo": {
@@ -21959,7 +21959,7 @@
               "isActive": {
                 "type": "boolean"
               },
-              "disabled": {
+              "isHidden": {
                 "type": "boolean"
               },
               "seo": {
@@ -23598,7 +23598,7 @@
                         "isActive": {
                           "type": "boolean"
                         },
-                        "disabled": {
+                        "isHidden": {
                           "type": "boolean"
                         },
                         "seo": {

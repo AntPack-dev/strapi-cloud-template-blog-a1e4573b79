@@ -35,7 +35,7 @@
       "required": true,
       "default": true
     },
-    "disabled": {
+    "isHidden": {
       "type": "boolean",
       "default": false
     },
