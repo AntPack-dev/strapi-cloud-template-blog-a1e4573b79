@@ -10,6 +10,24 @@ export interface SharedArticles extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedInput extends Struct.ComponentSchema {
+  collectionName: 'components_shared_inputs';
+  info: {
+    displayName: 'Input';
+    icon: 'bulletList';
+  };
+  attributes: {
+    IsRequired: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    Placeholder: Schema.Attribute.String;
+    Title: Schema.Attribute.String & Schema.Attribute.Required;
+    Type: Schema.Attribute.Enumeration<['text', 'email', 'phone', 'textarea']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'text'>;
+  };
+}
+
 export interface SharedLink extends Struct.ComponentSchema {
   collectionName: 'components_shared_links';
   info: {
@@ -121,6 +139,7 @@ declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
       'shared.articles': SharedArticles;
+      'shared.input': SharedInput;
       'shared.link': SharedLink;
       'shared.link-file': SharedLinkFile;
       'shared.media': SharedMedia;
