@@ -22,7 +22,7 @@ export interface SharedInput extends Struct.ComponentSchema {
       Schema.Attribute.DefaultTo<true>;
     Placeholder: Schema.Attribute.String;
     Title: Schema.Attribute.String & Schema.Attribute.Required;
-    Type: Schema.Attribute.Enumeration<['text', 'email', 'phone', 'textarea']> &
+    Type: Schema.Attribute.Enumeration<['text', 'email', 'textarea', 'tel']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'text'>;
   };
