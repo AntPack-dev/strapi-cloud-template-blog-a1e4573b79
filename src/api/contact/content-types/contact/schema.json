@@ -15,7 +15,7 @@
     }
   },
   "attributes": {
-    "Title": {
+    "title": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
@@ -25,7 +25,7 @@
       "required": true,
       "unique": true
     },
-    "Description": {
+    "description": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
@@ -35,7 +35,7 @@
       "required": true,
       "unique": false
     },
-    "Image": {
+    "image": {
       "type": "media",
       "pluginOptions": {
         "i18n": {
@@ -48,7 +48,7 @@
         "images"
       ]
     },
-    "AcceptanceOfTerms": {
+    "acceptanceOfTerms": {
       "type": "richtext",
       "pluginOptions": {
         "i18n": {
@@ -57,7 +57,7 @@
       },
       "required": true
     },
-    "SendText": {
+    "sendText": {
       "type": "string",
       "pluginOptions": {
         "i18n": {
@@ -67,7 +67,7 @@
       "maxLength": 20,
       "required": true
     },
-    "RecaptchaEnabled": {
+    "recaptchaEnabled": {
       "type": "boolean",
       "pluginOptions": {
         "i18n": {
@@ -76,7 +76,7 @@
       },
       "required": true
     },
-    "Fields": {
+    "fields": {
       "type": "component",
       "pluginOptions": {
         "i18n": {

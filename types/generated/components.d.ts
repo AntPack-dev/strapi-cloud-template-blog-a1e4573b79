@@ -17,12 +17,12 @@ export interface SharedInput extends Struct.ComponentSchema {
     icon: 'bulletList';
   };
   attributes: {
-    IsRequired: Schema.Attribute.Boolean &
+    isRequired: Schema.Attribute.Boolean &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<true>;
-    Placeholder: Schema.Attribute.String;
-    Title: Schema.Attribute.String & Schema.Attribute.Required;
-    Type: Schema.Attribute.Enumeration<['text', 'email', 'textarea', 'tel']> &
+    placeholder: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<['text', 'email', 'textarea', 'tel']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'text'>;
   };

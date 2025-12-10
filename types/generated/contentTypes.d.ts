@@ -696,7 +696,7 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
     };
   };
   attributes: {
-    AcceptanceOfTerms: Schema.Attribute.RichText &
+    acceptanceOfTerms: Schema.Attribute.RichText &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -707,14 +707,14 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    Description: Schema.Attribute.String &
+    description: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
-    Fields: Schema.Attribute.Component<'shared.input', true> &
+    fields: Schema.Attribute.Component<'shared.input', true> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -727,7 +727,7 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
         },
         number
       >;
-    Image: Schema.Attribute.Media<'images'> &
+    image: Schema.Attribute.Media<'images'> &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -740,14 +740,14 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
       'api::contact.contact'
     >;
     publishedAt: Schema.Attribute.DateTime;
-    RecaptchaEnabled: Schema.Attribute.Boolean &
+    recaptchaEnabled: Schema.Attribute.Boolean &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
-    SendText: Schema.Attribute.String &
+    sendText: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -757,7 +757,7 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 20;
       }>;
-    Title: Schema.Attribute.String &
+    title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique &
       Schema.Attribute.SetPluginOptions<{

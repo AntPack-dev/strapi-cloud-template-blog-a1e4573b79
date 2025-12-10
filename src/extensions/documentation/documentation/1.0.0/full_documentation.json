@@ -14644,23 +14644,23 @@
         "properties": {
           "data": {
             "required": [
-              "Title",
-              "Description",
-              "Image",
-              "AcceptanceOfTerms",
-              "SendText",
-              "RecaptchaEnabled",
-              "Fields"
+              "title",
+              "description",
+              "image",
+              "acceptanceOfTerms",
+              "sendText",
+              "recaptchaEnabled",
+              "fields"
             ],
             "type": "object",
             "properties": {
-              "Title": {
+              "title": {
                 "type": "string"
               },
-              "Description": {
+              "description": {
                 "type": "string"
               },
-              "Image": {
+              "image": {
                 "oneOf": [
                   {
                     "type": "integer"
@@ -14671,16 +14671,16 @@
                 ],
                 "example": "string or id"
               },
-              "AcceptanceOfTerms": {
+              "acceptanceOfTerms": {
                 "type": "string"
               },
-              "SendText": {
+              "sendText": {
                 "type": "string"
               },
-              "RecaptchaEnabled": {
+              "recaptchaEnabled": {
                 "type": "boolean"
               },
-              "Fields": {
+              "fields": {
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/SharedInputComponent"
@@ -14759,13 +14759,13 @@
       "Contact": {
         "type": "object",
         "required": [
-          "Title",
-          "Description",
-          "Image",
-          "AcceptanceOfTerms",
-          "SendText",
-          "RecaptchaEnabled",
-          "Fields"
+          "title",
+          "description",
+          "image",
+          "acceptanceOfTerms",
+          "sendText",
+          "recaptchaEnabled",
+          "fields"
         ],
         "properties": {
           "id": {
@@ -14774,13 +14774,13 @@
           "documentId": {
             "type": "string"
           },
-          "Title": {
+          "title": {
             "type": "string"
           },
-          "Description": {
+          "description": {
             "type": "string"
           },
-          "Image": {
+          "image": {
             "type": "object",
             "properties": {
               "id": {
@@ -15378,16 +15378,16 @@
               }
             }
           },
-          "AcceptanceOfTerms": {
+          "acceptanceOfTerms": {
             "type": "string"
           },
-          "SendText": {
+          "sendText": {
             "type": "string"
           },
-          "RecaptchaEnabled": {
+          "recaptchaEnabled": {
             "type": "boolean"
           },
-          "Fields": {
+          "fields": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SharedInputComponent"
@@ -16533,13 +16533,13 @@
                 "documentId": {
                   "type": "string"
                 },
-                "Title": {
+                "title": {
                   "type": "string"
                 },
-                "Description": {
+                "description": {
                   "type": "string"
                 },
-                "Image": {
+                "image": {
                   "type": "object",
                   "properties": {
                     "id": {
@@ -16668,16 +16668,16 @@
                     }
                   }
                 },
-                "AcceptanceOfTerms": {
+                "acceptanceOfTerms": {
                   "type": "string"
                 },
-                "SendText": {
+                "sendText": {
                   "type": "string"
                 },
-                "RecaptchaEnabled": {
+                "recaptchaEnabled": {
                   "type": "boolean"
                 },
-                "Fields": {
+                "fields": {
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/SharedInputComponent"
@@ -16770,13 +16770,13 @@
           "id": {
             "type": "number"
           },
-          "Title": {
+          "title": {
             "type": "string"
           },
-          "Placeholder": {
+          "placeholder": {
             "type": "string"
           },
-          "Type": {
+          "type": {
             "type": "string",
             "enum": [
               "text",
@@ -16785,7 +16785,7 @@
               "tel"
             ]
           },
-          "IsRequired": {
+          "isRequired": {
             "type": "boolean"
           }
         }
