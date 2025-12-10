@@ -43,6 +43,17 @@ export interface SharedMedia extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedQuestion extends Struct.ComponentSchema {
+  collectionName: 'components_shared_questions';
+  info: {
+    displayName: 'Question';
+  };
+  attributes: {
+    content: Schema.Attribute.RichText & Schema.Attribute.Required;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedQuote extends Struct.ComponentSchema {
   collectionName: 'components_shared_quotes';
   info: {
@@ -113,6 +124,7 @@ declare module '@strapi/strapi' {
       'shared.link': SharedLink;
       'shared.link-file': SharedLinkFile;
       'shared.media': SharedMedia;
+      'shared.question': SharedQuestion;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;
       'shared.seo': SharedSeo;

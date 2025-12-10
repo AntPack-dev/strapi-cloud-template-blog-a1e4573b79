@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "fqas",
+  "info": {
+    "singularName": "fqa",
+    "pluralName": "fqas",
+    "displayName": "FQA"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
+    },
+    "country": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::country.country"
+    },
+    "questions": {
+      "type": "component",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "shared.question",
+      "repeatable": true
+    }
+  }
+}
