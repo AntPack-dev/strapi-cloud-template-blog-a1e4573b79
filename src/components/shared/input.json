@@ -20,8 +20,8 @@
       "enum": [
         "text",
         "email",
-        "phone",
-        "textarea"
+        "textarea",
+        "tel"
       ]
     },
     "IsRequired": {

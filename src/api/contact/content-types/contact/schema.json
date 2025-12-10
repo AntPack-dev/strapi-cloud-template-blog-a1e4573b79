@@ -87,6 +87,11 @@
       "repeatable": true,
       "required": true,
       "min": 1
+    },
+    "countries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::country.country"
     }
   }
 }
