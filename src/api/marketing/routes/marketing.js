@@ -24,6 +24,15 @@ module.exports = {
         middlewares: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/marketing/interest',
+      handler: 'marketing.interest',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };
 

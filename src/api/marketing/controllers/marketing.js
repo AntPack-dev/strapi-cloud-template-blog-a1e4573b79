@@ -14,9 +14,9 @@ module.exports = ({ strapi }) => ({
       const { email } = ctx.request.body;
 
       // Validar que el email esté presente
-      if (!email) 
+      if (!email)
         return ctx.badRequest('El email es requerido');
-      
+
       // Validar formato de email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email))
@@ -66,27 +66,27 @@ module.exports = ({ strapi }) => ({
   },
 
   /**
-   * Envía un formulario de contacto a Mailchimp
+   * Submit contact form to Mailchimp
    */
   async contact(ctx) {
     try {
       const { email, name, phone, description } = ctx.request.body;
 
-      // Validar campos requeridos
+      // Validate required fields
       if (!email) {
         return ctx.badRequest('El email es requerido');
       }
 
-      // Validar formato de email
+      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return ctx.badRequest('El formato del email no es válido');
       }
 
-      // Obtener servicio de marketing
+      // Get marketing service
       const marketingService = strapi.service('api::marketing.marketing');
 
-      // Enviar formulario a Mailchimp
+      // Submit contact form to Mailchimp
       const result = await marketingService.submitContactForm({
         email,
         name: name || '',
@@ -101,6 +101,52 @@ module.exports = ({ strapi }) => ({
           email,
           name,
           phone,
+          result,
+        },
+      });
+    } catch (error) {
+      strapi.log.error('[Marketing] Error al enviar formulario de contacto:', error);
+
+      return ctx.internalServerError({
+        message: 'Error al enviar formulario de contacto',
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * Submit interest form to Mailchimp
+   */
+  async interest(ctx) {
+    try {
+      const { email, country, description } = ctx.request.body;
+
+      // Validate required fields
+      if (!email)
+        return ctx.badRequest('El email es requerido');
+
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email))
+        return ctx.badRequest('El formato del email no es válido');
+
+      // Get marketing service
+      const marketingService = strapi.service('api::marketing.marketing');
+
+      // Submit interest form to Mailchimp
+      const result = await marketingService.submitInterestForm({
+        email,
+        country: country || '',
+        description: description || '',
+      });
+
+      return ctx.send({
+        success: true,
+        message: 'Formulario de contacto enviado exitosamente',
+        data: {
+          email,
+          country,
+          description,
           result,
         },
       });

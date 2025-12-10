@@ -133,13 +133,13 @@ module.exports = ({ strapi }) => {
     },
 
     /**
-     * Envía un formulario de contacto a Mailchimp usando el endpoint de suscripción
+     * Submit contact form to Mailchimp using the subscription endpoint
      * @param {Object} contactData - Datos del contacto
-     * @param {string} contactData.email - Email del contacto
-     * @param {string} contactData.name - Nombre del contacto
-     * @param {string} contactData.phone - Teléfono del contacto
-     * @param {string} contactData.description - Descripción/mensaje
-     * @returns {Promise<Object>} - Respuesta de Mailchimp
+     * @param {string} contactData.email - Email
+     * @param {string} contactData.name - Name
+     * @param {string} contactData.phone - Phone
+     * @param {string} contactData.description - Description
+     * @returns {Promise<Object>} - Mailchimp response
      */
     async submitContactForm(contactData) {
       try {
@@ -147,7 +147,7 @@ module.exports = ({ strapi }) => {
 
         const mailchimpUrl = 'https://antpack.us19.list-manage.com/subscribe/post?u=1f207d6d7e9745dca48c572fd&id=981ba743b6&f_id=00f2c2e1f0';
 
-        // Crear form data
+        // Create form data
         const formData = new URLSearchParams();
         formData.append('EMAIL', email || '');
         formData.append('FNAME', name || '');
@@ -155,13 +155,6 @@ module.exports = ({ strapi }) => {
         formData.append('DESCRIPT', description || '');
         formData.append('b_1f207d6d7e9745dca48c572fd_981ba743b6', '');
         formData.append('subscribe', 'Subscribe');
-
-        strapi.log.info('[Mailchimp] Enviando formulario de contacto:', {
-          email,
-          name,
-          phone: phone ? '***' : '',
-          description: description ? '***' : '',
-        });
 
         const response = await fetch(mailchimpUrl, {
           method: 'POST',
@@ -171,16 +164,53 @@ module.exports = ({ strapi }) => {
           body: formData.toString(),
         });
 
-        const responseText = await response.text();
+        if (response.ok || response.status === 302) {
+          return {
+            success: true,
+            message: 'Formulario enviado exitosamente',
+            status: response.status,
+            url: response.url,
+          };
+        }
 
-        strapi.log.info('[Mailchimp] Respuesta del formulario:', {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url,
+        throw new Error(`Error al enviar formulario: ${response.status} ${response.statusText}`);
+      } catch (error) {
+        strapi.log.error('[Mailchimp] Error al enviar formulario de contacto:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Submit interest form to Mailchimp using the subscription endpoint
+     * @param {Object} interestData - Interest data
+     * @param {string} interestData.email - Email
+     * @param {string} interestData.country - Country
+     * @param {string} interestData.description - Description
+     * @returns {Promise<Object>} - Mailchimp response
+     */
+    async submitInterestForm(interestData) {
+      try {
+        const { email, country, description } = interestData;
+
+        const mailchimpUrl = 'https://antpack.us19.list-manage.com/subscribe/post?u=1f207d6d7e9745dca48c572fd&id=981ba743b6&f_id=00f1c2e1f0';
+
+        // Create form data
+        const formData = new URLSearchParams();
+        formData.append('EMAIL', email || '');
+        formData.append('COUNTRY', country || '');
+        formData.append('DESCRIPT', description || '');
+        formData.append('b_1f207d6d7e9745dca48c572fd_981ba743b6', '');
+        // formData.append('subscribe', 'Subscribe');
+        formData.append('tags', '133');
+
+        const response = await fetch(mailchimpUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
         });
 
-        // Mailchimp generalmente retorna un HTML de confirmación o redirección
-        // Si el status es 200 o 302, consideramos éxito
         if (response.ok || response.status === 302) {
           return {
             success: true,

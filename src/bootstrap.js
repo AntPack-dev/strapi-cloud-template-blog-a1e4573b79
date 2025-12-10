@@ -258,6 +258,7 @@ async function importSeedData() {
     const marketingPermissions = [
       'api::marketing.marketing.sendNewsletter',
       'api::marketing.marketing.contact',
+      'api::marketing.marketing.interest',
     ];
 
     for (const action of marketingPermissions) {
