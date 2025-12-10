@@ -6,14 +6,14 @@
   },
   "options": {},
   "attributes": {
-    "Title": {
+    "title": {
       "type": "string",
       "required": true
     },
-    "Placeholder": {
+    "placeholder": {
       "type": "string"
     },
-    "Type": {
+    "type": {
       "type": "enumeration",
       "required": true,
       "default": "text",
@@ -24,7 +24,7 @@
         "tel"
       ]
     },
-    "IsRequired": {
+    "isRequired": {
       "type": "boolean",
       "required": true,
       "default": true
