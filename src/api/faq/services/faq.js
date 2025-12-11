@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * fqa service
+ * faq service
  */
 
 const { createCoreService } = require('@strapi/strapi').factories;
 
-module.exports = createCoreService('api::fqa.fqa');
+module.exports = createCoreService('api::faq.faq');
