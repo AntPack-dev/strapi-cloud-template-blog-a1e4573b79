@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * fqa controller
+ * faq controller
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
-module.exports = createCoreController('api::fqa.fqa');
+module.exports = createCoreController('api::faq.faq');

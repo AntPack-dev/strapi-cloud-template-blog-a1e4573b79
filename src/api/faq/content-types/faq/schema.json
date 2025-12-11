@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "fqas",
+  "collectionName": "faqs",
   "info": {
-    "singularName": "fqa",
-    "pluralName": "fqas",
-    "displayName": "FQA"
+    "singularName": "faq",
+    "pluralName": "faqs",
+    "displayName": "FAQ"
   },
   "options": {
     "draftAndPublish": true
