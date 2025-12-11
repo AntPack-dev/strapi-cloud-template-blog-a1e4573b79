@@ -48,15 +48,6 @@
         "images"
       ]
     },
-    "acceptanceOfTerms": {
-      "type": "richtext",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
     "sendText": {
       "type": "string",
       "pluginOptions": {
