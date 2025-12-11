@@ -757,8 +757,7 @@ export interface ApiContactContact extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 20;
       }>;
-    termsAcceptanceText: Schema.Attribute.Blocks &
-      Schema.Attribute.Required &
+    termsAcceptance: Schema.Attribute.Component<'shared.rich-text', true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
