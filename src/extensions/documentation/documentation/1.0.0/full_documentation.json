@@ -14650,7 +14650,8 @@
               "acceptanceOfTerms",
               "sendText",
               "recaptchaEnabled",
-              "fields"
+              "fields",
+              "termsAcceptanceText"
             ],
             "type": "object",
             "properties": {
@@ -14771,7 +14772,8 @@
           "acceptanceOfTerms",
           "sendText",
           "recaptchaEnabled",
-          "fields"
+          "fields",
+          "termsAcceptanceText"
         ],
         "properties": {
           "id": {
