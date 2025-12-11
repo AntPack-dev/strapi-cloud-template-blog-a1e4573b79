@@ -93,14 +93,15 @@
       "relation": "oneToMany",
       "target": "api::country.country"
     },
-    "termsAcceptanceText": {
-      "type": "blocks",
+    "termsAcceptance": {
+      "type": "component",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
       },
-      "required": true
+      "component": "shared.rich-text",
+      "repeatable": true
     }
   }
 }
