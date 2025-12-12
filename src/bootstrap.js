@@ -10,15 +10,15 @@ async function seedExampleApp() {
 
   if (shouldImportSeedData) {
     try {
-      console.log('Setting up the template...');
+      strapi.log.info('Setting up the template...');
       await importSeedData();
-      console.log('Ready to go');
+      strapi.log.info('Ready to go');
     } catch (error) {
-      console.log('Could not import seed data');
-      console.error(error);
+      strapi.log.info('Could not import seed data');
+      strapi.error(error);
     }
   } else {
-    console.log(
+    strapi.log.info(
       'Seed data has already been imported. We cannot reimport unless you clear your database first.'
     );
   }
@@ -105,7 +105,7 @@ async function createEntry({ model, entry }) {
       data: entry,
     });
   } catch (error) {
-    console.error({ model, entry, error });
+    strapi.error({ model, entry, error });
   }
 }
 
@@ -303,8 +303,83 @@ async function main() {
 }
 
 module.exports = async () => {
+  strapi.log.info('[Bootstrap] ===== Iniciando bootstrap =====');
+  strapi.log.info('[Bootstrap] Forzando uso de configuración desde config/plugins.js...');
+  
+  // Eliminar cualquier configuración de provider de la base de datos
+  // para forzar que Strapi use la configuración de config/plugins.js
+  try {
+    strapi.log.info('[Bootstrap] Verificando configuración de upload en base de datos...');
+    
+    // Obtener la configuración actual de upload settings
+    const uploadSettings = await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).get();
+    strapi.log.info(`[Bootstrap] Configuración actual de upload settings en BD: ${JSON.stringify(uploadSettings)}`);
+    
+    // Si hay un provider en la BD, eliminarlo para forzar uso de config/plugins.js
+    if (uploadSettings && uploadSettings.provider) {
+      strapi.log.info(`[Bootstrap] Eliminando provider '${uploadSettings.provider}' de la BD para usar config/plugins.js`);
+      
+      // Crear nueva configuración sin el provider
+      const { provider, ...settingsWithoutProvider } = uploadSettings;
+      
+      // Guardar sin el provider
+      await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).set(settingsWithoutProvider);
+      strapi.log.info('[Bootstrap] Provider eliminado de la base de datos');
+    }
+    
+    // También verificar y limpiar directamente en la base de datos
+    try {
+      const dbCheck = await strapi.db.query('strapi::core-store').findOne({
+        where: { key: 'plugin_upload_settings' },
+      });
+      
+      if (dbCheck) {
+        let dbValue = null;
+        try {
+          dbValue = typeof dbCheck.value === 'string' ? JSON.parse(dbCheck.value) : dbCheck.value;
+        } catch (parseErr) {
+          strapi.log.warn(`[Bootstrap] Error al parsear valor de BD: ${parseErr.message}`);
+          dbValue = {};
+        }
+        
+        // Si hay un provider en la BD, eliminarlo
+        if (dbValue && dbValue.provider) {
+          strapi.log.info(`[Bootstrap] Eliminando provider '${dbValue.provider}' directamente de la BD`);
+          const { provider, ...settingsWithoutProvider } = dbValue;
+          
+          await strapi.db.query('strapi::core-store').update({
+            where: { key: 'plugin_upload_settings' },
+            data: {
+              value: JSON.stringify(settingsWithoutProvider),
+            },
+          });
+          strapi.log.info('[Bootstrap] Provider eliminado directamente de la base de datos');
+        } else {
+          strapi.log.info('[Bootstrap] No hay provider en la BD, se usará config/plugins.js');
+        }
+      }
+    } catch (dbErr) {
+      strapi.log.warn(`[Bootstrap] Error al verificar/limpiar BD: ${dbErr.message}`);
+    }
+    
+    // Verificar que la configuración de config/plugins.js está disponible
+    const uploadPluginConfig = strapi.plugin('upload')?.config;
+    if (uploadPluginConfig?.config?.provider) {
+      strapi.log.info(`[Bootstrap] Provider configurado en config/plugins.js: ${uploadPluginConfig.config.provider}`);
+      strapi.log.info('[Bootstrap] Strapi usará esta configuración en lugar de la BD');
+    } else {
+      strapi.log.warn('[Bootstrap] No se encontró provider en config/plugins.js, verifica la configuración');
+    }
+  } catch (error) {
+    strapi.log.error(`[Bootstrap] Error al limpiar configuración de provider: ${error.message}`);
+    strapi.log.error(`[Bootstrap] Stack: ${error.stack}`);
+  }
+
+  // Interceptar el servicio de upload para agregar logs
+  strapi.log.info('[Bootstrap] Interceptando servicio de upload...');
   try {
     const uploadService = strapi.plugin('upload').service('upload');
+    strapi.log.info(`[Bootstrap] Servicio de upload encontrado: ${JSON.stringify(!!uploadService)}`);
 
     if (uploadService && uploadService.upload) {
       const originalUpload = uploadService.upload.bind(uploadService);
@@ -327,12 +402,12 @@ module.exports = async () => {
 
           // Verificar configuración de S3 desde el plugin
           const uploadPlugin = strapi.plugin('upload');
-          strapi.log.info(`[Upload Service] Plugin upload existe: ${!!uploadPlugin}`);
-          
+          strapi.log.info(`[Upload Service] Plugin upload existe: ${JSON.stringify(!!uploadPlugin)}`);
+
           // Verificar si Strapi Cloud está activo
           try {
             const cloudPlugin = strapi.plugin('cloud');
-            strapi.log.info(`[Upload Service] Plugin cloud existe: ${!!cloudPlugin}`);
+            strapi.log.info(`[Upload Service] Plugin cloud existe: ${JSON.stringify(!!cloudPlugin)}`);
             if (cloudPlugin) {
               const cloudConfig = cloudPlugin.config;
               strapi.log.info(`[Upload Service] Cloud plugin config: ${JSON.stringify(cloudConfig, null, 2)}`);
@@ -340,33 +415,33 @@ module.exports = async () => {
           } catch (err) {
             strapi.log.info(`[Upload Service] Cloud plugin no encontrado o deshabilitado: ${err.message}`);
           }
-          
+
           let uploadConfig = null;
           if (uploadPlugin) {
             uploadConfig = uploadPlugin.config;
             strapi.log.info(`[Upload Service] Configuración completa del plugin: ${JSON.stringify(uploadConfig, null, 2)}`);
-            
+
             // Verificar qué provider está configurado
             const configuredProvider = uploadConfig?.config?.provider;
             strapi.log.info(`[Upload Service] Provider configurado en config: ${configuredProvider || 'NO CONFIGURADO'}`);
-            
+
             // Intentar acceder al provider directamente
             try {
               const providerService = uploadPlugin.service('provider');
-              strapi.log.info(`[Upload Service] Provider service existe: ${!!providerService}`);
-              
+              strapi.log.info(`[Upload Service] Provider service existe: ${JSON.stringify(!!providerService)}`);
+
               if (providerService) {
                 strapi.log.info(`[Upload Service] Provider service keys: ${JSON.stringify(Object.keys(providerService))}`);
-                
+
                 // Intentar ver la configuración del provider
                 if (providerService.getConfig) {
                   const providerConfig = providerService.getConfig();
                   strapi.log.info(`[Upload Service] Provider config: ${JSON.stringify(providerConfig, null, 2)}`);
                 }
-                
+
                 // Verificar el nombre del provider que se está usando
                 if (providerService.constructor && providerService.constructor.name) {
-                  strapi.log.info(`[Upload Service] Provider class name: ${providerService.constructor.name}`);
+                  strapi.log.info(`[Upload Service] Provider class name: ${JSON.stringify(providerService.constructor.name)}`);
                 }
               }
             } catch (err) {
@@ -429,14 +504,20 @@ module.exports = async () => {
         }
       };
 
+      strapi.log.info('[Bootstrap] Servicio de upload interceptado correctamente');
       strapi.log.info('[Upload Extension] Servicio de upload interceptado correctamente en bootstrap');
     } else {
+      strapi.warn('[Bootstrap] No se pudo encontrar el servicio de upload');
       strapi.log.warn('[Upload Extension] No se pudo encontrar el servicio de upload en bootstrap');
     }
   } catch (error) {
+    strapi.error(`[Bootstrap] Error al interceptar servicio: ${error.message}`);
+    strapi.error(`[Bootstrap] Stack: ${error.stack}`);
     strapi.log.error(`[Upload Extension] Error al interceptar servicio en bootstrap: ${error.message}`);
     strapi.log.error(`[Upload Extension] Stack: ${error.stack}`);
   }
 
+  strapi.log.info('[Bootstrap] Ejecutando seedExampleApp...');
   await seedExampleApp();
+  strapi.log.info('[Bootstrap] ===== Bootstrap completado =====');
 };
