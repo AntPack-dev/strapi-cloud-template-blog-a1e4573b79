@@ -21,6 +21,10 @@ module.exports = ({ env }) => {
     documentation: {
       enabled: true,
     },
+    // Deshabilitar Strapi Cloud para usar AWS S3
+    cloud: {
+      enabled: false,
+    },
     upload: {
       config: {
         provider: 'aws-s3',

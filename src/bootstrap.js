@@ -329,10 +329,26 @@ module.exports = async () => {
           const uploadPlugin = strapi.plugin('upload');
           strapi.log.info(`[Upload Service] Plugin upload existe: ${!!uploadPlugin}`);
           
+          // Verificar si Strapi Cloud está activo
+          try {
+            const cloudPlugin = strapi.plugin('cloud');
+            strapi.log.info(`[Upload Service] Plugin cloud existe: ${!!cloudPlugin}`);
+            if (cloudPlugin) {
+              const cloudConfig = cloudPlugin.config;
+              strapi.log.info(`[Upload Service] Cloud plugin config: ${JSON.stringify(cloudConfig, null, 2)}`);
+            }
+          } catch (err) {
+            strapi.log.info(`[Upload Service] Cloud plugin no encontrado o deshabilitado: ${err.message}`);
+          }
+          
           let uploadConfig = null;
           if (uploadPlugin) {
             uploadConfig = uploadPlugin.config;
             strapi.log.info(`[Upload Service] Configuración completa del plugin: ${JSON.stringify(uploadConfig, null, 2)}`);
+            
+            // Verificar qué provider está configurado
+            const configuredProvider = uploadConfig?.config?.provider;
+            strapi.log.info(`[Upload Service] Provider configurado en config: ${configuredProvider || 'NO CONFIGURADO'}`);
             
             // Intentar acceder al provider directamente
             try {
@@ -346,6 +362,11 @@ module.exports = async () => {
                 if (providerService.getConfig) {
                   const providerConfig = providerService.getConfig();
                   strapi.log.info(`[Upload Service] Provider config: ${JSON.stringify(providerConfig, null, 2)}`);
+                }
+                
+                // Verificar el nombre del provider que se está usando
+                if (providerService.constructor && providerService.constructor.name) {
+                  strapi.log.info(`[Upload Service] Provider class name: ${providerService.constructor.name}`);
                 }
               }
             } catch (err) {
