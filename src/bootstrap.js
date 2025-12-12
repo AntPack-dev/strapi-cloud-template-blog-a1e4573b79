@@ -302,7 +302,120 @@ async function main() {
   process.exit(0);
 }
 
-
 module.exports = async () => {
+  try {
+    const uploadService = strapi.plugin('upload').service('upload');
+
+    if (uploadService && uploadService.upload) {
+      const originalUpload = uploadService.upload.bind(uploadService);
+
+      uploadService.upload = async function (config) {
+        const startTime = Date.now();
+
+        try {
+          strapi.log.info('[Upload Service] ===== Iniciando servicio de upload =====');
+          strapi.log.info(`[Upload Service] Configuración: ${JSON.stringify(config)}`);
+
+          // Verificar variables de entorno directamente
+          strapi.log.info(`[Upload Service] Variables de entorno AWS: ${JSON.stringify({
+            AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ? `${process.env.AWS_ACCESS_KEY_ID.slice(0, 4)}...${process.env.AWS_ACCESS_KEY_ID.slice(-4)}` : 'NO CONFIGURADO',
+            AWS_ACCESS_SECRET: process.env.AWS_ACCESS_SECRET ? `${process.env.AWS_ACCESS_SECRET.slice(0, 4)}...${process.env.AWS_ACCESS_SECRET.slice(-4)}` : 'NO CONFIGURADO',
+            AWS_REGION: process.env.AWS_REGION || 'NO CONFIGURADO',
+            AWS_BUCKET: process.env.AWS_BUCKET || 'NO CONFIGURADO',
+            RESOURCES_CDN: process.env.RESOURCES_CDN || 'NO CONFIGURADO',
+          }, null, 2)}`);
+
+          // Verificar configuración de S3 desde el plugin
+          const uploadPlugin = strapi.plugin('upload');
+          strapi.log.info(`[Upload Service] Plugin upload existe: ${!!uploadPlugin}`);
+          
+          let uploadConfig = null;
+          if (uploadPlugin) {
+            uploadConfig = uploadPlugin.config;
+            strapi.log.info(`[Upload Service] Configuración completa del plugin: ${JSON.stringify(uploadConfig, null, 2)}`);
+            
+            // Intentar acceder al provider directamente
+            try {
+              const providerService = uploadPlugin.service('provider');
+              strapi.log.info(`[Upload Service] Provider service existe: ${!!providerService}`);
+              
+              if (providerService) {
+                strapi.log.info(`[Upload Service] Provider service keys: ${JSON.stringify(Object.keys(providerService))}`);
+                
+                // Intentar ver la configuración del provider
+                if (providerService.getConfig) {
+                  const providerConfig = providerService.getConfig();
+                  strapi.log.info(`[Upload Service] Provider config: ${JSON.stringify(providerConfig, null, 2)}`);
+                }
+              }
+            } catch (err) {
+              strapi.log.warn(`[Upload Service] No se pudo acceder al provider service: ${err.message}`);
+            }
+          }
+
+          // Llamar al método original
+          strapi.log.info('[Upload Service] Ejecutando upload al provider S3...');
+          const result = await originalUpload(config);
+
+          const duration = Date.now() - startTime;
+          strapi.log.info('[Upload Service] ===== Servicio de upload completado =====');
+          strapi.log.info(`[Upload Service] Resultado: ${JSON.stringify({
+            duration: `${duration}ms`,
+            resultCount: Array.isArray(result) ? result.length : 1,
+            results: Array.isArray(result)
+              ? result.map(r => ({
+                id: r.id,
+                name: r.name,
+                url: r.url,
+                provider: r.provider,
+                size: r.size,
+              }))
+              : {
+                id: result.id,
+                name: result.name,
+                url: result.url,
+                provider: result.provider,
+                size: result.size,
+              },
+          })}`);
+
+          return result;
+        } catch (error) {
+          const duration = Date.now() - startTime;
+          strapi.log.error('[Upload Service] ===== Error en servicio de upload =====');
+          strapi.log.error(`[Upload Service] Error detallado: ${JSON.stringify({
+            duration: `${duration}ms`,
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            code: error.code,
+            statusCode: error.statusCode,
+            requestId: error.requestId,
+            region: error.region,
+          }, null, 2)}`);
+
+          // Log específico para errores de AWS S3
+          if (error.code) {
+            strapi.log.error(`[Upload Service] Error de AWS S3: ${JSON.stringify({
+              code: error.code,
+              message: error.message,
+              requestId: error.requestId,
+              region: error.region,
+            }, null, 2)}`);
+          }
+
+          throw error;
+        }
+      };
+
+      strapi.log.info('[Upload Extension] Servicio de upload interceptado correctamente en bootstrap');
+    } else {
+      strapi.log.warn('[Upload Extension] No se pudo encontrar el servicio de upload en bootstrap');
+    }
+  } catch (error) {
+    strapi.log.error(`[Upload Extension] Error al interceptar servicio en bootstrap: ${error.message}`);
+    strapi.log.error(`[Upload Extension] Stack: ${error.stack}`);
+  }
+
   await seedExampleApp();
 };

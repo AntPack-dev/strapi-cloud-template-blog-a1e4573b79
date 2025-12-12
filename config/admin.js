@@ -9,6 +9,7 @@ module.exports = ({ env }) => ({
     token: {
       salt: env('TRANSFER_TOKEN_SALT'),
     },
+    timeout: env.int('TRANSFER_TIMEOUT', 300000), // 5 minutos (300000 ms)
   },
   flags: {
     nps: env.bool('FLAG_NPS', true),
