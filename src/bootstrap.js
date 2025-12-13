@@ -570,6 +570,121 @@ module.exports = async () => {
     strapi.log.error(`[Upload Extension] Stack: ${error.stack}`);
   }
 
+  // Transformar URLs de archivos para que apunten directamente al CDN
+  strapi.log.info('[Bootstrap] Configurando transformación de URLs de archivos...');
+  try {
+    const resourcesCdn = process.env.RESOURCES_CDN;
+    if (resourcesCdn) {
+      // Asegurar que el CDN sea una URL absoluta
+      const cdnUrl = resourcesCdn.startsWith('http') 
+        ? resourcesCdn 
+        : `https://${resourcesCdn}`;
+      
+      // Obtener el dominio de la API para detectar URLs mal formadas
+      const apiUrl = process.env.API_URL || process.env.PUBLIC_URL || '';
+      
+      strapi.log.info(`[Bootstrap] CDN URL configurado: ${cdnUrl}`);
+      strapi.log.info(`[Bootstrap] API URL: ${apiUrl}`);
+
+      // Función para transformar URLs de archivos
+      const transformFileUrl = (url) => {
+        if (!url || typeof url !== 'string') return url;
+        
+        // Si la URL ya es del CDN correcto, devolverla tal cual
+        if (url.startsWith(cdnUrl)) {
+          return url;
+        }
+        
+        // Si la URL contiene el dominio de la API seguido del CDN (caso del error)
+        if (apiUrl && url.includes(apiUrl) && url.includes(resourcesCdn.replace(/^https?:\/\//, ''))) {
+          // Extraer la ruta del archivo después del CDN
+          const cdnDomain = resourcesCdn.replace(/^https?:\/\//, '');
+          const cdnIndex = url.indexOf(cdnDomain);
+          if (cdnIndex !== -1) {
+            const filePath = url.substring(cdnIndex + cdnDomain.length);
+            return `${cdnUrl}${filePath}`;
+          }
+        }
+        
+        // Si la URL es relativa o contiene solo la ruta del archivo
+        if (url.startsWith('/') || (!url.startsWith('http') && !url.startsWith('//'))) {
+          // Si la URL comienza con el dominio del CDN sin protocolo
+          const cdnDomain = resourcesCdn.replace(/^https?:\/\//, '');
+          if (url.includes(cdnDomain)) {
+            const cdnIndex = url.indexOf(cdnDomain);
+            const filePath = url.substring(cdnIndex + cdnDomain.length);
+            return `${cdnUrl}${filePath}`;
+          }
+          // Si es una ruta relativa, construir la URL completa con el CDN
+          return `${cdnUrl}${url.startsWith('/') ? url : '/' + url}`;
+        }
+        
+        return url;
+      };
+
+      // Interceptar el servicio de archivos para transformar URLs
+      const fileService = strapi.plugin('upload').service('file');
+      if (fileService) {
+        const originalFormatFileInfo = fileService.formatFileInfo?.bind(fileService);
+        if (originalFormatFileInfo) {
+          fileService.formatFileInfo = function(file) {
+            const formatted = originalFormatFileInfo(file);
+            if (formatted && formatted.url) {
+              formatted.url = transformFileUrl(formatted.url);
+            }
+            return formatted;
+          };
+        }
+      }
+
+      // Interceptar respuestas de la API para transformar URLs en archivos
+      strapi.server.use(async (ctx, next) => {
+        await next();
+        
+        if (ctx.response && ctx.response.body) {
+          const transformUrlsInObject = (obj) => {
+            if (Array.isArray(obj)) {
+              return obj.map(transformUrlsInObject);
+            } else if (obj && typeof obj === 'object') {
+              const transformed = {};
+              for (const key in obj) {
+                if (key === 'url' && typeof obj[key] === 'string') {
+                  transformed[key] = transformFileUrl(obj[key]);
+                } else if (key === 'formats' && obj[key] && typeof obj[key] === 'object') {
+                  // Transformar URLs en los diferentes formatos (thumbnail, small, medium, large)
+                  transformed[key] = {};
+                  for (const formatKey in obj[key]) {
+                    if (obj[key][formatKey] && obj[key][formatKey].url) {
+                      transformed[key][formatKey] = {
+                        ...obj[key][formatKey],
+                        url: transformFileUrl(obj[key][formatKey].url)
+                      };
+                    } else {
+                      transformed[key][formatKey] = obj[key][formatKey];
+                    }
+                  }
+                } else {
+                  transformed[key] = transformUrlsInObject(obj[key]);
+                }
+              }
+              return transformed;
+            }
+            return obj;
+          };
+          
+          ctx.response.body = transformUrlsInObject(ctx.response.body);
+        }
+      });
+
+      strapi.log.info('[Bootstrap] Transformación de URLs de archivos configurada correctamente');
+    } else {
+      strapi.log.warn('[Bootstrap] RESOURCES_CDN no está configurado, omitiendo transformación de URLs');
+    }
+  } catch (error) {
+    strapi.log.error(`[Bootstrap] Error al configurar transformación de URLs: ${error.message}`);
+    strapi.log.error(`[Bootstrap] Stack: ${error.stack}`);
+  }
+
   strapi.log.info('[Bootstrap] Ejecutando seedExampleApp...');
   await seedExampleApp();
   strapi.log.info('[Bootstrap] ===== Bootstrap completado =====');
