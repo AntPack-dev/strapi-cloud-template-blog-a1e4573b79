@@ -363,12 +363,65 @@ module.exports = async () => {
     }
     
     // Verificar que la configuración de config/plugins.js está disponible
-    const uploadPluginConfig = strapi.plugin('upload')?.config;
-    if (uploadPluginConfig?.config?.provider) {
-      strapi.log.info(`[Bootstrap] Provider configurado en config/plugins.js: ${uploadPluginConfig.config.provider}`);
-      strapi.log.info('[Bootstrap] Strapi usará esta configuración en lugar de la BD');
-    } else {
-      strapi.log.warn('[Bootstrap] No se encontró provider en config/plugins.js, verifica la configuración');
+    try {
+      const uploadPlugin = strapi.plugin('upload');
+      if (uploadPlugin) {
+        const uploadPluginConfig = uploadPlugin.config;
+        strapi.log.info(`[Bootstrap] Configuración completa del plugin upload: ${JSON.stringify(uploadPluginConfig, null, 2)}`);
+        
+        if (uploadPluginConfig?.config?.provider) {
+          strapi.log.info(`[Bootstrap] Provider configurado en config/plugins.js: ${uploadPluginConfig.config.provider}`);
+          strapi.log.info('[Bootstrap] Strapi usará esta configuración en lugar de la BD');
+        } else {
+          strapi.log.warn('[Bootstrap] No se encontró provider en config/plugins.js');
+          strapi.log.warn('[Bootstrap] Verifica que config/plugins.js tenga: upload: { config: { provider: "aws-s3", ... } }');
+        }
+        
+        // Verificar si hay un provider service activo y forzar AWS S3 si es necesario
+        try {
+          const providerService = uploadPlugin.service('provider');
+          if (providerService) {
+            strapi.log.info(`[Bootstrap] Provider service encontrado: ${JSON.stringify(!!providerService)}`);
+            if (providerService.constructor && providerService.constructor.name) {
+              strapi.log.info(`[Bootstrap] Provider service class name: ${providerService.constructor.name}`);
+              
+              // Si está usando Strapi Cloud, intentar forzar AWS S3
+              if (providerService.constructor.name.includes('Cloud') || providerService.constructor.name.includes('cloud')) {
+                strapi.log.warn('[Bootstrap] ⚠️ ADVERTENCIA: Strapi Cloud está activo para uploads.');
+                strapi.log.warn('[Bootstrap] Intentando forzar AWS S3...');
+                
+                // Intentar reconfigurar el provider directamente
+                try {
+                  // Obtener la configuración de AWS S3 desde config/plugins.js
+                  const awsS3Config = strapi.config.get('plugin.upload.config');
+                  if (awsS3Config && awsS3Config.provider === 'aws-s3') {
+                    strapi.log.info('[Bootstrap] Configuración de AWS S3 encontrada, intentando aplicar...');
+                    
+                    // Guardar la configuración en la base de datos para que se use
+                    await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).set({
+                      provider: 'aws-s3',
+                    });
+                    
+                    strapi.log.info('[Bootstrap] Configuración de AWS S3 guardada en BD');
+                    strapi.log.warn('[Bootstrap] ⚠️ IMPORTANTE: También debes configurar el provider en el panel de administración:');
+                    strapi.log.warn('[Bootstrap] Settings → Plugins → Upload → Provider: AWS S3');
+                  }
+                } catch (forceErr) {
+                  strapi.log.error(`[Bootstrap] Error al forzar AWS S3: ${forceErr.message}`);
+                }
+              } else {
+                strapi.log.info('[Bootstrap] ✅ Provider correcto detectado (no es Strapi Cloud)');
+              }
+            }
+          }
+        } catch (serviceErr) {
+          strapi.log.warn(`[Bootstrap] No se pudo acceder al provider service: ${serviceErr.message}`);
+        }
+      } else {
+        strapi.log.error('[Bootstrap] Plugin upload no encontrado');
+      }
+    } catch (pluginErr) {
+      strapi.log.error(`[Bootstrap] Error al verificar plugin upload: ${pluginErr.message}`);
     }
   } catch (error) {
     strapi.log.error(`[Bootstrap] Error al limpiar configuración de provider: ${error.message}`);
