@@ -21,35 +21,20 @@ module.exports = ({ env }) => {
     documentation: {
       enabled: true,
     },
-    // Deshabilitar Strapi Cloud para usar AWS S3
-    cloud: {
-      enabled: false,
-    },
     upload: {
       config: {
-        provider: 'aws-s3',
+        provider: "provider-upload-aws-s3-cf",
         providerOptions: {
-          baseUrl: env('RESOURCES_CDN'),
           s3Options: {
-            credentials: {
-              accessKeyId: env('AWS_ACCESS_KEY_ID'),
-              secretAccessKey: env('AWS_ACCESS_SECRET'),
-            },
-            region: env('AWS_REGION'),
+            accessKeyId: env("AWS_ACCESS_KEY_ID"),
+            secretAccessKey: env("AWS_ACCESS_SECRET"),
+            region: env("AWS_REGION"),
             params: {
-              Bucket: env('AWS_BUCKET'),
+              signedUrlExpires: env("AWS_SIGNED_URL_EXPIRES", 15 * 60),
+              Bucket: env("AWS_BUCKET"),
             },
-            // Agregar timeout para S3
-            httpOptions: {
-              timeout: 300000, // 5 minutos
-              connectTimeout: 60000, // 1 minuto
-            },
+            cdn: env("AWS_CDN"),
           },
-        },
-        actionOptions: {
-          upload: {},
-          uploadStream: {},
-          delete: {},
         },
       },
     },

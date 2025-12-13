@@ -15,27 +15,20 @@ module.exports = ({ env }) => [
   'strapi::logger',
   'strapi::errors',
   {
-    name: 'strapi::security',
+    name: "strapi::security",
     config: {
       contentSecurityPolicy: {
-        useDefaults: true,
         directives: {
-          'connect-src': ["'self'", 'https:'],
-          'img-src': [
+          "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+          "img-src": [
             "'self'",
-            'data:',
-            'blob:',
-            `${env('AWS_BUCKET')}.s3.${env('AWS_REGION')}.amazonaws.com`,
-            env('RESOURCES_CDN'),
+            "data:",
+            "blob:",
+            "cdn.jsdelivr.net",
+            "strapi.io",
+            `${env("AWS_BUCKET")}.s3.${env("AWS_REGION")}.amazonaws.com`,
+            `${env("AWS_CDN")}`,
           ],
-          'media-src': [
-            "'self'",
-            'data:',
-            'blob:',
-            `${env('AWS_BUCKET')}.s3.${env('AWS_REGION')}.amazonaws.com`,
-            env('RESOURCES_CDN'),
-          ],
-          upgradeInsecureRequests: null,
         },
       },
     },
