@@ -638,43 +638,61 @@ module.exports = async () => {
       }
 
       // Interceptar respuestas de la API para transformar URLs en archivos
-      strapi.server.use(async (ctx, next) => {
-        await next();
+      // Solo interceptar rutas de la API, no el admin panel
+      // strapi.server.use(async (ctx, next) => {
+      //   await next();
         
-        if (ctx.response && ctx.response.body) {
-          const transformUrlsInObject = (obj) => {
-            if (Array.isArray(obj)) {
-              return obj.map(transformUrlsInObject);
-            } else if (obj && typeof obj === 'object') {
-              const transformed = {};
-              for (const key in obj) {
-                if (key === 'url' && typeof obj[key] === 'string') {
-                  transformed[key] = transformFileUrl(obj[key]);
-                } else if (key === 'formats' && obj[key] && typeof obj[key] === 'object') {
-                  // Transformar URLs en los diferentes formatos (thumbnail, small, medium, large)
-                  transformed[key] = {};
-                  for (const formatKey in obj[key]) {
-                    if (obj[key][formatKey] && obj[key][formatKey].url) {
-                      transformed[key][formatKey] = {
-                        ...obj[key][formatKey],
-                        url: transformFileUrl(obj[key][formatKey].url)
-                      };
-                    } else {
-                      transformed[key][formatKey] = obj[key][formatKey];
-                    }
-                  }
-                } else {
-                  transformed[key] = transformUrlsInObject(obj[key]);
-                }
-              }
-              return transformed;
-            }
-            return obj;
-          };
+      //   // Solo procesar respuestas JSON de la API, no el admin panel ni archivos estáticos
+      //   const isAdminRoute = ctx.path && (
+      //     ctx.path.startsWith('/admin') || 
+      //     ctx.path.startsWith('/_build') ||
+      //     ctx.path.startsWith('/build')
+      //   );
+        
+      //   const isStaticFile = ctx.path && (
+      //     ctx.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)
+      //   );
+        
+      //   // Solo transformar si es una respuesta JSON de la API
+      //   if (!isAdminRoute && !isStaticFile && ctx.response && ctx.response.body && 
+      //       ctx.type && ctx.type.includes('application/json')) {
+      //     const transformUrlsInObject = (obj) => {
+      //       if (Array.isArray(obj)) {
+      //         return obj.map(transformUrlsInObject);
+      //       } else if (obj && typeof obj === 'object' && obj !== null) {
+      //         const transformed = {};
+      //         for (const key in obj) {
+      //           if (key === 'url' && typeof obj[key] === 'string') {
+      //             transformed[key] = transformFileUrl(obj[key]);
+      //           } else if (key === 'formats' && obj[key] && typeof obj[key] === 'object') {
+      //             // Transformar URLs en los diferentes formatos (thumbnail, small, medium, large)
+      //             transformed[key] = {};
+      //             for (const formatKey in obj[key]) {
+      //               if (obj[key][formatKey] && obj[key][formatKey].url) {
+      //                 transformed[key][formatKey] = {
+      //                   ...obj[key][formatKey],
+      //                   url: transformFileUrl(obj[key][formatKey].url)
+      //                 };
+      //               } else {
+      //                 transformed[key][formatKey] = obj[key][formatKey];
+      //               }
+      //             }
+      //           } else {
+      //             transformed[key] = transformUrlsInObject(obj[key]);
+      //           }
+      //         }
+      //         return transformed;
+      //       }
+      //       return obj;
+      //     };
           
-          ctx.response.body = transformUrlsInObject(ctx.response.body);
-        }
-      });
+      //     try {
+      //       ctx.response.body = transformUrlsInObject(ctx.response.body);
+      //     } catch (error) {
+      //       strapi.log.warn(`[Bootstrap] Error al transformar URLs en respuesta: ${error.message}`);
+      //     }
+      //   }
+      // });
 
       strapi.log.info('[Bootstrap] Transformación de URLs de archivos configurada correctamente');
     } else {
