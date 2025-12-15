@@ -10,17 +10,71 @@
   "attributes": {
     "metaTitle": {
       "type": "string",
+      "maxLength": 60,
       "required": true
     },
     "metaDescription": {
       "type": "text",
+      "maxLength": 155,
       "required": true
     },
-    "shareImage": {
+    "metaRobots": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "index/dofollow",
+        "index/follow",
+        "noindex/nofollow"
+      ]
+    },
+    "canonicalURL": {
+      "type": "string",
+      "required": true
+    },
+    "openGraphTitle": {
+      "type": "string",
+      "required": false
+    },
+    "openGraphDescription": {
+      "type": "string",
+      "required": false
+    },
+    "openGraphImage": {
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "twitterCardImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "languageCode": {
+      "type": "string",
+      "required": true
+    },
+    "countryCode": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "co",
+        "pa",
+        "gy",
+        "hn",
+        "sv",
+        "ec",
+        "pe",
+        "tt",
+        "jm"
+      ]
+    },
+    "slug": {
+      "type": "string"
     }
   }
 }

@@ -105,9 +105,31 @@ export interface SharedSeo extends Struct.ComponentSchema {
     name: 'Seo';
   };
   attributes: {
-    metaDescription: Schema.Attribute.Text & Schema.Attribute.Required;
-    metaTitle: Schema.Attribute.String & Schema.Attribute.Required;
-    shareImage: Schema.Attribute.Media<'images'>;
+    canonicalURL: Schema.Attribute.String & Schema.Attribute.Required;
+    countryCode: Schema.Attribute.Enumeration<
+      ['co', 'pa', 'gy', 'hn', 'sv', 'ec', 'pe', 'tt', 'jm']
+    > &
+      Schema.Attribute.Required;
+    languageCode: Schema.Attribute.String & Schema.Attribute.Required;
+    metaDescription: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 155;
+      }>;
+    metaRobots: Schema.Attribute.Enumeration<
+      ['index/dofollow', 'index/follow', 'noindex/nofollow']
+    > &
+      Schema.Attribute.Required;
+    metaTitle: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 60;
+      }>;
+    openGraphDescription: Schema.Attribute.String;
+    openGraphImage: Schema.Attribute.Media<'images'>;
+    openGraphTitle: Schema.Attribute.String;
+    slug: Schema.Attribute.String;
+    twitterCardImage: Schema.Attribute.Media<'images'>;
   };
 }
 
