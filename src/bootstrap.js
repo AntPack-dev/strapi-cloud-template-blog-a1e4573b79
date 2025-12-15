@@ -303,133 +303,6 @@ async function main() {
 }
 
 module.exports = async () => {
-  // strapi.log.info('[Bootstrap] ===== Iniciando bootstrap =====');
-  // strapi.log.info('[Bootstrap] Forzando uso de configuración desde config/plugins.js...');
-  
-  // // Eliminar cualquier configuración de provider de la base de datos
-  // // para forzar que Strapi use la configuración de config/plugins.js
-  // try {
-  //   strapi.log.info('[Bootstrap] Verificando configuración de upload en base de datos...');
-    
-  //   // Obtener la configuración actual de upload settings
-  //   const uploadSettings = await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).get();
-  //   strapi.log.info(`[Bootstrap] Configuración actual de upload settings en BD: ${JSON.stringify(uploadSettings)}`);
-    
-  //   // Si hay un provider en la BD, eliminarlo para forzar uso de config/plugins.js
-  //   if (uploadSettings && uploadSettings.provider) {
-  //     strapi.log.info(`[Bootstrap] Eliminando provider '${uploadSettings.provider}' de la BD para usar config/plugins.js`);
-      
-  //     // Crear nueva configuración sin el provider
-  //     const { provider, ...settingsWithoutProvider } = uploadSettings;
-      
-  //     // Guardar sin el provider
-  //     await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).set(settingsWithoutProvider);
-  //     strapi.log.info('[Bootstrap] Provider eliminado de la base de datos');
-  //   }
-    
-  //   // También verificar y limpiar directamente en la base de datos
-  //   try {
-  //     const dbCheck = await strapi.db.query('strapi::core-store').findOne({
-  //       where: { key: 'plugin_upload_settings' },
-  //     });
-      
-  //     if (dbCheck) {
-  //       let dbValue = null;
-  //       try {
-  //         dbValue = typeof dbCheck.value === 'string' ? JSON.parse(dbCheck.value) : dbCheck.value;
-  //       } catch (parseErr) {
-  //         strapi.log.warn(`[Bootstrap] Error al parsear valor de BD: ${parseErr.message}`);
-  //         dbValue = {};
-  //       }
-        
-  //       // Si hay un provider en la BD, eliminarlo
-  //       if (dbValue && dbValue.provider) {
-  //         strapi.log.info(`[Bootstrap] Eliminando provider '${dbValue.provider}' directamente de la BD`);
-  //         const { provider, ...settingsWithoutProvider } = dbValue;
-          
-  //         await strapi.db.query('strapi::core-store').update({
-  //           where: { key: 'plugin_upload_settings' },
-  //           data: {
-  //             value: JSON.stringify(settingsWithoutProvider),
-  //           },
-  //         });
-  //         strapi.log.info('[Bootstrap] Provider eliminado directamente de la base de datos');
-  //       } else {
-  //         strapi.log.info('[Bootstrap] No hay provider en la BD, se usará config/plugins.js');
-  //       }
-  //     }
-  //   } catch (dbErr) {
-  //     strapi.log.warn(`[Bootstrap] Error al verificar/limpiar BD: ${dbErr.message}`);
-  //   }
-    
-  //   // Verificar que la configuración de config/plugins.js está disponible
-  //   try {
-  //     const uploadPlugin = strapi.plugin('upload');
-  //     if (uploadPlugin) {
-  //       const uploadPluginConfig = uploadPlugin.config;
-  //       strapi.log.info(`[Bootstrap] Configuración completa del plugin upload: ${JSON.stringify(uploadPluginConfig, null, 2)}`);
-        
-  //       if (uploadPluginConfig?.config?.provider) {
-  //         strapi.log.info(`[Bootstrap] Provider configurado en config/plugins.js: ${uploadPluginConfig.config.provider}`);
-  //         strapi.log.info('[Bootstrap] Strapi usará esta configuración en lugar de la BD');
-  //       } else {
-  //         strapi.log.warn('[Bootstrap] No se encontró provider en config/plugins.js');
-  //         strapi.log.warn('[Bootstrap] Verifica que config/plugins.js tenga: upload: { config: { provider: "aws-s3", ... } }');
-  //       }
-        
-  //       // Verificar si hay un provider service activo y forzar AWS S3 si es necesario
-  //       try {
-  //         const providerService = uploadPlugin.service('provider');
-  //         if (providerService) {
-  //           strapi.log.info(`[Bootstrap] Provider service encontrado: ${JSON.stringify(!!providerService)}`);
-  //           if (providerService.constructor && providerService.constructor.name) {
-  //             strapi.log.info(`[Bootstrap] Provider service class name: ${providerService.constructor.name}`);
-              
-  //             // Si está usando Strapi Cloud, intentar forzar AWS S3
-  //             if (providerService.constructor.name.includes('Cloud') || providerService.constructor.name.includes('cloud')) {
-  //               strapi.log.warn('[Bootstrap] ⚠️ ADVERTENCIA: Strapi Cloud está activo para uploads.');
-  //               strapi.log.warn('[Bootstrap] Intentando forzar AWS S3...');
-                
-  //               // Intentar reconfigurar el provider directamente
-  //               try {
-  //                 // Obtener la configuración de AWS S3 desde config/plugins.js
-  //                 const awsS3Config = strapi.config.get('plugin.upload.config');
-  //                 if (awsS3Config && awsS3Config.provider === 'aws-s3') {
-  //                   strapi.log.info('[Bootstrap] Configuración de AWS S3 encontrada, intentando aplicar...');
-                    
-  //                   // Guardar la configuración en la base de datos para que se use
-  //                   await strapi.store({ type: 'plugin', name: 'upload', key: 'settings' }).set({
-  //                     provider: 'aws-s3',
-  //                   });
-                    
-  //                   strapi.log.info('[Bootstrap] Configuración de AWS S3 guardada en BD');
-  //                   strapi.log.warn('[Bootstrap] ⚠️ IMPORTANTE: También debes configurar el provider en el panel de administración:');
-  //                   strapi.log.warn('[Bootstrap] Settings → Plugins → Upload → Provider: AWS S3');
-  //                 }
-  //               } catch (forceErr) {
-  //                 strapi.log.error(`[Bootstrap] Error al forzar AWS S3: ${forceErr.message}`);
-  //               }
-  //             } else {
-  //               strapi.log.info('[Bootstrap] ✅ Provider correcto detectado (no es Strapi Cloud)');
-  //             }
-  //           }
-  //         }
-  //       } catch (serviceErr) {
-  //         strapi.log.warn(`[Bootstrap] No se pudo acceder al provider service: ${serviceErr.message}`);
-  //       }
-  //     } else {
-  //       strapi.log.error('[Bootstrap] Plugin upload no encontrado');
-  //     }
-  //   } catch (pluginErr) {
-  //     strapi.log.error(`[Bootstrap] Error al verificar plugin upload: ${pluginErr.message}`);
-  //   }
-  // } catch (error) {
-  //   strapi.log.error(`[Bootstrap] Error al limpiar configuración de provider: ${error.message}`);
-  //   strapi.log.error(`[Bootstrap] Stack: ${error.stack}`);
-  // }
-
-  // Interceptar el servicio de upload para agregar logs 
-  strapi.log.info('[Bootstrap] Interceptando servicio de upload...');
   try {
     const uploadService = strapi.plugin('upload').service('upload');
     strapi.log.info(`[Bootstrap] Servicio de upload encontrado: ${JSON.stringify(!!uploadService)}`);
@@ -441,65 +314,92 @@ module.exports = async () => {
         const startTime = Date.now();
 
         try {
-          strapi.log.info('[Upload Service] ===== Iniciando servicio de upload =====');
-          strapi.log.info(`[Upload Service] Configuración: ${JSON.stringify(config)}`);
-
-          // Verificar variables de entorno directamente
-          strapi.log.info(`[Upload Service] Variables de entorno AWS: ${JSON.stringify({
-            AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ? `${process.env.AWS_ACCESS_KEY_ID.slice(0, 4)}...${process.env.AWS_ACCESS_KEY_ID.slice(-4)}` : 'NO CONFIGURADO',
-            AWS_ACCESS_SECRET: process.env.AWS_ACCESS_SECRET ? `${process.env.AWS_ACCESS_SECRET.slice(0, 4)}...${process.env.AWS_ACCESS_SECRET.slice(-4)}` : 'NO CONFIGURADO',
-            AWS_REGION: process.env.AWS_REGION || 'NO CONFIGURADO',
-            AWS_BUCKET: process.env.AWS_BUCKET || 'NO CONFIGURADO',
-            RESOURCES_CDN: process.env.RESOURCES_CDN || 'NO CONFIGURADO',
+          // Log completo del config para debugging
+          strapi.log.info(`[Upload Service] Config recibido: ${JSON.stringify({
+            hasData: !!config.data,
+            hasFileInfo: !!config.data?.fileInfo,
+            fileInfoKeys: config.data?.fileInfo ? Object.keys(config.data.fileInfo) : [],
+            folderInfo: config.data?.fileInfo?.folder,
+            actionOptions: config.actionOptions,
           }, null, 2)}`);
 
-          // Verificar configuración de S3 desde el plugin
-          const uploadPlugin = strapi.plugin('upload');
-          strapi.log.info(`[Upload Service] Plugin upload existe: ${JSON.stringify(!!uploadPlugin)}`);
+          // Obtener información del folder si está presente
+          let folderPath = null;
+          let folderId = null;
 
-          // Verificar si Strapi Cloud está activo
-          try {
-            const cloudPlugin = strapi.plugin('cloud');
-            strapi.log.info(`[Upload Service] Plugin cloud existe: ${JSON.stringify(!!cloudPlugin)}`);
-            if (cloudPlugin) {
-              const cloudConfig = cloudPlugin.config;
-              strapi.log.info(`[Upload Service] Cloud plugin config: ${JSON.stringify(cloudConfig, null, 2)}`);
-            }
-          } catch (err) {
-            strapi.log.info(`[Upload Service] Cloud plugin no encontrado o deshabilitado: ${err.message}`);
+          // Intentar obtener el folder de diferentes formas
+          if (config?.data?.fileInfo?.folder) {
+            folderId = typeof config.data.fileInfo.folder === 'object' 
+              ? config.data.fileInfo.folder.id || config.data.fileInfo.folder
+              : config.data.fileInfo.folder;
+          } else if (config?.data?.folder) {
+            folderId = typeof config.data.folder === 'object'
+              ? config.data.folder.id || config.data.folder
+              : config.data.folder;
           }
 
-          let uploadConfig = null;
-          if (uploadPlugin) {
-            uploadConfig = uploadPlugin.config;
-            strapi.log.info(`[Upload Service] Configuración completa del plugin: ${JSON.stringify(uploadConfig, null, 2)}`);
+          strapi.log.info(`[Upload Service] Folder ID detectado: ${folderId}`);
 
-            // Verificar qué provider está configurado
-            const configuredProvider = uploadConfig?.config?.provider;
-            strapi.log.info(`[Upload Service] Provider configurado en config: ${configuredProvider || 'NO CONFIGURADO'}`);
-
-            // Intentar acceder al provider directamente
+          if (folderId) {
             try {
-              const providerService = uploadPlugin.service('provider');
-              strapi.log.info(`[Upload Service] Provider service existe: ${JSON.stringify(!!providerService)}`);
+              const folder = await strapi.query('plugin::upload.folder').findOne({
+                where: { id: folderId },
+                populate: ['parent'],
+              });
+              
+              strapi.log.info(`[Upload Service] Folder encontrado: ${JSON.stringify({
+                id: folder?.id,
+                name: folder?.name,
+                path: folder?.path,
+                pathId: folder?.pathId,
+              }, null, 2)}`);
 
-              if (providerService) {
-                strapi.log.info(`[Upload Service] Provider service keys: ${JSON.stringify(Object.keys(providerService))}`);
-
-                // Intentar ver la configuración del provider
-                if (providerService.getConfig) {
-                  const providerConfig = providerService.getConfig();
-                  strapi.log.info(`[Upload Service] Provider config: ${JSON.stringify(providerConfig, null, 2)}`);
-                }
-
-                // Verificar el nombre del provider que se está usando
-                if (providerService.constructor && providerService.constructor.name) {
-                  strapi.log.info(`[Upload Service] Provider class name: ${JSON.stringify(providerService.constructor.name)}`);
-                }
+              if (folder && folder.path) {
+                folderPath = folder.path;
+                strapi.log.info(`[Upload Service] Folder path detectado: ${folderPath}`);
               }
-            } catch (err) {
-              strapi.log.warn(`[Upload Service] No se pudo acceder al provider service: ${err.message}`);
+            } catch (error) {
+              strapi.log.warn(`[Upload Service] Error al obtener folder: ${error.message}`);
+              strapi.log.warn(`[Upload Service] Stack: ${error.stack}`);
             }
+          }
+
+          // Si hay un folderPath, guardarlo para usar en el provider
+          if (folderPath) {
+            // Normalizar el folderPath (eliminar barras iniciales y asegurar barra final)
+            const normalizedPath = folderPath.startsWith('/') 
+              ? folderPath.substring(1) 
+              : folderPath;
+            const s3Path = normalizedPath.endsWith('/') 
+              ? normalizedPath 
+              : `${normalizedPath}/`;
+
+            // Guardar el path en el config para que el provider lo use
+            if (!config.actionOptions) {
+              config.actionOptions = {};
+            }
+            if (!config.actionOptions.upload) {
+              config.actionOptions.upload = {};
+            }
+            
+            // El provider de S3 puede usar el campo 'path' en actionOptions.upload
+            config.actionOptions.upload.path = s3Path;
+            config._folderPath = s3Path; // También guardarlo aquí para acceso directo
+            
+            // También guardar el path en los files para que el provider lo pueda acceder
+            if (config.files && Array.isArray(config.files)) {
+              config.files.forEach(file => {
+                if (file) {
+                  file._folderPath = s3Path;
+                }
+              });
+            } else if (config.files) {
+              config.files._folderPath = s3Path;
+            }
+            
+            strapi.log.info(`[Upload Service] Archivo se guardará en S3 con path: ${s3Path}`);
+          } else {
+            strapi.log.info(`[Upload Service] No se detectó folder, archivo se guardará en la raíz de S3`);
           }
 
           // Llamar al método original
@@ -563,6 +463,81 @@ module.exports = async () => {
       strapi.warn('[Bootstrap] No se pudo encontrar el servicio de upload');
       strapi.log.warn('[Upload Extension] No se pudo encontrar el servicio de upload en bootstrap');
     }
+
+    // Interceptar el provider de S3 para modificar la Key según el folder
+    try {
+      const uploadPlugin = strapi.plugin('upload');
+      if (uploadPlugin) {
+        const providerService = uploadPlugin.service('provider');
+        
+        if (providerService && providerService.upload) {
+          const originalProviderUpload = providerService.upload.bind(providerService);
+          
+          providerService.upload = async function (file, customParams = {}) {
+            strapi.log.info(`[S3 Provider] Upload llamado con customParams: ${JSON.stringify({
+              hasPath: !!customParams.path,
+              path: customParams.path,
+              hasKey: !!customParams.Key,
+              Key: customParams.Key,
+              fileHash: file?.hash,
+              fileName: file?.name,
+            }, null, 2)}`);
+
+            // Obtener el path del folder desde customParams o desde el file si está disponible
+            let folderPath = customParams.path;
+            
+            // Si no hay path en customParams, intentar obtenerlo del file
+            if (!folderPath && file && file._folderPath) {
+              folderPath = file._folderPath;
+            }
+
+            // Si hay un folderPath, construir la Key con el path
+            if (folderPath) {
+              // Asegurar que el path termine con /
+              const pathPrefix = folderPath.endsWith('/') 
+                ? folderPath 
+                : `${folderPath}/`;
+              
+              // Obtener la Key original (el provider de S3 puede haberla construido ya)
+              // Si no existe, construirla desde el hash o nombre del archivo
+              let originalKey = customParams.Key;
+              
+              if (!originalKey) {
+                // El provider de S3 normalmente usa el hash del archivo
+                originalKey = file.hash || file.name;
+                if (file.ext) {
+                  originalKey = `${originalKey}${file.ext.startsWith('.') ? '' : '.'}${file.ext}`;
+                }
+              }
+              
+              // Construir la nueva Key con el path del folder
+              const newKey = `${pathPrefix}${originalKey}`;
+              
+              strapi.log.info(`[S3 Provider] Key original: ${originalKey}`);
+              strapi.log.info(`[S3 Provider] Key con folder: ${newKey}`);
+              
+              // Modificar customParams para incluir la Key con el path
+              customParams = {
+                ...customParams,
+                Key: newKey,
+                path: pathPrefix, // También mantener el path para referencia
+              };
+            } else {
+              strapi.log.info(`[S3 Provider] No hay folder path, usando Key original: ${customParams.Key || file.hash || file.name}`);
+            }
+            
+            return originalProviderUpload(file, customParams);
+          };
+          
+          strapi.log.info('[Bootstrap] Provider de S3 interceptado correctamente para soportar folders');
+        } else {
+          strapi.log.warn('[Bootstrap] No se encontró el método upload en el provider service');
+        }
+      }
+    } catch (error) {
+      strapi.log.warn(`[Bootstrap] No se pudo interceptar el provider de S3: ${error.message}`);
+      strapi.log.warn(`[Bootstrap] Stack: ${error.stack}`);
+    }
   } catch (error) {
     strapi.error(`[Bootstrap] Error al interceptar servicio: ${error.message}`);
     strapi.error(`[Bootstrap] Stack: ${error.stack}`);
@@ -576,25 +551,24 @@ module.exports = async () => {
     const resourcesCdn = process.env.RESOURCES_CDN;
     if (resourcesCdn) {
       // Asegurar que el CDN sea una URL absoluta
-      const cdnUrl = resourcesCdn.startsWith('http') 
-        ? resourcesCdn 
+      const cdnUrl = resourcesCdn.startsWith('http')
+        ? resourcesCdn
         : `https://${resourcesCdn}`;
-      
+
       // Obtener el dominio de la API para detectar URLs mal formadas
       const apiUrl = process.env.API_URL || process.env.PUBLIC_URL || '';
-      
+
       strapi.log.info(`[Bootstrap] CDN URL configurado: ${cdnUrl}`);
       strapi.log.info(`[Bootstrap] API URL: ${apiUrl}`);
 
       // Función para transformar URLs de archivos
       const transformFileUrl = (url) => {
         if (!url || typeof url !== 'string') return url;
-        
+
         // Si la URL ya es del CDN correcto, devolverla tal cual
-        if (url.startsWith(cdnUrl)) {
+        if (url.startsWith(cdnUrl))
           return url;
-        }
-        
+
         // Si la URL contiene el dominio de la API seguido del CDN (caso del error)
         if (apiUrl && url.includes(apiUrl) && url.includes(resourcesCdn.replace(/^https?:\/\//, ''))) {
           // Extraer la ruta del archivo después del CDN
@@ -605,7 +579,7 @@ module.exports = async () => {
             return `${cdnUrl}${filePath}`;
           }
         }
-        
+
         // Si la URL es relativa o contiene solo la ruta del archivo
         if (url.startsWith('/') || (!url.startsWith('http') && !url.startsWith('//'))) {
           // Si la URL comienza con el dominio del CDN sin protocolo
@@ -618,7 +592,7 @@ module.exports = async () => {
           // Si es una ruta relativa, construir la URL completa con el CDN
           return `${cdnUrl}${url.startsWith('/') ? url : '/' + url}`;
         }
-        
+
         return url;
       };
 
@@ -627,7 +601,7 @@ module.exports = async () => {
       if (fileService) {
         const originalFormatFileInfo = fileService.formatFileInfo?.bind(fileService);
         if (originalFormatFileInfo) {
-          fileService.formatFileInfo = function(file) {
+          fileService.formatFileInfo = function (file) {
             const formatted = originalFormatFileInfo(file);
             if (formatted && formatted.url) {
               formatted.url = transformFileUrl(formatted.url);

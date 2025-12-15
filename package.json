@@ -10,19 +10,22 @@
     "seed:example": "node ./scripts/seed.js",
     "start": "strapi start",
     "start:dev": "npm run build && strapi develop",
-    "strapi": "strapi"
+    "strapi": "strapi",
+    "transfer": "strapi transfer --from-token <TOKEN PROD> --exclude files",
+    "transfer:qa": "strapi transfer --to-token <TOKEN LOCAL>"
+
   },
   "dependencies": {
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@strapi/plugin-cloud": "5.32.0",
     "@strapi/plugin-documentation": "5.32.0",
     "@strapi/plugin-users-permissions": "5.32.0",
-    "@strapi/provider-upload-aws-s3": "5.32.0",
     "@strapi/strapi": "5.32.0",
     "better-sqlite3": "12.5.0",
     "fs-extra": "11.3.2",
     "mime-types": "3.0.2",
     "pg": "8.16.3",
+    "provider-upload-aws-s3-cf": "^1.0.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
