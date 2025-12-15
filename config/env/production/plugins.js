@@ -1,6 +1,6 @@
 module.exports = ({ env }) => {
   // Log de configuración de S3 al iniciar
-  const resourcesCdn = env('RESOURCES_CDN');
+  const resourcesCdn = process.env.RESOURCES_CDN;
   // Asegurar que el CDN sea una URL absoluta
   const baseUrl = resourcesCdn && !resourcesCdn.startsWith('http') 
     ? `https://${resourcesCdn}` 
@@ -17,12 +17,12 @@ module.exports = ({ env }) => {
           baseUrl: baseUrl,
           s3Options: {
             credentials: {
-              accessKeyId: env('AWS_ACCESS_KEY_ID'),
-              secretAccessKey: env('AWS_ACCESS_SECRET'),
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_ACCESS_SECRET,
             },
-            region: env('AWS_REGION'),
+            region: process.env.AWS_REGION,
             params: {
-              Bucket: env('AWS_BUCKET'),
+              Bucket: process.env.AWS_BUCKET,
             },
           },
         },
