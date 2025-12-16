@@ -15,50 +15,21 @@
     }
   },
   "attributes": {
-    "siteName": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
     "country": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::country.country"
     },
-    "siteDescription": {
-      "type": "text",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
-    "favicon": {
-      "type": "media",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "multiple": false,
-      "allowedTypes": [
-        "images"
-      ]
-    },
-    "defaultSeo": {
+    "pages": {
       "type": "component",
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
       },
-      "component": "shared.seo",
-      "repeatable": false
+      "component": "shared.page-seo",
+      "repeatable": true,
+      "required": true
     }
   }
 }

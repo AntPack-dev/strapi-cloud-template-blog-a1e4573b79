@@ -61,6 +61,20 @@ export interface SharedMedia extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedPageSeo extends Struct.ComponentSchema {
+  collectionName: 'components_shared_page_seos';
+  info: {
+    displayName: 'PageSeo';
+  };
+  attributes: {
+    defaultSeo: Schema.Attribute.Component<'shared.seo', false>;
+    page: Schema.Attribute.Enumeration<
+      ['home', 'categories', 'contact', 'faq', 'search', 'soon']
+    > &
+      Schema.Attribute.Required;
+  };
+}
+
 export interface SharedQuestion extends Struct.ComponentSchema {
   collectionName: 'components_shared_questions';
   info: {
@@ -165,6 +179,7 @@ declare module '@strapi/strapi' {
       'shared.link': SharedLink;
       'shared.link-file': SharedLinkFile;
       'shared.media': SharedMedia;
+      'shared.page-seo': SharedPageSeo;
       'shared.question': SharedQuestion;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;
