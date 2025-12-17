@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-12-16T23:13:12.493Z"
+    "x-generation-date": "2025-12-17T16:46:41.294Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -9513,6 +9513,9 @@
                           "fourth"
                         ]
                       },
+                      "backgroundColor": {
+                        "type": "string"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time"
@@ -11539,6 +11542,9 @@
                                 "fourth"
                               ]
                             },
+                            "backgroundColor": {
+                              "type": "string"
+                            },
                             "createdAt": {
                               "type": "string",
                               "format": "date-time"
@@ -13232,6 +13238,9 @@
                         "fourth"
                       ]
                     },
+                    "backgroundColor": {
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -14670,6 +14679,9 @@
                   "third",
                   "fourth"
                 ]
+              },
+              "backgroundColor": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
@@ -16527,6 +16539,9 @@
                           "fourth"
                         ]
                       },
+                      "backgroundColor": {
+                        "type": "string"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time"
@@ -18159,6 +18174,9 @@
                     "fourth"
                   ]
                 },
+                "backgroundColor": {
+                  "type": "string"
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -19361,6 +19379,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -21330,6 +21351,9 @@
                         "fourth"
                       ]
                     },
+                    "backgroundColor": {
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -23141,6 +23165,9 @@
                         "fourth"
                       ]
                     },
+                    "backgroundColor": {
+                      "type": "string"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -23350,7 +23377,8 @@
             "required": [
               "slug",
               "name",
-              "order"
+              "order",
+              "backgroundColor"
             ],
             "type": "object",
             "properties": {
@@ -23396,6 +23424,9 @@
                   "third",
                   "fourth"
                 ]
+              },
+              "backgroundColor": {
+                "type": "string"
               },
               "locale": {
                 "type": "string"
@@ -23458,7 +23489,8 @@
         "required": [
           "slug",
           "name",
-          "order"
+          "order",
+          "backgroundColor"
         ],
         "properties": {
           "id": {
@@ -24443,6 +24475,9 @@
                           "fourth"
                         ]
                       },
+                      "backgroundColor": {
+                        "type": "string"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time"
@@ -24587,6 +24622,9 @@
               "third",
               "fourth"
             ]
+          },
+          "backgroundColor": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -25716,6 +25754,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -27085,6 +27126,9 @@
                       "third",
                       "fourth"
                     ]
+                  },
+                  "backgroundColor": {
+                    "type": "string"
                   },
                   "createdAt": {
                     "type": "string",
