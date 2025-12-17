@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_shared_page_seos",
+  "info": {
+    "displayName": "PageSeo"
+  },
+  "options": {},
+  "attributes": {
+    "page": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "home",
+        "categories",
+        "contact",
+        "faq",
+        "search",
+        "soon"
+      ]
+    },
+    "defaultSeo": {
+      "type": "component",
+      "component": "shared.seo",
+      "repeatable": false
+    }
+  },
+  "config": {}
+}
