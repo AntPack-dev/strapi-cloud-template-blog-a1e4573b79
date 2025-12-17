@@ -124,6 +124,7 @@ export interface SharedSeo extends Struct.ComponentSchema {
       ['co', 'pa', 'gy', 'hn', 'sv', 'ec', 'pe', 'tt', 'jm']
     > &
       Schema.Attribute.Required;
+    keywords: Schema.Attribute.String;
     languageCode: Schema.Attribute.String & Schema.Attribute.Required;
     metaDescription: Schema.Attribute.Text &
       Schema.Attribute.Required &
