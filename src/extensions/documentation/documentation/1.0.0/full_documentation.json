@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-12-16T23:13:12.493Z"
+    "x-generation-date": "2025-12-18T19:24:11.544Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -7574,7 +7574,8 @@
               "slug",
               "imageCard",
               "cover",
-              "currentStatus"
+              "currentStatus",
+              "readingTime"
             ],
             "type": "object",
             "properties": {
@@ -7729,6 +7730,9 @@
                   "example": "string or id"
                 }
               },
+              "readingTime": {
+                "type": "integer"
+              },
               "locale": {
                 "type": "string"
               },
@@ -7792,7 +7796,8 @@
           "slug",
           "imageCard",
           "cover",
-          "currentStatus"
+          "currentStatus",
+          "readingTime"
         ],
         "properties": {
           "id": {
@@ -9342,6 +9347,9 @@
                                             }
                                           }
                                         },
+                                        "readingTime": {
+                                          "type": "integer"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -9512,6 +9520,9 @@
                           "third",
                           "fourth"
                         ]
+                      },
+                      "backgroundColor": {
+                        "type": "string"
                       },
                       "createdAt": {
                         "type": "string",
@@ -9734,6 +9745,9 @@
                 }
               }
             }
+          },
+          "readingTime": {
+            "type": "integer"
           },
           "createdAt": {
             "type": "string",
@@ -10104,6 +10118,9 @@
             ]
           },
           "slug": {
+            "type": "string"
+          },
+          "keywords": {
             "type": "string"
           }
         }
@@ -11539,6 +11556,9 @@
                                 "fourth"
                               ]
                             },
+                            "backgroundColor": {
+                              "type": "string"
+                            },
                             "createdAt": {
                               "type": "string",
                               "format": "date-time"
@@ -12042,6 +12062,9 @@
                       }
                     }
                   }
+                },
+                "readingTime": {
+                  "type": "integer"
                 },
                 "createdAt": {
                   "type": "string",
@@ -13061,6 +13084,9 @@
                                           }
                                         }
                                       },
+                                      "readingTime": {
+                                        "type": "integer"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -13231,6 +13257,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -14540,6 +14569,9 @@
                               }
                             }
                           },
+                          "readingTime": {
+                            "type": "integer"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -14670,6 +14702,9 @@
                   "third",
                   "fourth"
                 ]
+              },
+              "backgroundColor": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
@@ -16356,6 +16391,9 @@
                                             }
                                           }
                                         },
+                                        "readingTime": {
+                                          "type": "integer"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -16526,6 +16564,9 @@
                           "third",
                           "fourth"
                         ]
+                      },
+                      "backgroundColor": {
+                        "type": "string"
                       },
                       "createdAt": {
                         "type": "string",
@@ -18028,6 +18069,9 @@
                                 }
                               }
                             },
+                            "readingTime": {
+                              "type": "integer"
+                            },
                             "createdAt": {
                               "type": "string",
                               "format": "date-time"
@@ -18158,6 +18202,9 @@
                     "third",
                     "fourth"
                   ]
+                },
+                "backgroundColor": {
+                  "type": "string"
                 },
                 "createdAt": {
                   "type": "string",
@@ -19191,6 +19238,9 @@
                                           }
                                         }
                                       },
+                                      "readingTime": {
+                                        "type": "integer"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -19361,6 +19411,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -21159,6 +21212,9 @@
                                           }
                                         }
                                       },
+                                      "readingTime": {
+                                        "type": "integer"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -21329,6 +21385,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -22970,6 +23029,9 @@
                                           }
                                         }
                                       },
+                                      "readingTime": {
+                                        "type": "integer"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -23140,6 +23202,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -23350,7 +23415,8 @@
             "required": [
               "slug",
               "name",
-              "order"
+              "order",
+              "backgroundColor"
             ],
             "type": "object",
             "properties": {
@@ -23396,6 +23462,9 @@
                   "third",
                   "fourth"
                 ]
+              },
+              "backgroundColor": {
+                "type": "string"
               },
               "locale": {
                 "type": "string"
@@ -23458,7 +23527,8 @@
         "required": [
           "slug",
           "name",
-          "order"
+          "order",
+          "backgroundColor"
         ],
         "properties": {
           "id": {
@@ -24272,6 +24342,9 @@
                                             }
                                           }
                                         },
+                                        "readingTime": {
+                                          "type": "integer"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -24443,6 +24516,9 @@
                           "fourth"
                         ]
                       },
+                      "backgroundColor": {
+                        "type": "string"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time"
@@ -24587,6 +24663,9 @@
               "third",
               "fourth"
             ]
+          },
+          "backgroundColor": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -25546,6 +25625,9 @@
                                           }
                                         }
                                       },
+                                      "readingTime": {
+                                        "type": "integer"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -25716,6 +25798,9 @@
                         "third",
                         "fourth"
                       ]
+                    },
+                    "backgroundColor": {
+                      "type": "string"
                     },
                     "createdAt": {
                       "type": "string",
@@ -26955,6 +27040,9 @@
                                   }
                                 }
                               },
+                              "readingTime": {
+                                "type": "integer"
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -27085,6 +27173,9 @@
                       "third",
                       "fourth"
                     ]
+                  },
+                  "backgroundColor": {
+                    "type": "string"
                   },
                   "createdAt": {
                     "type": "string",

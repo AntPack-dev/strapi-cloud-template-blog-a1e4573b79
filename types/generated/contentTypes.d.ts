@@ -528,6 +528,13 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       'api::main-category.main-category'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    readingTime: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     seo: Schema.Attribute.Component<'shared.seo', false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -999,6 +1006,13 @@ export interface ApiMainCategoryMainCategory
     };
   };
   attributes: {
+    backgroundColor: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     categories: Schema.Attribute.Relation<
       'oneToMany',
       'api::category.category'

@@ -175,6 +175,15 @@
       "relation": "manyToMany",
       "target": "api::global-check.global-check",
       "inversedBy": "articles"
+    },
+    "readingTime": {
+      "type": "integer",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "required": true
     }
   }
 }

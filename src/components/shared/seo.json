@@ -75,6 +75,9 @@
     },
     "slug": {
       "type": "string"
+    },
+    "keywords": {
+      "type": "string"
     }
   }
 }
