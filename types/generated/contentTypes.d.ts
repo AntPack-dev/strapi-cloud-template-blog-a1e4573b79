@@ -468,6 +468,12 @@ export interface ApiAboutUsAboutUs extends Struct.SingleTypeSchema {
       'api::about-us.about-us'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    Seo: Schema.Attribute.Component<'shared.seo', false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
