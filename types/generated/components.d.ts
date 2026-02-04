@@ -1,5 +1,18 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface SharedAbout extends Struct.ComponentSchema {
+  collectionName: 'components_shared_abouts';
+  info: {
+    displayName: 'about';
+  };
+  attributes: {
+    cover: Schema.Attribute.Media<'images' | 'files'>;
+    SEO: Schema.Attribute.Component<'shared.seo', false>;
+    text: Schema.Attribute.Text & Schema.Attribute.Required;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedArticles extends Struct.ComponentSchema {
   collectionName: 'components_shared_articles';
   info: {
@@ -175,6 +188,7 @@ export interface SharedSocialMediaLink extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'shared.about': SharedAbout;
       'shared.articles': SharedArticles;
       'shared.input': SharedInput;
       'shared.link': SharedLink;
