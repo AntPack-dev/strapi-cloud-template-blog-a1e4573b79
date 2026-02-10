@@ -600,6 +600,10 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 80;
       }>;
+    favoriteLists: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::favorite-list.favorite-list'
+    >;
     global_checks: Schema.Attribute.Relation<
       'manyToMany',
       'api::global-check.global-check'
@@ -1007,6 +1011,51 @@ export interface ApiFaqFaq extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiFavoriteListFavoriteList
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'favorite_lists';
+  info: {
+    description: 'User favorite lists for organizing articles';
+    displayName: 'Favorite List';
+    name: 'favorite-list';
+    pluralName: 'favorite-lists';
+    singularName: 'favorite-list';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    isDefault: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::favorite-list.favorite-list'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+        minLength: 1;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
   };
 }
 
@@ -1772,6 +1821,7 @@ export interface PluginUsersPermissionsUser
     draftAndPublish: false;
   };
   attributes: {
+    biography: Schema.Attribute.Text;
     blocked: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<false>;
@@ -1787,12 +1837,17 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    favoriteLists: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::favorite-list.favorite-list'
+    >;
     firstName: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 50;
         minLength: 1;
       }>;
+    imageUrl: Schema.Attribute.String;
     lastName: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -1814,6 +1869,11 @@ export interface PluginUsersPermissionsUser
     provider: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'local'>;
+    providers: Schema.Attribute.JSON &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<{
+        local: true;
+      }>;
     publishedAt: Schema.Attribute.DateTime;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     role: Schema.Attribute.Relation<
@@ -1821,6 +1881,9 @@ export interface PluginUsersPermissionsUser
       'plugin::users-permissions.role'
     > &
       Schema.Attribute.Required;
+    statusProfile: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'active'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1854,6 +1917,7 @@ declare module '@strapi/strapi' {
       'api::contact.contact': ApiContactContact;
       'api::country.country': ApiCountryCountry;
       'api::faq.faq': ApiFaqFaq;
+      'api::favorite-list.favorite-list': ApiFavoriteListFavoriteList;
       'api::footer.footer': ApiFooterFooter;
       'api::global-check.global-check': ApiGlobalCheckGlobalCheck;
       'api::like.like': ApiLikeLike;

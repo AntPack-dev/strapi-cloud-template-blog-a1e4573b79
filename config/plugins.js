@@ -39,7 +39,7 @@ module.exports = ({ env }) => {
     'users-permissions': {
       config: {
         register: {
-          allowedFields: ['firstName', 'lastName', 'provider', 'providerId'],
+          allowedFields: ['firstName', 'lastName', 'provider', 'providers', 'providerId', 'imageUrl', 'biography', 'statusProfile'],
         },
       },
     },
@@ -66,6 +66,7 @@ module.exports = ({ env }) => {
                 lastname: profile.family_name,
                 provider: 'google',
                 providerId: profile.id,
+                imageUrl: profile.picture,
               });
             }
           ),
@@ -80,7 +81,7 @@ module.exports = ({ env }) => {
               clientSecret: env('FACEBOOK_APP_SECRET'),
               scope: ['email'],
               callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('facebook'),
-              profileFields: ['id', 'displayName', 'name', 'emails'],
+              profileFields: ['id', 'displayName', 'name', 'emails', 'photos'],
             },
             (request, accessToken, refreshToken, profile, done) => {
               done(null, {
@@ -89,6 +90,7 @@ module.exports = ({ env }) => {
                 lastname: profile.name ? profile.name.familyName : null,
                 provider: 'facebook',
                 providerId: profile.id,
+                imageUrl: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
               });
             }
           ),

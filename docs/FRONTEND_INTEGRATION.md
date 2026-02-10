@@ -91,12 +91,21 @@ async function loginUser(identifier, password) {
     const data = await response.json();
 
     if (response.ok) {
-      // Guardar el JWT en localStorage
-      localStorage.setItem('jwt', data.jwt);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Obtener JWT del header
+      const authHeader = response.headers.get('Authorization');
+      const jwt = authHeader ? authHeader.replace('Bearer ', '') : null;
       
-      console.log('Usuario logueado:', data.user);
-      return { success: true, user: data.user, jwt: data.jwt };
+      if (jwt) {
+        // Guardar el JWT en localStorage
+        localStorage.setItem('jwt', jwt);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        console.log('Usuario logueado:', data.user);
+        return { success: true, user: data.user, jwt: jwt };
+      } else {
+        console.error('JWT no encontrado en headers');
+        return { success: false, error: 'JWT no encontrado' };
+      }
     } else {
       console.error('Error en login:', data);
       return { success: false, error: data.error };
@@ -112,12 +121,43 @@ loginUser('john@example.com', 'Password123!')
   .then(result => {
     if (result.success) {
       console.log('Login exitoso');
+      console.log('JWT guardado:', result.jwt);
       // Redirigir al usuario o actualizar UI
     } else {
       console.log('Error:', result.error);
     }
   });
 ```
+
+### **Respuesta del Login**
+
+La respuesta del login incluye el campo `provider` que indica el método de registro:
+
+```json
+{
+  "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "provider": "local",        // "local", "google", o "facebook"
+    "imageUrl": "https://example.com/profile.jpg",
+    "biography": "Desarrollador apasionado",
+    "statusProfile": "active",
+    "confirmed": true,
+    "blocked": false,
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Importante**: El campo `provider` siempre viene en la respuesta del login, permitiendo identificar si el usuario se registró con:
+- **Email y contraseña** (`"local"`)
+- **Google OAuth** (`"google"`)  
+- **Facebook OAuth** (`"facebook"`)
 
 ---
 
@@ -138,7 +178,1250 @@ logoutUser();
 
 ---
 
-## 📝 4. Crear un Comentario
+## 🌐 4. Autenticación Social (Google y Facebook)
+
+### **Registro con Google**
+
+```javascript
+// auth/google.js
+import API_URL from './config';
+
+// Redirigir al usuario a Google para autenticación
+function loginWithGoogle() {
+  window.location.href = `${API_URL}/api/connect/google`;
+}
+
+// Después de la autenticación, Google redirigirá al usuario a tu callback URL
+// El usuario llegará con el token JWT en la URL
+```
+
+### **Registro con Facebook**
+
+```javascript
+// auth/facebook.js
+import API_URL from './config';
+
+// Redirigir al usuario a Facebook para autenticación
+function loginWithFacebook() {
+  window.location.href = `${API_URL}/api/connect/facebook`;
+}
+
+// Después de la autenticación, Facebook redirigirá al usuario a tu callback URL
+// El usuario llegará con el token JWT en la URL
+```
+
+### **Manejar el Callback de Autenticación Social**
+
+```javascript
+// auth/socialCallback.js
+import API_URL from './config';
+
+// Esta función se ejecuta cuando el usuario regresa de Google/Facebook
+function handleSocialCallback() {
+  // Obtener el JWT de los parámetros de la URL (para compatibilidad)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlJwt = urlParams.get('jwt');
+  
+  if (urlJwt) {
+    // Guardar el JWT y los datos del usuario (método antiguo)
+    localStorage.setItem('jwt', urlJwt);
+    
+    // Obtener los datos del usuario usando el JWT
+    fetch(`${API_URL}/api/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${urlJwt}`,
+      },
+    })
+    .then(response => response.json())
+    .then(userData => {
+      localStorage.setItem('user', JSON.stringify(userData));
+      console.log('Usuario autenticado con redes sociales:', userData);
+      
+      // Redirigir al dashboard o página principal
+      window.location.href = '/dashboard';
+    })
+    .catch(error => {
+      console.error('Error al obtener datos del usuario:', error);
+    });
+  } else {
+    // Nuevo método: obtener JWT de headers de la respuesta del callback
+    // Esto se maneja automáticamente por el backend
+    console.log('Autenticación social procesada por el backend');
+    
+    // Redirigir al dashboard o página principal
+    window.location.href = '/dashboard';
+  }
+}
+
+// Ejecutar esta función en tu página de callback
+handleSocialCallback();
+```
+
+### **Respuesta del Login Social**
+
+Cuando un usuario se autentica con Google o Facebook, la respuesta del endpoint `/api/users/me` también incluye el campo `provider`:
+
+```json
+{
+  "data": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "provider": "google",       // "google" para login con Google
+    "imageUrl": "https://lh3.googleusercontent.com/photo.jpg",
+    "biography": null,
+    "statusProfile": "active",
+    "confirmed": true,
+    "blocked": false,
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Ejemplo con Facebook:**
+```json
+{
+  "data": {
+    "id": 2,
+    "username": "jane_doe",
+    "email": "jane@example.com",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "provider": "facebook",     // "facebook" para login con Facebook
+    "imageUrl": "https://graph.facebook.com/photo.jpg",
+    "biography": null,
+    "statusProfile": "active",
+    "confirmed": true,
+    "blocked": false,
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Importante**: Tanto en el login local como en el login social, el campo `provider` siempre está presente y permite identificar el método de autenticación utilizado.
+
+### **Verificar Provider Después del Login**
+
+```javascript
+// auth/checkLoginProvider.js
+import API_URL from './config';
+
+// Función para verificar el método de registro después del login
+function checkLoginProvider() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  if (user) {
+    const provider = user.provider;
+    console.log(`Usuario registrado con: ${provider}`);
+    
+    // Mostrar不同的 UI basado en el provider
+    switch(provider) {
+      case 'local':
+        console.log('Mostrar opciones para cambio de contraseña');
+        break;
+      case 'google':
+        console.log('Mostrar badge de Google, ocultar opción de cambio de contraseña');
+        break;
+      case 'facebook':
+        console.log('Mostrar badge de Facebook, ocultar opción de cambio de contraseña');
+        break;
+    }
+    
+    return provider;
+  }
+  
+  return null;
+}
+
+// Usar después del login
+loginUser('john@example.com', 'Password123!')
+  .then(result => {
+    if (result.success) {
+      const provider = checkLoginProvider();
+      console.log(`Login exitoso con provider: ${provider}`);
+    }
+  });
+```
+
+### **Botones de Autenticación Social**
+
+```javascript
+// components/SocialAuthButtons.js
+export function SocialAuthButtons() {
+  return (
+    <div className="social-auth-container">
+      <button 
+        onClick={loginWithGoogle}
+        className="google-btn"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '12px 24px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          background: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        <img 
+          src="https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Google-512.png" 
+          alt="Google" 
+          width="20"
+          height="20"
+        />
+        Continuar con Google
+      </button>
+      
+      <button 
+        onClick={loginWithFacebook}
+        className="facebook-btn"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '12px 24px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          background: '#4267B2',
+          color: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        <img 
+          src="https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Facebook-512.png" 
+          alt="Facebook" 
+          width="20"
+          height="20"
+        />
+        Continuar con Facebook
+      </button>
+    </div>
+  );
+}
+```
+
+### **Datos del Usuario con Perfil Completo**
+
+Los usuarios ahora incluyen campos adicionales para biografía y estado del perfil:
+
+```javascript
+// Ejemplo de respuesta de usuario con perfil completo
+{
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "provider": "local", // "local", "google", o "facebook"
+  "imageUrl": "https://example.com/profile.jpg",
+  "biography": "Desarrollador apasionado por el código limpio",
+  "statusProfile": "active", // "active", "inactive", "deactivated"
+  "confirmed": true,
+  "blocked": false,
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### **Campo Provider - Método de Registro**
+
+El campo `provider` indica cómo se registró el usuario originalmente. Con el nuevo sistema de múltiples providers, los usuarios pueden tener varios métodos de autenticación asociados:
+
+```javascript
+// Valores posibles del campo provider (método principal)
+"provider": "local"      // Registro original con email y contraseña
+"provider": "google"     // Registro original con Google OAuth
+"provider": "facebook"   // Registro original con Facebook OAuth
+
+// Nuevo campo providers (todos los métodos conectados)
+"providers": {
+  "local": true,                    // Si tiene contraseña
+  "google": {                        // Si conectó Google
+    "providerId": "123456789",
+    "connectedAt": "2024-01-15T10:30:00.000Z",
+    "profile": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "imageUrl": "https://lh3.googleusercontent.com/photo.jpg"
+    }
+  },
+  "facebook": {                      // Si conectó Facebook
+    "providerId": "987654321",
+    "connectedAt": "2024-01-16T14:20:00.000Z",
+    "profile": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "imageUrl": "https://graph.facebook.com/photo.jpg"
+    }
+  }
+}
+```
+
+#### **Ejemplo de Usuario con Múltiples Providers (Respuesta Pública)**
+
+```json
+{
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "provider": "local",              // Método original de registro
+  "providers": [                   // ← Array simple sin datos sensibles
+    "local",
+    "google", 
+    "facebook"
+  ],
+  "imageUrl": "https://example.com/profile.jpg",
+  "biography": "Desarrollador apasionado",
+  "statusProfile": "active",
+  "confirmed": true,
+  "blocked": false,
+  "createdAt": "2024-01-10T08:00:00.000Z",
+  "updatedAt": "2024-01-16T14:20:00.000Z"
+}
+```
+
+#### **Respuesta del Login y Registro**
+
+**Headers:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Body:**
+```json
+{
+  "user": {
+    "id": 4,
+    "username": "custom_avatar_user",
+    "email": "custom@example.com",
+    "firstName": "Custom",
+    "lastName": "Avatar",
+    "providers": [
+      "local",
+      "google",
+      "facebook"
+    ]
+  }
+}
+```
+
+**Importante:** 
+- El JWT viene en el header `Authorization`
+- La respuesta contiene solo los campos básicos del usuario
+- `providers` es un array simple con los nombres de los providers conectados
+
+#### **Endpoint getUserInfo (Datos Completos)**
+
+```javascript
+// users/getUserInfo.js
+import API_URL from './config';
+
+async function getUserInfo() {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users-permissions/multi-provider/user-info`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log('Información completa del usuario:', data.user);
+      return { success: true, user: data.user };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+#### **Respuesta de getUserInfo (Datos Completos con IDs)**
+
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "provider": "local",
+    "providers": {                    // ← Objeto completo con datos sensibles
+      "local": true,
+      "google": {
+        "providerId": "123456789",
+        "connectedAt": "2024-01-15T10:30:00.000Z",
+        "profile": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "imageUrl": "https://lh3.googleusercontent.com/photo.jpg"
+        }
+      },
+      "facebook": {
+        "providerId": "987654321",
+        "connectedAt": "2024-01-16T14:20:00.000Z",
+        "profile": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "imageUrl": "https://graph.facebook.com/photo.jpg"
+        }
+      }
+    },
+    "imageUrl": "https://example.com/profile.jpg",
+    "biography": "Desarrollador apasionado",
+    "statusProfile": "active",
+    "confirmed": true,
+    "blocked": false,
+    "role": {
+      "id": 1,
+      "name": "Authenticated",
+      "type": "authenticated"
+    },
+    "createdAt": "2024-01-10T08:00:00.000Z",
+    "updatedAt": "2024-01-16T14:20:00.000Z"
+  }
+}
+```
+
+#### **Obtener Todos los Providers del Usuario**
+
+```javascript
+// users/getAllProviders.js
+import API_URL from './config';
+
+async function getUserProviders() {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users-permissions/multi-provider/providers`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log('Providers del usuario:', data);
+      return { 
+        success: true, 
+        providers: data.providers,
+        providersData: data.providersData
+      };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+#### **Desconectar un Provider**
+
+```javascript
+// users/disconnectProvider.js
+import API_URL from './config';
+
+async function disconnectProvider(providerName) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users-permissions/multi-provider/providers/${providerName}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`Provider ${providerName} desconectado:`, data);
+      return { success: true, message: data.message, user: data.user };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+#### **Componente React para Gestión de Providers**
+
+```javascript
+// components/ProviderManager.js
+import React, { useState, useEffect } from 'react';
+
+export function ProviderManager() {
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadProviders();
+  }, []);
+
+  const loadProviders = async () => {
+    const result = await getUserProviders();
+    if (result.success) {
+      setProviders(result.providers);
+    }
+  };
+
+  const handleDisconnect = async (provider) => {
+    setLoading(true);
+    const result = await disconnectProvider(provider);
+    if (result.success) {
+      await loadProviders(); // Recargar providers
+      alert('Provider desconectado exitosamente');
+    } else {
+      alert('Error al desconectar provider: ' + result.error);
+    }
+    setLoading(false);
+  };
+
+  const getProviderIcon = (provider) => {
+    switch(provider) {
+      case 'local': return '📧';
+      case 'google': return '🔍';
+      case 'facebook': return '📘';
+      default: return '❓';
+    }
+  };
+
+  const getProviderName = (provider) => {
+    switch(provider) {
+      case 'local': return 'Email y Contraseña';
+      case 'google': return 'Google';
+      case 'facebook': return 'Facebook';
+      default: return 'Desconocido';
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '600px' }}>
+      <h3>Métodos de Autenticación Conectados</h3>
+      
+      {providers.map(provider => (
+        <div
+          key={provider}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px',
+            margin: '8px 0',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#f9f9f9'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '20px' }}>{getProviderIcon(provider)}</span>
+            <span>{getProviderName(provider)}</span>
+          </div>
+          
+          {provider !== 'local' && providers.length > 1 && (
+            <button
+              onClick={() => handleDisconnect(provider)}
+              disabled={loading}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {loading ? 'Procesando...' : 'Desconectar'}
+            </button>
+          )}
+        </div>
+      ))}
+      
+      <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+        <p>• Puedes conectar múltiples métodos de autenticación</p>
+        <p>• Debes mantener al menos un método conectado</p>
+        <p>• El método local no se puede desconectar si tienes contraseña</p>
+      </div>
+    </div>
+  );
+}
+```
+
+#### **Actualizar Imagen de Perfil desde Provider**
+
+```javascript
+// users/updateProfileImage.js
+import API_URL from './config';
+
+async function updateProfileImageFromProvider(provider) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users-permissions/multi-provider/update-profile-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        provider: provider // 'google' o 'facebook'
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log('Imagen de perfil actualizada:', data.user);
+      return { 
+        success: true, 
+        message: data.message,
+        user: data.user
+      };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+#### **Componente React para Gestión de Imagen de Perfil**
+
+```javascript
+// components/ProfileImageManager.js
+import React, { useState, useEffect } from 'react';
+
+export function ProfileImageManager({ user, onUserUpdate }) {
+  const [loading, setLoading] = useState(false);
+  const [providers, setProviders] = useState([]);
+
+  useEffect(() => {
+    loadProviders();
+  }, []);
+
+  const loadProviders = async () => {
+    const result = await getUserProviders();
+    if (result.success) {
+      setProviders(result.providersData);
+    }
+  };
+
+  const updateImageFromProvider = async (provider) => {
+    setLoading(true);
+    const result = await updateProfileImageFromProvider(provider);
+    if (result.success) {
+      onUserUpdate(result.user); // Actualizar usuario en el componente padre
+      alert('Imagen de perfil actualizada exitosamente');
+    } else {
+      alert('Error al actualizar imagen: ' + result.error);
+    }
+    setLoading(false);
+  };
+
+  const getProviderIcon = (provider) => {
+    switch(provider) {
+      case 'google': return '🔍';
+      case 'facebook': return '📘';
+      default: return '❓';
+    }
+  };
+
+  const getProviderName = (provider) => {
+    switch(provider) {
+      case 'google': return 'Google';
+      case 'facebook': return 'Facebook';
+      default: return 'Desconocido';
+    }
+  };
+
+  const isProviderImage = (imageUrl) => {
+    return imageUrl && (
+      imageUrl.includes('googleusercontent.com') || 
+      imageUrl.includes('graph.facebook.com')
+    );
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '600px' }}>
+      <h3>Gestión de Imagen de Perfil</h3>
+      
+      {/* Imagen actual */}
+      <div style={{ marginBottom: '20px' }}>
+        <h4>Imagen Actual:</h4>
+        {user.imageUrl ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img 
+              src={user.imageUrl} 
+              alt="Profile" 
+              style={{ 
+                width: '80px', 
+                height: '80px', 
+                borderRadius: '50%',
+                objectFit: 'cover'
+              }}
+            />
+            <div>
+              <p style={{ margin: 0 }}>
+                {isProviderImage(user.imageUrl) ? 'Imagen de red social' : 'Imagen personalizada'}
+              </p>
+              <small style={{ color: '#666' }}>
+                {user.imageUrl}
+              </small>
+            </div>
+          </div>
+        ) : (
+          <p>Sin imagen de perfil</p>
+        )}
+      </div>
+
+      {/* Opciones de actualización */}
+      <div>
+        <h4>Actualizar imagen desde:</h4>
+        {Object.entries(providers)
+          .filter(([key, value]) => key !== 'local' && value.profile?.imageUrl)
+          .map(([provider, data]) => (
+            <div
+              key={provider}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px',
+                margin: '8px 0',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                backgroundColor: '#f9f9f9'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>{getProviderIcon(provider)}</span>
+                <div>
+                  <div>{getProviderName(provider)}</div>
+                  <small style={{ color: '#666' }}>
+                    Conectado el {new Date(data.connectedAt).toLocaleDateString()}
+                  </small>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {data.profile.imageUrl && (
+                  <img 
+                    src={data.profile.imageUrl} 
+                    alt={`${provider} profile`}
+                    style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      borderRadius: '50%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                )}
+                <button
+                  onClick={() => updateImageFromProvider(provider)}
+                  disabled={loading}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {loading ? 'Actualizando...' : 'Usar esta imagen'}
+                </button>
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+        <p>• Puedes actualizar tu imagen de perfil usando la de tus redes sociales</p>
+        <p>• Si tienes una imagen personalizada, no será reemplazada automáticamente</p>
+        <p>• La imagen se actualizará inmediatamente en todo tu perfil</p>
+      </div>
+    </div>
+  );
+}
+```
+
+#### **Verificar Método de Registro**
+
+```javascript
+// users/checkProvider.js
+import API_URL from './config';
+
+async function getUserProvider(userId) {
+  const jwt = localStorage.getItem('jwt');
+
+  try {
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      const provider = data.data.provider;
+      console.log(`Método de registro: ${provider}`);
+      
+      // Ejemplo de lógica basada en el provider
+      switch(provider) {
+        case 'local':
+          console.log('Usuario registrado con email y contraseña');
+          break;
+        case 'google':
+          console.log('Usuario registrado con Google');
+          break;
+        case 'facebook':
+          console.log('Usuario registrado con Facebook');
+          break;
+        default:
+          console.log('Método de registro desconocido');
+      }
+      
+      return { success: true, provider };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+#### **Componente React para Mostrar Método de Registro**
+
+```javascript
+// components/UserProviderBadge.js
+import React from 'react';
+
+export function UserProviderBadge({ provider }) {
+  const getProviderInfo = (provider) => {
+    switch(provider) {
+      case 'local':
+        return {
+          text: 'Email',
+          icon: '📧',
+          color: '#007bff',
+          bgColor: '#e7f3ff'
+        };
+      case 'google':
+        return {
+          text: 'Google',
+          icon: '🔍',
+          color: '#4285f4',
+          bgColor: '#f8f9fa'
+        };
+      case 'facebook':
+        return {
+          text: 'Facebook',
+          icon: '📘',
+          color: '#1877f2',
+          bgColor: '#e7f3ff'
+        };
+      default:
+        return {
+          text: 'Desconocido',
+          icon: '❓',
+          color: '#6c757d',
+          bgColor: '#f8f9fa'
+        };
+    }
+  };
+
+  const providerInfo = getProviderInfo(provider);
+
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '4px 12px',
+        backgroundColor: providerInfo.bgColor,
+        color: providerInfo.color,
+        borderRadius: '16px',
+        fontSize: '12px',
+        fontWeight: '500',
+        border: `1px solid ${providerInfo.color}20`
+      }}
+    >
+      <span style={{ fontSize: '14px' }}>{providerInfo.icon}</span>
+      <span>{providerInfo.text}</span>
+    </div>
+  );
+}
+
+// Uso en el perfil del usuario
+function UserProfile({ user }) {
+  return (
+    <div>
+      <h2>{user.firstName} {user.lastName}</h2>
+      <p>Email: {user.email}</p>
+      <UserProviderBadge provider={user.provider} />
+    </div>
+  );
+}
+```
+
+### **Actualizar Perfil de Usuario**
+
+```javascript
+// users/updateProfile.js
+import API_URL from './config';
+
+async function updateProfile(userId, profileData) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        data: profileData, // { firstName, lastName, biography, imageUrl, etc. }
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log('Perfil actualizado:', data.data);
+      return { success: true, user: data.data };
+    } else {
+      console.error('Error al actualizar perfil:', data);
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('Error de red:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Ejemplo de uso
+updateProfile(1, {
+  firstName: 'John',
+  lastName: 'Doe',
+  biography: 'Soy un desarrollador apasionado por las nuevas tecnologías.',
+  imageUrl: 'https://example.com/new-avatar.jpg'
+})
+  .then(result => {
+    if (result.success) {
+      console.log('Perfil actualizado exitosamente');
+      // Actualizar UI con nuevos datos
+    }
+  });
+```
+
+### **Desactivar Cuenta de Usuario**
+
+```javascript
+// users/deactivateAccount.js
+import API_URL from './config';
+
+async function deactivateAccount(userId) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        data: {
+          statusProfile: 'deactivated'
+        }
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log('Cuenta desactivada:', data.data);
+      
+      // Cerrar sesión automáticamente
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('user');
+      
+      return { success: true, message: 'Cuenta desactivada exitosamente' };
+    } else {
+      console.error('Error al desactivar cuenta:', data);
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('Error de red:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Ejemplo de uso
+deactivateAccount(1)
+  .then(result => {
+    if (result.success) {
+      console.log('Cuenta desactivada');
+      // Redirigir a página de despedida o login
+      window.location.href = '/goodbye';
+    }
+  });
+```
+
+### **Componente de Perfil de Usuario Completo**
+
+```javascript
+// components/CompleteUserProfile.js
+export function CompleteUserProfile({ user, onUpdate, onDeactivate }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    biography: user.biography || '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate(user.id, formData);
+    setIsEditing(false);
+  };
+
+  const handleDeactivate = () => {
+    if (window.confirm('¿Estás seguro de que quieres desactivar tu cuenta? Esta acción puede ser reversible.')) {
+      onDeactivate(user.id);
+    }
+  };
+
+  return (
+    <div className="user-profile-complete">
+      <div className="profile-header">
+        <div className="user-avatar">
+          {user.imageUrl ? (
+            <img 
+              src={user.imageUrl} 
+              alt={`${user.firstName} ${user.lastName}`}
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                objectFit: 'cover'
+              }}
+            />
+          ) : (
+            <div className="default-avatar" style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              backgroundColor: '#f0f0f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              {user.firstName[0]}{user.lastName[0]}
+            </div>
+          )}
+        </div>
+        
+        <div className="user-info">
+          <h2>{user.firstName} {user.lastName}</h2>
+          <p>@{user.username}</p>
+          <div className="user-status">
+            <span className={`status-badge ${user.statusProfile}`}>
+              {user.statusProfile === 'active' ? '✅ Activo' : 
+               user.statusProfile === 'inactive' ? '⏸️ Inactivo' : 
+               '❌ Desactivado'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="profile-biography">
+        {isEditing ? (
+          <textarea
+            value={formData.biography}
+            onChange={(e) => setFormData({...formData, biography: e.target.value})}
+            placeholder="Cuéntanos sobre ti..."
+            rows={4}
+            style={{
+              width: '100%',
+              padding: '8px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              resize: 'vertical'
+            }}
+          />
+        ) : (
+          <p>{user.biography || 'Este usuario aún no ha agregado una biografía.'}</p>
+        )}
+      </div>
+
+      <div className="profile-actions">
+        {isEditing ? (
+          <div className="edit-actions">
+            <button 
+              onClick={handleSubmit}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginRight: '8px'
+              }}
+            >
+              Guardar
+            </button>
+            <button 
+              onClick={() => setIsEditing(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <div className="normal-actions">
+            <button 
+              onClick={() => setIsEditing(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginRight: '8px'
+              }}
+            >
+              Editar Perfil
+            </button>
+            
+            {user.statusProfile !== 'deactivated' && (
+              <button 
+                onClick={handleDeactivate}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#ff9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Desactivar Cuenta
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### **Mostrar Imagen de Perfil en la UI**
+
+```javascript
+// components/UserProfile.js
+export function UserProfile({ user }) {
+  return (
+    <div className="user-profile">
+      <div className="user-avatar">
+        {user.imageUrl ? (
+          <img 
+            src={user.imageUrl} 
+            alt={`${user.firstName} ${user.lastName}`}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              objectFit: 'cover'
+            }}
+          />
+        ) : (
+          <div className="default-avatar">
+            {user.firstName[0]}{user.lastName[0]}
+          </div>
+        )}
+      </div>
+      <div className="user-info">
+        <h3>{user.firstName} {user.lastName}</h3>
+        <p>@{user.username}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 📝 5. Crear un Comentario
 
 ```javascript
 // comments/createComment.js
@@ -1581,6 +2864,211 @@ getArticlesWithAllCountsOptimized()
     }
   });
 ```
+
+---
+
+## ⭐ 20. Sistema de Listas de Favoritos
+
+### **Añadir Artículo a Favoritos**
+
+```javascript
+// favorites/addToFavorites.js
+import API_URL from './config';
+
+async function addArticleToFavorites(articleId, listId = null) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, error: 'No autenticado' };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/favorite-lists/add-article`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        articleId: articleId,
+        listId: listId // Si no se proporciona, se usa la lista por defecto
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log('Artículo añadido a favoritos:', data.data);
+      return { success: true, list: data.data, message: data.message };
+    } else {
+      console.error('Error al añadir a favoritos:', data);
+      return { success: false, error: data.error?.message || 'Error desconocido' };
+    }
+  } catch (error) {
+    console.error('Error de red:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Ejemplo de uso
+addArticleToFavorites(6) // Añade a lista por defecto
+  .then(result => {
+    if (result.success) {
+      console.log('✅ Artículo añadido a favoritos');
+    }
+  });
+```
+
+### **Verificar si Artículo está en Favoritos**
+
+```javascript
+// favorites/checkFavoriteStatus.js
+import API_URL from './config';
+
+async function checkArticleFavoriteStatus(articleId) {
+  const jwt = localStorage.getItem('jwt');
+
+  if (!jwt) {
+    console.error('Usuario no autenticado');
+    return { success: false, isFavorite: false };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/favorite-lists/check/${articleId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log('Estado de favorito:', data.data);
+      return { 
+        success: true, 
+        isFavorite: data.data.isFavorite,
+        lists: data.data.lists
+      };
+    } else {
+      console.error('Error al verificar favorito:', data);
+      return { success: false, isFavorite: false };
+    }
+  } catch (error) {
+    console.error('Error de red:', error);
+    return { success: false, isFavorite: false };
+  }
+}
+```
+
+### **Componente React para Botón de Favoritos**
+
+```javascript
+// components/FavoriteButton.js
+import React, { useState, useEffect } from 'react';
+
+export function FavoriteButton({ articleId }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, [articleId]);
+
+  const checkFavoriteStatus = async () => {
+    const result = await checkArticleFavoriteStatus(articleId);
+    if (result.success) {
+      setIsFavorite(result.isFavorite);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    setLoading(true);
+    
+    try {
+      if (isFavorite) {
+        // Remover de favoritos
+        setIsFavorite(false);
+      } else {
+        // Añadir a lista por defecto
+        const result = await addArticleToFavorites(articleId);
+        if (result.success) {
+          setIsFavorite(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleToggleFavorite}
+      disabled={loading}
+      style={{
+        padding: '8px 16px',
+        border: 'none',
+        borderRadius: '4px',
+        backgroundColor: isFavorite ? '#ff4444' : '#ffcc00',
+        color: isFavorite ? 'white' : 'black',
+        cursor: loading ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}
+    >
+      {loading ? (
+        'Cargando...'
+      ) : (
+        <>
+          {isFavorite ? '❤️' : '🤍'}
+          {isFavorite ? 'En Favoritos' : 'Añadir a Favoritos'}
+        </>
+      )}
+    </button>
+  );
+}
+```
+
+### **Estructura de Datos de Respuesta**
+
+```javascript
+// Ejemplo de respuesta de lista de favoritos
+{
+  "data": {
+    "id": 1,
+    "name": "favorites",
+    "description": "My favorite articles",
+    "isDefault": true,
+    "articles": [
+      {
+        "id": 6,
+        "title": "Beautiful picture",
+        "slug": "beautiful-picture",
+        "description": "Description of a beautiful picture"
+      }
+    ],
+    "user": {
+      "id": 1,
+      "username": "john"
+    },
+    "createdAt": "2026-02-10T15:30:00.000Z"
+  }
+}
+```
+
+### **Características del Sistema**
+
+✅ **Lista por Defecto**: Se crea automáticamente "favorites" si el usuario no tiene listas  
+✅ **Múltiples Listas**: Los usuarios pueden crear listas personalizadas  
+✅ **Organización**: Cada lista puede tener nombre y descripción  
+✅ **Relaciones**: Muchos a muchos entre artículos y listas  
+✅ **Privacidad**: Cada usuario solo ve sus propias listas  
+✅ **No afecta consultas**: Las consultas de artículos no se ven afectadas  
 
 ---
 
