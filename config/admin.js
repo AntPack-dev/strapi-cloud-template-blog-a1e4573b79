@@ -10,52 +10,53 @@ module.exports = ({ env }) => ({
     options: {
       expiresIn: '7d',
     },
-    providers: [
-      {
-        uid: 'google',
-        displayName: 'Google',
-        icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Google-512.png',
-        createStrategy: (strapi) => new GoogleStrategy({
-          clientID: env('GOOGLE_CLIENT_ID'),
-          clientSecret: env('GOOGLE_CLIENT_SECRET'),
-          scope: [
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile',
-          ],
-          callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('google'),
-        }, (request, accessToken, refreshToken, profile, done) => {
-          done(null, {
-            email: profile.email,
-            firstname: profile.given_name,
-            lastname: profile.family_name,
-            provider: 'google',
-            providerId: profile.id,
-            imageUrl: profile.picture,
-          });
-        }),
-      },
-      {
-        uid: 'facebook',
-        displayName: 'Facebook',
-        icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Facebook-512.png',
-        createStrategy: (strapi) => new FacebookStrategy({
-          clientID: env('FACEBOOK_APP_ID'),
-          clientSecret: env('FACEBOOK_APP_SECRET'),
-          scope: ['email'],
-          callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('facebook'),
-          profileFields: ['id', 'displayName', 'name', 'emails', 'photos'],
-        }, (request, accessToken, refreshToken, profile, done) => {
-          done(null, {
-            email: profile.emails ? profile.emails[0].value : null,
-            firstname: profile.name ? profile.name.givenName : null,
-            lastname: profile.name ? profile.name.familyName : null,
-            provider: 'facebook',
-            providerId: profile.id,
-            imageUrl: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
-          });
-        }),
-      },
-    ],
+    // Comentado para no interferir con nuestro sistema custom de OAuth
+    // providers: [
+    //   {
+    //     uid: 'google',
+    //     displayName: 'Google',
+    //     icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Google-512.png',
+    //     createStrategy: (strapi) => new GoogleStrategy({
+    //       clientID: env('GOOGLE_CLIENT_ID'),
+    //       clientSecret: env('GOOGLE_CLIENT_SECRET'),
+    //       scope: [
+    //         'https://www.googleapis.com/auth/userinfo.email',
+    //         'https://www.googleapis.com/auth/userinfo.profile',
+    //       ],
+    //       callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('google'),
+    //     }, (request, accessToken, refreshToken, profile, done) => {
+    //       done(null, {
+    //         email: profile.email,
+    //         firstname: profile.given_name,
+    //         lastname: profile.family_name,
+    //         provider: 'google',
+    //         providerId: profile.id,
+    //         imageUrl: profile.picture,
+    //       });
+    //     }),
+    //   },
+    //   {
+    //     uid: 'facebook',
+    //     displayName: 'Facebook',
+    //     icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Facebook-512.png',
+    //     createStrategy: (strapi) => new FacebookStrategy({
+    //       clientID: env('FACEBOOK_APP_ID'),
+    //       clientSecret: env('FACEBOOK_APP_SECRET'),
+    //       scope: ['email'],
+    //       callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('facebook'),
+    //       profileFields: ['id', 'displayName', 'name', 'emails', 'photos'],
+    //     }, (request, accessToken, refreshToken, profile, done) => {
+    //       done(null, {
+    //         email: profile.emails ? profile.emails[0].value : null,
+    //         firstname: profile.name ? profile.name.givenName : null,
+    //         lastname: profile.name ? profile.name.familyName : null,
+    //         provider: 'facebook',
+    //         providerId: profile.id,
+    //         imageUrl: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
+    //       });
+    //     }),
+    //   },
+    // ],
   },
   apiToken: {
     salt: env('API_TOKEN_SALT'),
