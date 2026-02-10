@@ -59,7 +59,7 @@ module.exports = ({ env }) => {
                 'https://www.googleapis.com/auth/userinfo.email',
                 'https://www.googleapis.com/auth/userinfo.profile',
               ],
-              callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('google'),
+              callbackURL: 'http://localhost:4060/en/auth/google/callback',
             },
             (request, accessToken, refreshToken, profile, done) => {
               done(null, {
@@ -82,7 +82,7 @@ module.exports = ({ env }) => {
               clientID: process.env.FACEBOOK_APP_ID,
               clientSecret: process.env.FACEBOOK_APP_SECRET,
               scope: ['email'],
-              callbackURL: strapi.admin.services.passport.getStrategyCallbackURL('facebook'),
+              callbackURL: 'http://localhost:4060/en/auth/facebook/callback',
               profileFields: ['id', 'displayName', 'name', 'emails', 'photos'],
             },
             (request, accessToken, refreshToken, profile, done) => {

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Callback</title>
+</head>
+<body>
+    <div id="loading">
+        <h2>Procesando autenticación...</h2>
+        <p>Por favor espera mientras verificamos tu cuenta.</p>
+    </div>
+    
+    <div id="error" style="display: none;">
+        <h2>Error en la autenticación</h2>
+        <p id="error-message"></p>
+        <button onclick="window.location.href='/login'">Volver al login</button>
+    </div>
+
+    <script>
+        async function handleGoogleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const errorMessage = document.getElementById('error-message');
+            
+            if (error) {
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorMessage.textContent = errorDescription || error;
+                return;
+            }
+            
+            if (!code) {
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorMessage.textContent = 'No se recibió código de autorización';
+                return;
+            }
+            
+            try {
+                // Enviar el código al backend
+                const response = await fetch('http://localhost:1337/api/users-permissions/multi-provider/callback/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Error ${response.status}`);
+                }
+                
+                // Obtener JWT del header
+                const jwt = response.headers.get('Authorization')?.replace('Bearer ', '');
+                
+                // Obtener datos del usuario del body
+                const data = await response.json();
+                
+                if (!jwt || !data.user) {
+                    throw new Error('No se recibió token de autenticación');
+                }
+                
+                // Guardar en localStorage
+                localStorage.setItem('jwt', jwt);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Redirigir al dashboard
+                window.location.href = '/dashboard';
+                
+            } catch (error) {
+                console.error('Error procesando callback:', error);
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorMessage.textContent = error.message || 'Error al procesar la autenticación';
+            }
+        }
+        
+        // Ejecutar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', handleGoogleCallback);
+    </script>
+</body>
+</html>
