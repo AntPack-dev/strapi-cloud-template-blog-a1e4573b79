@@ -301,39 +301,85 @@ module.exports = {
     }
 
     try {
-      // Get the OAuth URL from Strapi's auth service
-      const authService = strapi.plugin('users-permissions').service('auth');
-      const oauthUrl = await authService.getProviderRedirectUrl(provider);
+      // Debug: Verificar variables de entorno
+      console.log('Environment variables check:');
+      console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
+      console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+      console.log('FACEBOOK_APP_ID:', process.env.FACEBOOK_APP_ID ? 'SET' : 'NOT SET');
+      console.log('FACEBOOK_APP_SECRET:', process.env.FACEBOOK_APP_SECRET ? 'SET' : 'NOT SET');
 
-      if (oauthUrl) {
-        return ctx.redirect(oauthUrl);
-      } else {
-        // Fallback: construct the OAuth URL manually
-        const baseUrl = provider === 'google' 
-          ? 'https://accounts.google.com/o/oauth2/v2/auth'
-          : 'https://www.facebook.com/v18.0/dialog/oauth';
-        
-        const params = new URLSearchParams();
-        
-        if (provider === 'google') {
-          params.append('client_id', strapi.config.get('plugin.users-permissions.providers.google.clientID'));
-          params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/google`);
-          params.append('response_type', 'code');
-          params.append('scope', 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
-          params.append('access_type', 'offline');
-        } else {
-          params.append('client_id', strapi.config.get('plugin.users-permissions.providers.facebook.clientID'));
-          params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/facebook`);
-          params.append('response_type', 'code');
-          params.append('scope', 'email');
+      const baseUrl = provider === 'google' 
+        ? 'https://accounts.google.com/o/oauth2/v2/auth'
+        : 'https://www.facebook.com/v18.0/dialog/oauth';
+      
+      const params = new URLSearchParams();
+      
+      if (provider === 'google') {
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        if (!clientId) {
+          return ctx.badRequest('Google OAuth not configured: Missing GOOGLE_CLIENT_ID');
         }
         
-        const fullUrl = `${baseUrl}?${params.toString()}`;
-        return ctx.redirect(fullUrl);
+        params.append('client_id', clientId);
+        params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/google`);
+        params.append('response_type', 'code');
+        params.append('scope', 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+        params.append('access_type', 'offline');
+        params.append('prompt', 'consent');
+      } else {
+        const appId = process.env.FACEBOOK_APP_ID;
+        if (!appId) {
+          return ctx.badRequest('Facebook OAuth not configured: Missing FACEBOOK_APP_ID');
+        }
+        
+        params.append('client_id', appId);
+        params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/facebook`);
+        params.append('response_type', 'code');
+        params.append('scope', 'email');
       }
+      
+      const fullUrl = `${baseUrl}?${params.toString()}`;
+      console.log('Redirecting to:', fullUrl);
+      
+      return ctx.redirect(fullUrl);
     } catch (error) {
       console.error('Error redirecting to provider:', error);
       return ctx.badRequest(`Failed to redirect to ${provider}: ${error.message}`);
+    }
+  },
+
+  /**
+   * Debug OAuth configuration
+   */
+  async debugOAuthConfig(ctx) {
+    try {
+      const config = {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET',
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET',
+          clientIdValue: process.env.GOOGLE_CLIENT_ID?.substring(0, 10) + '...' || null,
+        },
+        facebook: {
+          appId: process.env.FACEBOOK_APP_ID ? 'SET' : 'NOT SET',
+          appSecret: process.env.FACEBOOK_APP_SECRET ? 'SET' : 'NOT SET',
+          appIdValue: process.env.FACEBOOK_APP_ID?.substring(0, 10) + '...' || null,
+        },
+        server: {
+          origin: ctx.request.origin,
+          nodeEnv: process.env.NODE_ENV,
+        },
+        plugins: {
+          authConfigured: !!strapi.config.get('plugin.users-permissions.auth'),
+          providersCount: strapi.config.get('plugin.users-permissions.auth.providers')?.length || 0,
+        }
+      };
+
+      return ctx.send({
+        message: 'OAuth configuration debug',
+        config
+      });
+    } catch (error) {
+      return ctx.badRequest(`Debug error: ${error.message}`);
     }
   }
 };
