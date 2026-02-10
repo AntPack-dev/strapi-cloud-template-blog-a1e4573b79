@@ -86,18 +86,6 @@ module.exports = {
           scope: []
         }
       }
-    },
-    {
-      method: 'GET',
-      path: '/multi-provider/debug/oauth-config',
-      handler: 'multi-provider-auth.debugOAuthConfig',
-      config: {
-        policies: [],
-        middlewares: [],
-        auth: {
-          scope: []
-        }
-      }
     }
   ]
 };

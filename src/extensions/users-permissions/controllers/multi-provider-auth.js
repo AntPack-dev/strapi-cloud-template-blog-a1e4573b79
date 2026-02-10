@@ -343,8 +343,7 @@ module.exports = {
       
       return ctx.redirect(fullUrl);
     } catch (error) {
-      console.error('Error redirecting to provider:', error);
-      return ctx.badRequest(`Failed to redirect to ${provider}: ${error.message}`);
+      return ctx.badRequest(error.message);
     }
   },
 
