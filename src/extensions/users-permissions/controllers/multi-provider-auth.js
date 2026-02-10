@@ -288,5 +288,52 @@ module.exports = {
     } catch (error) {
       return ctx.badRequest(error.message);
     }
+  },
+
+  /**
+   * Redirect to OAuth provider
+   */
+  async redirectToProvider(ctx) {
+    const provider = ctx.params.provider || 'google';
+    
+    if (!['google', 'facebook'].includes(provider)) {
+      return ctx.badRequest('Provider not supported');
+    }
+
+    try {
+      // Get the OAuth URL from Strapi's auth service
+      const authService = strapi.plugin('users-permissions').service('auth');
+      const oauthUrl = await authService.getProviderRedirectUrl(provider);
+
+      if (oauthUrl) {
+        return ctx.redirect(oauthUrl);
+      } else {
+        // Fallback: construct the OAuth URL manually
+        const baseUrl = provider === 'google' 
+          ? 'https://accounts.google.com/o/oauth2/v2/auth'
+          : 'https://www.facebook.com/v18.0/dialog/oauth';
+        
+        const params = new URLSearchParams();
+        
+        if (provider === 'google') {
+          params.append('client_id', strapi.config.get('plugin.users-permissions.providers.google.clientID'));
+          params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/google`);
+          params.append('response_type', 'code');
+          params.append('scope', 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+          params.append('access_type', 'offline');
+        } else {
+          params.append('client_id', strapi.config.get('plugin.users-permissions.providers.facebook.clientID'));
+          params.append('redirect_uri', `${ctx.request.origin}/api/users-permissions/multi-provider/callback/facebook`);
+          params.append('response_type', 'code');
+          params.append('scope', 'email');
+        }
+        
+        const fullUrl = `${baseUrl}?${params.toString()}`;
+        return ctx.redirect(fullUrl);
+      }
+    } catch (error) {
+      console.error('Error redirecting to provider:', error);
+      return ctx.badRequest(`Failed to redirect to ${provider}: ${error.message}`);
+    }
   }
 };
