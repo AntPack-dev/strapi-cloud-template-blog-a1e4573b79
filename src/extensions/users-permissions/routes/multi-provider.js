@@ -62,6 +62,30 @@ module.exports = {
           scope: ['users-permissions']
         }
       }
+    },
+    {
+      method: 'GET',
+      path: '/connect/google',
+      handler: 'multi-provider-auth.redirectToProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/connect/facebook',
+      handler: 'multi-provider-auth.redirectToProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
     }
   ]
 };
