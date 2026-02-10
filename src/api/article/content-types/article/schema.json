@@ -194,6 +194,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::like.like"
+    },
+    "favoriteLists": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::favorite-list.favorite-list",
+      "mappedBy": "articles"
     }
   }
 }
