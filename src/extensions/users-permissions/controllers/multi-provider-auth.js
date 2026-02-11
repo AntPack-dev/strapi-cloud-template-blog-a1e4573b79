@@ -19,9 +19,16 @@ module.exports = {
     try {
       const multiProviderService = strapi.plugin('users-permissions').service('multi-provider');
       
+      // Get profile data from the OAuth service first
+      const profile = await this.getProfileData(provider, query.access_token);
+      
+      if (!profile || !profile.email) {
+        return ctx.badRequest('Unable to get user profile from OAuth provider');
+      }
+      
       // Find user by provider
       const existingUser = await multiProviderService.findUserByEmailAndProvider(
-        query.email, 
+        profile.email, 
         provider
       );
 
@@ -41,15 +48,12 @@ module.exports = {
 
       // Check if user exists with other providers
       const users = await strapi.query('plugin::users-permissions.user').findMany({
-        where: { email: query.email.toLowerCase() }
+        where: { email: profile.email.toLowerCase() }
       });
 
       if (users.length > 0) {
         // User exists but not with this provider, add this provider
         const user = users[0];
-        
-        // Get profile data from the OAuth service
-        const profile = await this.getProfileData(provider, query.access_token);
         
         const updatedUser = await multiProviderService.addProvider(
           user, 
@@ -71,7 +75,7 @@ module.exports = {
       }
 
       // New user, create with this provider
-      const profile = await this.getProfileData(provider, query.access_token);
+      // Profile data already obtained above
       
       const userData = {
         email: profile.email,
