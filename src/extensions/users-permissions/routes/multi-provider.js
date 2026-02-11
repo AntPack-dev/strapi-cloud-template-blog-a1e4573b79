@@ -28,14 +28,14 @@ module.exports = {
       }
     },
     {
-      method: 'POST',
+      method: 'GET',
       path: '/multi-provider/callback/:provider',
       handler: 'multi-provider-auth.callback',
       config: {
         policies: [],
         middlewares: [],
         auth: {
-          scope: ['users-permissions']
+          scope: []
         }
       }
     },
