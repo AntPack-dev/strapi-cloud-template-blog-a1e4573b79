@@ -56,5 +56,9 @@ module.exports = ({ env }) => {
       name: 'global::auth-transform',
       config: {},
     },
+    {
+      name: 'global::oauth-callback',
+      config: {},
+    },
   ];
 };
