@@ -9,6 +9,8 @@ module.exports = (config, { strapi }) => {
       // Si hay access_token, procesarlo directamente
       if (access_token) {
         try {
+          console.log('🔍 OAuth Callback - Processing access_token:', access_token.substring(0, 20) + '...');
+          
           // Obtener perfil de Google usando el access_token
           const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
             headers: {
@@ -16,23 +18,31 @@ module.exports = (config, { strapi }) => {
             }
           });
 
+          console.log('🔍 OAuth Callback - Google API Response Status:', profileResponse.status);
+
           if (!profileResponse.ok) {
-            throw new Error('Failed to get user profile from Google');
+            const errorText = await profileResponse.text();
+            console.error('❌ OAuth Callback - Google API Error:', errorText);
+            throw new Error(`Failed to get user profile from Google: ${profileResponse.status} - ${errorText}`);
           }
 
           const profile = await profileResponse.json();
+          console.log('✅ OAuth Callback - Profile received:', { email: profile.email, id: profile.id });
 
           if (!profile.email) {
+            console.error('❌ OAuth Callback - No email in profile');
             return ctx.badRequest('Unable to get email from Google profile');
           }
 
           // Buscar usuario existente con provider Google
-          const existingUser = await strapi.query('plugin::users-permissions.user').findOne({
+          const allUsers = await strapi.query('plugin::users-permissions.user').findMany({
             where: { 
-              email: profile.email.toLowerCase(),
-              'providers.google': { $exists: true }
+              email: profile.email.toLowerCase()
             }
           });
+          
+          // Filtrar usuarios que tienen provider Google
+          const existingUser = allUsers.find(user => user.providers && user.providers.google);
 
           if (existingUser) {
             // Usuario existe, login
@@ -146,7 +156,8 @@ module.exports = (config, { strapi }) => {
           });
 
         } catch (error) {
-          console.error('OAuth callback error:', error);
+          console.error('❌ OAuth callback error:', error);
+          console.error('❌ Error stack:', error.stack);
           return ctx.badRequest(`OAuth error: ${error.message}`);
         }
       }
