@@ -45,7 +45,7 @@ module.exports = ({ env }) => {
     'users-permissions': {
       config: {
         register: {
-          allowedFields: ['firstName', 'lastName', 'provider', 'providers', 'providerId', 'imageUrl', 'biography', 'statusProfile'],
+          allowedFields: ['firstName', 'lastName', 'provider', 'providers', 'providerId', 'imageUrl', 'biography', 'statusProfile', 'localIntegration', 'notificationActive'],
         },
       },
       auth: {

@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-02-11T16:39:31.963Z"
+    "x-generation-date": "2026-02-12T15:29:17.408Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -13497,6 +13497,12 @@
                                                       }
                                                     }
                                                   },
+                                                  "localIntegration": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "notificationActive": {
+                                                    "type": "boolean"
+                                                  },
                                                   "createdAt": {
                                                     "type": "string",
                                                     "format": "date-time"
@@ -16486,6 +16492,12 @@
                               }
                             }
                           },
+                          "localIntegration": {
+                            "type": "boolean"
+                          },
+                          "notificationActive": {
+                            "type": "boolean"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -18049,6 +18061,12 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "localIntegration": {
+                                                  "type": "boolean"
+                                                },
+                                                "notificationActive": {
+                                                  "type": "boolean"
                                                 },
                                                 "createdAt": {
                                                   "type": "string",
@@ -20077,6 +20095,12 @@
                                           }
                                         }
                                       }
+                                    },
+                                    "localIntegration": {
+                                      "type": "boolean"
+                                    },
+                                    "notificationActive": {
+                                      "type": "boolean"
                                     },
                                     "createdAt": {
                                       "type": "string",
@@ -22505,6 +22529,12 @@
                             }
                           }
                         },
+                        "localIntegration": {
+                          "type": "boolean"
+                        },
+                        "notificationActive": {
+                          "type": "boolean"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
@@ -24733,6 +24763,12 @@
                                                       }
                                                     }
                                                   },
+                                                  "localIntegration": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "notificationActive": {
+                                                    "type": "boolean"
+                                                  },
                                                   "createdAt": {
                                                     "type": "string",
                                                     "format": "date-time"
@@ -26954,6 +26990,12 @@
                                           }
                                         }
                                       },
+                                      "localIntegration": {
+                                        "type": "boolean"
+                                      },
+                                      "notificationActive": {
+                                        "type": "boolean"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -28665,6 +28707,12 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "localIntegration": {
+                                                  "type": "boolean"
+                                                },
+                                                "notificationActive": {
+                                                  "type": "boolean"
                                                 },
                                                 "createdAt": {
                                                   "type": "string",
@@ -31468,6 +31516,12 @@
                   }
                 }
               },
+              "localIntegration": {
+                "type": "boolean"
+              },
+              "notificationActive": {
+                "type": "boolean"
+              },
               "createdAt": {
                 "type": "string",
                 "format": "date-time"
@@ -33457,6 +33511,12 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "localIntegration": {
+                                                  "type": "boolean"
+                                                },
+                                                "notificationActive": {
+                                                  "type": "boolean"
                                                 },
                                                 "createdAt": {
                                                   "type": "string",
@@ -35817,6 +35877,12 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "localIntegration": {
+                                                  "type": "boolean"
+                                                },
+                                                "notificationActive": {
+                                                  "type": "boolean"
                                                 },
                                                 "createdAt": {
                                                   "type": "string",
@@ -38341,6 +38407,12 @@
                             }
                           }
                         },
+                        "localIntegration": {
+                          "type": "boolean"
+                        },
+                        "notificationActive": {
+                          "type": "boolean"
+                        },
                         "createdAt": {
                           "type": "string",
                           "format": "date-time"
@@ -39951,6 +40023,12 @@
                                                         }
                                                       }
                                                     }
+                                                  },
+                                                  "localIntegration": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "notificationActive": {
+                                                    "type": "boolean"
                                                   },
                                                   "createdAt": {
                                                     "type": "string",
@@ -41777,6 +41855,12 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "localIntegration": {
+                                                  "type": "boolean"
+                                                },
+                                                "notificationActive": {
+                                                  "type": "boolean"
                                                 },
                                                 "createdAt": {
                                                   "type": "string",
@@ -43735,6 +43819,12 @@
                                               }
                                             }
                                           }
+                                        },
+                                        "localIntegration": {
+                                          "type": "boolean"
+                                        },
+                                        "notificationActive": {
+                                          "type": "boolean"
                                         },
                                         "createdAt": {
                                           "type": "string",

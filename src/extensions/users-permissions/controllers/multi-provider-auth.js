@@ -77,6 +77,9 @@ module.exports = {
       // New user, create with this provider
       // Profile data already obtained above
       
+      // Check if notificationActive is passed in query
+      const notificationActive = query.notificationActive === 'true' || query.notificationActive === true;
+
       const userData = {
         email: profile.email,
         username: this.generateUsername(profile.email),
@@ -97,11 +100,29 @@ module.exports = {
         imageUrl: profile.picture || profile.photos?.[0]?.value,
         confirmed: true,
         providerId: profile.id,
+        localIntegration: false,
+        notificationActive: notificationActive,
       };
 
       const user = await strapi.query('plugin::users-permissions.user').create({
         data: userData
       });
+
+      // If notificationActive is true, add user to Mailchimp
+      if (notificationActive) {
+        try {
+          const campaignId = process.env.MAILCHIMP_CAMPAIGN_ID;
+          if (campaignId) {
+            const marketingService = strapi.service('api::marketing.marketing');
+            const listId = await marketingService.getListIdFromCampaign(campaignId);
+            await marketingService.createContact(user.email, listId);
+            strapi.log.info(`User ${user.email} added to Mailchimp list via OAuth`);
+          }
+        } catch (error) {
+          strapi.log.error('Error adding OAuth user to Mailchimp:', error);
+          // Don't fail registration if Mailchimp fails
+        }
+      }
 
       // Transform response to hide sensitive data
       const transformedUser = this.transformUserResponse(user);
