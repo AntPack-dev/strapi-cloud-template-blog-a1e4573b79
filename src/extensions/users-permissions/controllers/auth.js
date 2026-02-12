@@ -118,12 +118,29 @@ module.exports = {
         local: true
       },
       confirmed: true,
+      localIntegration: true,
     };
 
     // Create user
     const user = await strapi.query('plugin::users-permissions.user').create({
       data: userData,
     });
+
+    // If notificationActive is true, add user to Mailchimp
+    if (params.notificationActive === true) {
+      try {
+        const campaignId = process.env.MAILCHIMP_CAMPAIGN_ID;
+        if (campaignId) {
+          const marketingService = strapi.service('api::marketing.marketing');
+          const listId = await marketingService.getListIdFromCampaign(campaignId);
+          await marketingService.createContact(user.email, listId);
+          strapi.log.info(`User ${user.email} added to Mailchimp list`);
+        }
+      } catch (error) {
+        strapi.log.error('Error adding user to Mailchimp:', error);
+        // Don't fail registration if Mailchimp fails
+      }
+    }
 
     // Generate JWT
     const jwt = strapi.plugin('users-permissions').service('jwt').issue({

@@ -1855,11 +1855,17 @@ export interface PluginUsersPermissionsUser
         minLength: 1;
       }>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localIntegration: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'plugin::users-permissions.user'
     > &
       Schema.Attribute.Private;
+    notificationActive: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     password: Schema.Attribute.Password &
       Schema.Attribute.Required &
       Schema.Attribute.Private &
