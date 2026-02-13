@@ -200,6 +200,14 @@
       "relation": "manyToMany",
       "target": "api::favorite-list.favorite-list",
       "mappedBy": "articles"
+    },
+    "creationDate": {
+      "type": "date",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }
