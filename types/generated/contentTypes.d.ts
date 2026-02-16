@@ -1186,6 +1186,34 @@ export interface ApiGlobalCheckGlobalCheck extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiImageUploadImageUpload extends Struct.CollectionTypeSchema {
+  collectionName: 'image_uploads';
+  info: {
+    description: 'Servicio para subir im\u00E1genes con validaci\u00F3n de formatos';
+    displayName: 'Image Upload';
+    pluralName: 'image-uploads';
+    singularName: 'image-upload';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::image-upload.image-upload'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiLikeLike extends Struct.CollectionTypeSchema {
   collectionName: 'likes';
   info: {
@@ -1932,6 +1960,7 @@ declare module '@strapi/strapi' {
       'api::favorite-list.favorite-list': ApiFavoriteListFavoriteList;
       'api::footer.footer': ApiFooterFooter;
       'api::global-check.global-check': ApiGlobalCheckGlobalCheck;
+      'api::image-upload.image-upload': ApiImageUploadImageUpload;
       'api::like.like': ApiLikeLike;
       'api::main-category.main-category': ApiMainCategoryMainCategory;
       'api::metadata-page.metadata-page': ApiMetadataPageMetadataPage;
