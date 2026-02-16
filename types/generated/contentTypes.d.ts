@@ -1891,7 +1891,7 @@ export interface PluginUsersPermissionsUser
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localIntegration: Schema.Attribute.Boolean &
       Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
+      Schema.Attribute.DefaultTo<true>;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'plugin::users-permissions.user'
