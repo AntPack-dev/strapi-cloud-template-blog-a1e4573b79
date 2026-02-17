@@ -54,6 +54,7 @@ module.exports = ({ env }) => {
             uid: 'google',
             displayName: 'Google',
             icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Google-512.png',
+            enabled: true,
             createStrategy: (strapi) => {
               const GoogleStrategy = require('passport-google-oauth2').Strategy;
               return new GoogleStrategy({
@@ -80,6 +81,7 @@ module.exports = ({ env }) => {
             uid: 'facebook',
             displayName: 'Facebook',
             icon: 'https://cdn2.iconfinder.com/data/icons/social-icons-33/128/Facebook-512.png',
+            enabled: true,
             createStrategy: (strapi) => {
               const FacebookStrategy = require('passport-facebook').Strategy;
               return new FacebookStrategy({
