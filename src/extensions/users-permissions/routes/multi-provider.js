@@ -101,6 +101,18 @@ module.exports = {
     },
     {
       method: 'GET',
+      path: '/connect/facebook/callback',
+      handler: 'multi-provider-auth.callback',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
       path: '/auth/google/redirect',
       handler: 'multi-provider-auth.redirectToProvider',
       config: {
