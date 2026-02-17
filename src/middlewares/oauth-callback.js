@@ -70,6 +70,22 @@ module.exports = (config, { strapi }) => {
             
             if (!hasProvider) {
               // Agregar el nuevo provider al usuario existente
+              
+              // Asegurar que el usuario tenga un rol
+              if (!user.role) {
+                const defaultRole = await strapi.query('plugin::users-permissions.role').findOne({
+                  where: { type: 'authenticated' }
+                });
+                
+                if (defaultRole) {
+                  await strapi.query('plugin::users-permissions.user').update({
+                    where: { id: user.id },
+                    data: { role: defaultRole.id }
+                  });
+                  user.role = defaultRole;
+                }
+              }
+              
               const updatedUser = await strapi.query('plugin::users-permissions.user').update({
                 where: { id: user.id },
                 data: {
@@ -98,6 +114,22 @@ module.exports = (config, { strapi }) => {
               });
             } else {
               // Usuario ya tiene este provider - solo hacer login
+              
+              // Asegurar que el usuario tenga un rol
+              if (!user.role) {
+                const defaultRole = await strapi.query('plugin::users-permissions.role').findOne({
+                  where: { type: 'authenticated' }
+                });
+                
+                if (defaultRole) {
+                  await strapi.query('plugin::users-permissions.user').update({
+                    where: { id: user.id },
+                    data: { role: defaultRole.id }
+                  });
+                  user.role = defaultRole;
+                }
+              }
+              
               const jwt = strapi.plugin('users-permissions').service('jwt').issue({
                 id: user.id,
               });
@@ -122,6 +154,11 @@ module.exports = (config, { strapi }) => {
           const randomSuffix = Math.random().toString(36).substring(2, 8);
           const username = `${emailPrefix}_${randomSuffix}`;
           
+          // Obtener el rol por defecto
+          const defaultRole = await strapi.query('plugin::users-permissions.role').findOne({
+            where: { type: 'authenticated' }
+          });
+          
           // Truncar campos a 255 caracteres para evitar errores
           const truncate = (str, maxLength = 255) => {
             if (!str) return '';
@@ -139,7 +176,7 @@ module.exports = (config, { strapi }) => {
             imageUrl: truncate(profile.picture || '', 255),
             confirmed: true,
             localIntegration: false,
-            // No especificar role - Strapi usará el rol por defecto
+            role: defaultRole ? defaultRole.id : null
           };
 
           const newUser = await strapi.query('plugin::users-permissions.user').create({
