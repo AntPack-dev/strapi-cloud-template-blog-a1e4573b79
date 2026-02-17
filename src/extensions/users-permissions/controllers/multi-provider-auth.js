@@ -170,7 +170,12 @@ module.exports = {
    * Get profile data from OAuth provider
    */
   async getProfileData(provider, accessToken) {
+    console.log('=== GET PROFILE DATA ===');
+    console.log('Provider:', provider);
+    console.log('AccessToken:', accessToken ? accessToken.substring(0, 20) + '...' : 'undefined');
+    
     if (provider === 'google') {
+      console.log('Using Google API');
       const google = require('passport-google-oauth2');
       const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: {
@@ -181,8 +186,10 @@ module.exports = {
     }
 
     if (provider === 'facebook') {
+      console.log('Using Facebook API');
       const response = await fetch(`https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture&access_token=${accessToken}`);
       const data = await response.json();
+      console.log('Facebook response:', data);
       return {
         id: data.id,
         email: data.email,
@@ -192,6 +199,7 @@ module.exports = {
       };
     }
 
+    console.log('ERROR: Unsupported provider:', provider);
     throw new Error(`Unsupported provider: ${provider}`);
   },
 
