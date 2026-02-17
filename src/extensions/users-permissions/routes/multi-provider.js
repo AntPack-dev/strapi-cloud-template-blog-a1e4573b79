@@ -41,6 +41,18 @@ module.exports = {
     },
     {
       method: 'POST',
+      path: '/multi-provider/callback/:provider',
+      handler: 'multi-provider-auth.callback',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'POST',
       path: '/multi-provider/update-profile-image',
       handler: 'multi-provider-auth.updateProfileImage',
       config: {
@@ -79,6 +91,66 @@ module.exports = {
       method: 'GET',
       path: '/connect/facebook',
       handler: 'multi-provider-auth.redirectToProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/auth/google/redirect',
+      handler: 'multi-provider-auth.redirectToProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/auth/facebook/redirect',
+      handler: 'multi-provider-auth.redirectToProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'POST',
+      path: '/auth/google/callback',
+      handler: 'multi-provider-auth.callback',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'POST',
+      path: '/auth/facebook/callback',
+      handler: 'multi-provider-auth.callback',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/auth/:provider/debug',
+      handler: 'multi-provider-auth.debugOAuthConfig',
       config: {
         policies: [],
         middlewares: [],

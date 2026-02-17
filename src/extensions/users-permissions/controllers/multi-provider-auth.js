@@ -326,13 +326,6 @@ module.exports = {
     }
 
     try {
-      // Debug: Verificar variables de entorno
-      console.log('Environment variables check:');
-      console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-      console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
-      console.log('FACEBOOK_APP_ID:', process.env.FACEBOOK_APP_ID ? 'SET' : 'NOT SET');
-      console.log('FACEBOOK_APP_SECRET:', process.env.FACEBOOK_APP_SECRET ? 'SET' : 'NOT SET');
-
       const baseUrl = provider === 'google' 
         ? 'https://accounts.google.com/o/oauth2/v2/auth'
         : 'https://www.facebook.com/v18.0/dialog/oauth';
@@ -364,7 +357,6 @@ module.exports = {
       }
       
       const fullUrl = `${baseUrl}?${params.toString()}`;
-      console.log('Redirecting to:', fullUrl);
       
       return ctx.redirect(fullUrl);
     } catch (error) {
@@ -381,12 +373,10 @@ module.exports = {
         google: {
           clientId: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET',
           clientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET',
-          clientIdValue: process.env.GOOGLE_CLIENT_ID?.substring(0, 10) + '...' || null,
         },
         facebook: {
           appId: process.env.FACEBOOK_APP_ID ? 'SET' : 'NOT SET',
           appSecret: process.env.FACEBOOK_APP_SECRET ? 'SET' : 'NOT SET',
-          appIdValue: process.env.FACEBOOK_APP_ID?.substring(0, 10) + '...' || null,
         },
         server: {
           origin: ctx.request.origin,
