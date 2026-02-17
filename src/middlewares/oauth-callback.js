@@ -8,13 +8,10 @@ module.exports = (config, { strapi }) => {
       
       // Detectar el provider desde la URL
       const provider = ctx.path.includes('/connect/google/') ? 'google' : 'facebook';
-      console.log('🔍 OAuth Callback - Provider detected:', provider);
 
       // Si hay access_token, procesarlo directamente
       if (access_token) {
         try {
-          console.log('🔍 OAuth Callback - Processing access_token:', access_token.substring(0, 20) + '...');
-          
           let profile;
           
           // Obtener perfil según el provider
@@ -25,11 +22,8 @@ module.exports = (config, { strapi }) => {
               }
             });
 
-            console.log('🔍 OAuth Callback - Google API Response Status:', profileResponse.status);
-
             if (!profileResponse.ok) {
               const errorText = await profileResponse.text();
-              console.error('❌ OAuth Callback - Google API Error:', errorText);
               throw new Error(`Failed to get user profile from Google: ${profileResponse.status} - ${errorText}`);
             }
 
@@ -37,11 +31,8 @@ module.exports = (config, { strapi }) => {
           } else if (provider === 'facebook') {
             const profileResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture&access_token=${access_token}`);
 
-            console.log('🔍 OAuth Callback - Facebook API Response Status:', profileResponse.status);
-
             if (!profileResponse.ok) {
               const errorText = await profileResponse.text();
-              console.error('❌ OAuth Callback - Facebook API Error:', errorText);
               throw new Error(`Failed to get user profile from Facebook: ${profileResponse.status} - ${errorText}`);
             }
 
@@ -55,21 +46,22 @@ module.exports = (config, { strapi }) => {
             };
           }
           
-          console.log('✅ OAuth Callback - Profile received:', { email: profile.email, id: profile.id });
-
           if (!profile.email) {
-            console.error('❌ OAuth Callback - No email in profile');
             return ctx.badRequest(`Unable to get email from ${provider} profile`);
           }
 
-          // Buscar usuario por email (sin importar el provider)
-          const users = await strapi.query('plugin::users-permissions.user').findMany({
-            where: { 
-              email: profile.email.toLowerCase()
+          const emailToSearch = profile.email.toLowerCase();
+
+          // Buscar usuario por email
+          let users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+            filters: {
+              email: {
+                $eqi: emailToSearch
+              }
             }
           });
 
-          if (users.length > 0) {
+          if (users && users.length > 0) {
             // Usuario existe - hacer login o agregar provider
             const user = users[0];
             
@@ -77,24 +69,14 @@ module.exports = (config, { strapi }) => {
             const hasProvider = user.providers && user.providers[provider];
             
             if (!hasProvider) {
-              // Agregar el nuevo provider al usuario existente (sin modificar otros datos)
-              console.log(`✅ Adding ${provider} to existing user`);
+              // Agregar el nuevo provider al usuario existente
               const updatedUser = await strapi.query('plugin::users-permissions.user').update({
                 where: { id: user.id },
                 data: {
                   providers: {
                     ...user.providers,
-                    [provider]: {
-                      providerId: profile.id,
-                      connectedAt: new Date().toISOString(),
-                      profile: {
-                        firstName: profile.given_name,
-                        lastName: profile.family_name,
-                        imageUrl: profile.picture
-                      }
-                    }
+                    [provider]: true
                   }
-                  // NO modificar: firstName, lastName, username, biography, imageUrl
                 }
               });
 
@@ -116,7 +98,6 @@ module.exports = (config, { strapi }) => {
               });
             } else {
               // Usuario ya tiene este provider - solo hacer login
-              console.log(`✅ User already has ${provider} - logging in`);
               const jwt = strapi.plugin('users-permissions').service('jwt').issue({
                 id: user.id,
               });
@@ -137,34 +118,28 @@ module.exports = (config, { strapi }) => {
           }
 
           // Nuevo usuario, crear cuenta
-          console.log(`✅ Creating new user with ${provider}`);
-          
-          // Generar username corto
-          const emailPrefix = profile.email.split('@')[0].substring(0, 20); // Máximo 20 caracteres del email
-          const randomSuffix = Math.random().toString(36).substring(2, 8); // 6 caracteres aleatorios
+          const emailPrefix = profile.email.split('@')[0].substring(0, 20);
+          const randomSuffix = Math.random().toString(36).substring(2, 8);
           const username = `${emailPrefix}_${randomSuffix}`;
           
+          // Truncar campos a 255 caracteres para evitar errores
+          const truncate = (str, maxLength = 255) => {
+            if (!str) return '';
+            return str.substring(0, maxLength);
+          };
+          
           const userData = {
-            email: profile.email,
-            username: username,
-            firstName: profile.given_name,
-            lastName: profile.family_name,
+            email: truncate(profile.email, 255),
+            username: truncate(username, 255),
+            firstName: truncate(profile.given_name || 'User', 50),
+            lastName: truncate(profile.family_name || '', 50),
             providers: {
-              [provider]: {
-                providerId: profile.id,
-                connectedAt: new Date().toISOString(),
-                profile: {
-                  firstName: profile.given_name,
-                  lastName: profile.family_name,
-                  imageUrl: profile.picture
-                }
-              }
+              [provider]: true
             },
-            imageUrl: profile.picture,
+            imageUrl: truncate(profile.picture || '', 255),
             confirmed: true,
-            providerId: profile.id,
             localIntegration: false,
-            role: 2 // Rol de usuario por defecto
+            role: 2
           };
 
           const newUser = await strapi.query('plugin::users-permissions.user').create({
