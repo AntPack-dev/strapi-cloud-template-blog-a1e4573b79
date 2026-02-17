@@ -9,7 +9,29 @@ module.exports = {
    * Handle OAuth callback with multi-provider support
    */
   async callback(ctx) {
-    const provider = ctx.params.provider;
+    // Extraer provider de la URL o params
+    const urlPath = ctx.request.url;
+    let provider = ctx.params.provider;
+    
+    // Si no viene en params, extraer de la URL
+    if (!provider && urlPath.includes('/connect/')) {
+      if (urlPath.includes('/connect/google/')) {
+        provider = 'google';
+      } else if (urlPath.includes('/connect/facebook/')) {
+        provider = 'facebook';
+      }
+    }
+    
+    console.log('=== CALLBACK DEBUG ===');
+    console.log('URL:', urlPath);
+    console.log('Provider detected:', provider);
+    console.log('Params:', ctx.params);
+    console.log('Query:', ctx.query);
+    
+    if (!provider) {
+      return ctx.badRequest('Provider not found in request');
+    }
+    
     const { query } = ctx;
 
     if (!query.access_token) {
