@@ -139,7 +139,7 @@ module.exports = (config, { strapi }) => {
             imageUrl: truncate(profile.picture || '', 255),
             confirmed: true,
             localIntegration: false,
-            role: 2
+            // No especificar role - Strapi usará el rol por defecto
           };
 
           const newUser = await strapi.query('plugin::users-permissions.user').create({
