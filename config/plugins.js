@@ -105,5 +105,26 @@ module.exports = ({ env }) => {
         ],
       },
     },
+    email: {
+      config: {
+        provider: 'nodemailer',
+        providerOptions: {
+          host: 'smtp.mandrillapp.com',
+          port: 587,
+          auth: {
+            user: env('MAILCHIMP_FROM_EMAIL'),
+            pass: env('MAILCHIMP_TRANSACTIONAL_API_KEY'),
+          },
+          secure: false,
+          logger: true,
+          debug: true,
+        },
+        settings: {
+          defaultFrom: env('MAILCHIMP_FROM_EMAIL'),
+          defaultFromName: env('MAILCHIMP_FROM_NAME', 'Soporte Latilde'),
+          defaultReplyTo: env('MAILCHIMP_FROM_EMAIL'),
+        },
+      },
+    },
   };
 };
