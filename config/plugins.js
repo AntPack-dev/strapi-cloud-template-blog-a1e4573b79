@@ -47,6 +47,12 @@ module.exports = ({ env }) => {
         register: {
           allowedFields: ['firstName', 'lastName', 'provider', 'providers', 'providerId', 'imageUrl', 'biography', 'statusProfile', 'localIntegration', 'notificationActive'],
         },
+        email: {
+          reset_password: {
+            from: env('RESEND_EMAIL_SENDER'),
+            replyTo: env('RESEND_EMAIL_SENDER'),
+          },
+        },
       },
       auth: {
         providers: [
@@ -107,22 +113,13 @@ module.exports = ({ env }) => {
     },
     email: {
       config: {
-        provider: 'nodemailer',
+        provider: 'strapi-provider-email-resend',
         providerOptions: {
-          host: 'smtp.mandrillapp.com',
-          port: 587,
-          auth: {
-            user: env('MAILCHIMP_FROM_EMAIL'),
-            pass: env('MAILCHIMP_TRANSACTIONAL_API_KEY'),
-          },
-          secure: false,
-          logger: true,
-          debug: true,
+          apiKey: env('RESEND_API_KEY'),
         },
         settings: {
-          defaultFrom: env('MAILCHIMP_FROM_EMAIL'),
-          defaultFromName: env('MAILCHIMP_FROM_NAME', 'Soporte Latilde'),
-          defaultReplyTo: env('MAILCHIMP_FROM_EMAIL'),
+          defaultFrom: env('RESEND_EMAIL_SENDER'),
+          defaultReplyTo: env('RESEND_EMAIL_SENDER'),
         },
       },
     },
