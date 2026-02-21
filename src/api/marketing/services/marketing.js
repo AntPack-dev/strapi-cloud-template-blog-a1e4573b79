@@ -226,6 +226,48 @@ module.exports = ({ strapi }) => {
         throw error;
       }
     },
+
+    /**
+     * Remove contact from Mailchimp
+     * @param {string} email - Email del contacto a eliminar
+     * @returns {Promise<Object>} - Respuesta de Mailchimp
+     */
+    async removeContact(email) {
+      try {
+        const campaignId = process.env.MAILCHIMP_CAMPAIGN_ID;
+        if (!campaignId) {
+          throw new Error('MAILCHIMP_CAMPAIGN_ID no está configurada');
+        }
+
+        initMailchimp();
+        
+        // Obtener el listId de la campaña
+        const listId = await this.getListIdFromCampaign(campaignId);
+        const subscriberHash = getSubscriberHash(email);
+
+        // Eliminar el contacto de la lista
+        const response = await mailchimp.lists.deleteListMember(listId, subscriberHash);
+
+        return {
+          success: true,
+          message: 'Contacto eliminado exitosamente',
+          data: response,
+        };
+      } catch (error) {
+        strapi.log.error('[Mailchimp] Error al eliminar contacto:', error);
+        
+        // Si el contacto no existe, considerarlo como exitoso
+        if (error.status === 404) {
+          return {
+            success: true,
+            message: 'Contacto no encontrado en Mailchimp',
+            data: null,
+          };
+        }
+        
+        throw new Error(`Error al eliminar contacto: ${error.message}`);
+      }
+    },
   };
 };
 
