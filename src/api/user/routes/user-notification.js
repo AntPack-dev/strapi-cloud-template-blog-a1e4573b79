@@ -5,7 +5,7 @@
  */
 
 module.exports = {
-  type: 'user',
+  type: 'content-api',
   routes: [
     {
       method: 'POST',
@@ -15,8 +15,8 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: [''],
-        },
+          scope: []
+        }
       },
     },
     {
@@ -27,8 +27,8 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: [''],
-        },
+          scope: []
+        }
       },
     },
     {
