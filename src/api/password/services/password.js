@@ -35,15 +35,14 @@ module.exports = () => ({
       },
     });
 
-    console.log('[PasswordService] Token generado:', resetPasswordToken.substring(0, 20) + '...');
-
-    // Get redirect URL from env
-    const redirectUrl = process.env.REDIRECT_URL_FORGOT_PASSWORD || 'http://localhost:3000/reset-password';
+    // Try multiple ways to get the env var
+    const redirectUrl = process.env.REDIRECT_URL_FORGOT_PASSWORD || 
+                       strapi.config.get('server', {}).url || 
+                       'http://localhost:4060/';
     
     // Build reset URL
     const resetUrl = `${redirectUrl}${language}/reset-password?token=${resetPasswordToken}`;
 
-    console.log('[PasswordService] URL de reset:', resetUrl);
 
     // Email templates
     const templates = {
@@ -104,14 +103,19 @@ Soporte Latilde`,
     const template = templates[language];
 
     try {
-      // Send email
-      await strapi.plugin('email').service('email').send({
+      const emailPayload = {
         to: user.email,
         from: process.env.RESEND_EMAIL_SENDER || 'info@latilde.co',
         subject: template.subject,
         text: template.text,
         html: template.html,
-      });
+      };
+      
+      console.log('[PasswordService] Email payload from:', emailPayload.from);
+      console.log('[PasswordService] Email payload to:', emailPayload.to);
+      
+      // Send email
+      await strapi.plugin('email').service('email').send(emailPayload);
 
       console.log('[PasswordService] ✅ Email enviado exitosamente a', user.email, 'en', language);
       
