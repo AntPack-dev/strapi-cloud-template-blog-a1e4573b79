@@ -6,39 +6,55 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
   async create(ctx) {
     const { data } = ctx.request.body;
     const userId = ctx.state.user?.id;
+    const typeId = data.type;
 
     if (!userId) {
-      return ctx.unauthorized('You must be logged in to like articles');
+      return ctx.unauthorized('You must be logged in to interact with articles');
+    }
+
+    if (!typeId) {
+      return ctx.badRequest('Interaction type is required');
     }
 
     try {
-      // Verificar si ya existe un like de este usuario para este artículo
-      const existingLike = await strapi.db.query('api::like.like').findOne({
+      // Verificar que el tipo de interacción existe y está activo
+      const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
+        where: { id: typeId, active: true }
+      });
+
+      if (!interactionType) {
+        return ctx.badRequest('Invalid interaction type');
+      }
+
+      // Verificar si ya existe una interacción del mismo tipo de este usuario para este artículo
+      const existingInteraction = await strapi.db.query('api::like.like').findOne({
         where: {
           article: data.article_id || data.article,
           user: userId,
+          type: typeId,
         },
       });
 
-      if (existingLike) {
-        return ctx.badRequest('You have already liked this article');
+      if (existingInteraction) {
+        return ctx.badRequest(`You have already ${interactionType.display_name.toLowerCase()}d this article`);
       }
 
-      // Crear el like
-      const like = await strapi.db.query('api::like.like').create({
+      // Crear la interacción
+      const interaction = await strapi.db.query('api::like.like').create({
         data: {
           article: data.article_id || data.article,
           user: userId,
+          type: typeId,
         },
-        populate: ['article', 'user'],
+        populate: ['article', 'user', 'type'],
       });
 
       return ctx.send({
-        data: like,
+        data: interaction,
       });
     } catch (error) {
-      console.error('Error creating like:', error);
-      return ctx.badRequest('Error creating like');
+      console.error('Error creating interaction:', error);
+      return ctx.badRequest('Error creating interaction');
     }
   },
 
@@ -47,41 +63,41 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
     const userId = ctx.state.user?.id;
 
     if (!userId) {
-      return ctx.unauthorized('You must be logged in to delete likes');
+      return ctx.unauthorized('You must be logged in to delete interactions');
     }
 
     try {
-      // Verificar que el like exista y pertenezca al usuario
-      const existingLike = await strapi.db.query('api::like.like').findOne({
+      // Verificar que la interacción exista y pertenezca al usuario
+      const existingInteraction = await strapi.db.query('api::like.like').findOne({
         where: { id },
         populate: ['user'],
       });
 
-      if (!existingLike) {
-        return ctx.notFound('Like not found');
+      if (!existingInteraction) {
+        return ctx.notFound('Interaction not found');
       }
 
-      if (existingLike.user.id !== userId) {
-        return ctx.forbidden('You can only delete your own likes');
+      if (existingInteraction.user.id !== userId) {
+        return ctx.forbidden('You can only delete your own interactions');
       }
 
-      // Eliminar el like
+      // Eliminar la interacción
       await strapi.db.query('api::like.like').delete({
         where: { id },
       });
 
       return ctx.send({
-        message: 'Like deleted successfully',
+        message: 'Interaction deleted successfully',
       });
     } catch (error) {
-      console.error('Error deleting like:', error);
-      return ctx.badRequest('Error deleting like');
+      console.error('Error deleting interaction:', error);
+      return ctx.badRequest('Error deleting interaction');
     }
   },
 
   async find(ctx) {
     const userId = ctx.state.user?.id;
-    const { articleId } = ctx.query;
+    const { articleId, type } = ctx.query;
 
     try {
       let whereClause = {};
@@ -91,24 +107,37 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         whereClause.article = articleId;
       }
       
-      // Si el usuario está logueado, puede ver todos los likes
-      // Si no, solo puede ver likes públicos (sin filtros de usuario)
+      // Si se especifica un tipo (ID), filtrar por ese tipo
+      if (type) {
+        // Verificar que el tipo existe y está activo
+        const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
+          where: { id: type, active: true }
+        });
+        
+        if (!interactionType) {
+          return ctx.badRequest('Invalid interaction type');
+        }
+        whereClause.type = type;
+      }
+      
+      // Si el usuario está logueado, puede ver todas las interacciones
+      // Si no, solo puede ver interacciones públicas (sin filtros de usuario)
 
-      const likes = await strapi.db.query('api::like.like').findMany({
+      const interactions = await strapi.db.query('api::like.like').findMany({
         where: whereClause,
-        populate: ['article', 'user'],
+        populate: ['article', 'user', 'type'],
         sort: { createdAt: 'desc' },
       });
 
       return ctx.send({
-        data: likes,
+        data: interactions,
         meta: {
-          total: likes.length,
+          total: interactions.length,
         },
       });
     } catch (error) {
-      console.error('Error fetching likes:', error);
-      return ctx.badRequest('Error fetching likes');
+      console.error('Error fetching interactions:', error);
+      return ctx.badRequest('Error fetching interactions');
     }
   },
 
@@ -117,74 +146,263 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
     const userId = ctx.state.user?.id;
 
     try {
-      const like = await strapi.db.query('api::like.like').findOne({
+      const interaction = await strapi.db.query('api::like.like').findOne({
         where: { id },
         populate: ['article', 'user'],
       });
 
-      if (!like) {
-        return ctx.notFound('Like not found');
+      if (!interaction) {
+        return ctx.notFound('Interaction not found');
       }
 
-      // Si el usuario no es el dueño del like, no mostrar información sensible
-      if (userId !== like.user.id) {
-        // Devolver versión pública del like (sin datos del usuario)
-        const publicLike = {
-          id: like.id,
-          article: like.article,
-          createdAt: like.createdAt,
+      // Si el usuario no es el dueño de la interacción, no mostrar información sensible
+      if (userId !== interaction.user.id) {
+        // Devolver versión pública de la interacción (sin datos del usuario)
+        const publicInteraction = {
+          id: interaction.id,
+          article: interaction.article,
+          type: interaction.type,
+          createdAt: interaction.createdAt,
         };
-        return ctx.send({ data: publicLike });
+        return ctx.send({ data: publicInteraction });
       }
 
-      return ctx.send({ data: like });
+      return ctx.send({ data: interaction });
     } catch (error) {
-      console.error('Error fetching like:', error);
-      return ctx.badRequest('Error fetching like');
+      console.error('Error fetching interaction:', error);
+      return ctx.badRequest('Error fetching interaction');
     }
   },
 
-  async toggleLike(ctx) {
-    const { id } = ctx.params; // id del artículo
+  async toggleInteraction(ctx) {
     const userId = ctx.state.user?.id;
+    const { articleId, type } = ctx.request.body;
 
     if (!userId) {
-      return ctx.unauthorized('You must be logged in to like articles');
+      return ctx.unauthorized('You must be logged in to interact with articles');
+    }
+
+    if (!articleId) {
+      return ctx.badRequest('Article ID is required');
+    }
+
+    if (!type) {
+      return ctx.badRequest('Interaction type is required');
     }
 
     try {
-      const existingLike = await strapi.db.query('api::like.like').findOne({
-        where: {
-          article: id,
-          user: userId,
-        },
+      const typeId = parseInt(type, 10);
+
+      if (isNaN(typeId)) {
+        return ctx.badRequest('Invalid interaction type ID');
+      }
+
+      // Verificar que el tipo de interacción existe y está activo
+      const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
+        where: { id: typeId, active: true }
       });
 
-      if (existingLike) {
-        await strapi.db.query('api::like.like').delete({
-          where: { id: existingLike.id },
-        });
+      if (!interactionType) {
+        return ctx.badRequest('Invalid interaction type');
+      }
 
-        return ctx.send({
-          message: 'Like removed',
-          liked: false,
+      // Verificar si el usuario ya tiene CUALQUIER interacción con este artículo
+      const existingInteractionRaw = await strapi.db.query('api::like.like').findOne({
+        where: {
+          article: articleId,
+          user: userId,
+        }
+      });
+
+      if (existingInteractionRaw) {
+        // Obtener la interacción con el tipo poblado
+        const existingInteraction = await strapi.entityService.findOne('api::like.like', existingInteractionRaw.id, {
+          populate: ['type']
         });
+        
+        // Si type es null, es un registro viejo - eliminarlo y crear uno nuevo
+        if (!existingInteraction.type) {
+          await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
+          
+          const result = await strapi.db.connection.raw(`
+            INSERT INTO likes (type_id, published_at, created_at, updated_at)
+            VALUES (?, NOW(), NOW(), NOW())
+            RETURNING id
+          `, [typeId]);
+
+          const likeId = result.rows[0].id;
+
+          await strapi.db.connection.raw(`
+            INSERT INTO likes_article_lnk (like_id, article_id)
+            VALUES (?, ?)
+          `, [likeId, articleId]);
+
+          await strapi.db.connection.raw(`
+            INSERT INTO likes_user_lnk (like_id, user_id)
+            VALUES (?, ?)
+          `, [likeId, userId]);
+
+          return ctx.send({
+            message: `Interaction added`,
+            interacted: true,
+            typeId: typeId,
+            typeInfo: {
+              id: interactionType.id,
+              code: interactionType.code,
+              display_name: interactionType.display_name,
+              icon: interactionType.icon,
+              color: interactionType.color
+            }
+          });
+        }
+
+        // Si es el mismo tipo, eliminar la interacción
+        if (existingInteraction.type.id === typeId) {
+          await strapi.db.query('api::like.like').delete({
+            where: { id: existingInteraction.id },
+          });
+
+          return ctx.send({
+            message: `${interactionType.display_name} removed`,
+            interacted: false,
+            typeId: typeId,
+            typeInfo: {
+              id: interactionType.id,
+              code: interactionType.code,
+              display_name: interactionType.display_name,
+              icon: interactionType.icon,
+              color: interactionType.color
+            }
+          });
+        } else {
+          // Si es un tipo diferente, actualizar la interacción existente
+          const oldTypeDisplay = existingInteraction.type.display_name;
+          
+          await strapi.db.query('api::like.like').update({
+            where: { id: existingInteraction.id },
+            data: {
+              type: typeId,
+            },
+          });
+
+          return ctx.send({
+            message: `Interaction changed from ${oldTypeDisplay} to ${interactionType.display_name}`,
+            interacted: true,
+            typeId: typeId,
+            previousTypeId: existingInteraction.type.id,
+            typeInfo: {
+              id: interactionType.id,
+              code: interactionType.code,
+              display_name: interactionType.display_name,
+              icon: interactionType.icon,
+              color: interactionType.color
+            }
+          });
+        }
       } else {
-        await strapi.db.query('api::like.like').create({
-          data: {
-            article: id,
-            user: userId,
-          },
-        });
+        // Generar un document_id único
+        const crypto = require('crypto');
+        const documentId = crypto.randomBytes(13).toString('base64url').substring(0, 25);
+
+        // Crear el like con SQL raw
+        const result = await strapi.db.connection.raw(`
+          INSERT INTO likes (document_id, type_id, published_at, created_at, updated_at)
+          VALUES (?, ?, NOW(), NOW(), NOW())
+          RETURNING id
+        `, [documentId, typeId]);
+
+        const likeId = result.rows[0].id;
+        console.log('Like creado con ID:', likeId);
+
+        // Insertar relaciones directamente en tablas de links
+        try {
+          const articleLinkResult = await strapi.db.connection.raw(`
+            INSERT INTO likes_article_lnk (like_id, article_id)
+            VALUES (?, ?)
+            RETURNING *
+          `, [likeId, articleId]);
+          console.log('Article link creado:', articleLinkResult.rows);
+        } catch (error) {
+          console.error('Error creando article link:', error.message);
+          console.error('Detalles:', error);
+        }
+
+        try {
+          const userLinkResult = await strapi.db.connection.raw(`
+            INSERT INTO likes_user_lnk (like_id, user_id)
+            VALUES (?, ?)
+            RETURNING *
+          `, [likeId, userId]);
+          console.log('User link creado:', userLinkResult.rows);
+        } catch (error) {
+          console.error('Error creando user link:', error.message);
+          console.error('Detalles:', error);
+        }
 
         return ctx.send({
-          message: 'Article liked',
-          liked: true,
+          message: `Interaction added`,
+          interacted: true,
+          typeId: typeId,
+          typeInfo: {
+            id: interactionType.id,
+            code: interactionType.code,
+            display_name: interactionType.display_name,
+            icon: interactionType.icon,
+            color: interactionType.color
+          }
         });
       }
     } catch (error) {
-      console.error('Error toggling like:', error);
-      return ctx.badRequest('An error occurred while toggling like');
+      console.error('Error toggling interaction:', error);
+      return ctx.badRequest('An error occurred while toggling interaction');
     }
   },
-}));
+
+  async getMyInteractions(ctx) {
+    const userId = ctx.state.user?.id;
+    const { type, articleId } = ctx.query;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in to view your interactions');
+    }
+
+    try {
+      // Construir where clause
+      const whereClause = { user: userId };
+
+      if (type) {
+        whereClause.type = type;
+      }
+
+      if (articleId) {
+        whereClause.article = articleId;
+      }
+
+      // Usar db.query con populate
+      const interactions = await strapi.db.query('api::like.like').findMany({
+        where: whereClause,
+        populate: {
+          article: {
+            populate: ['cover', 'category', 'author', 'main_category', 'sub_categories']
+          },
+          type: true,
+          user: {
+            select: ['id', 'username', 'email', 'firstName', 'lastName']
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return ctx.send({
+        data: interactions,
+        meta: {
+          total: interactions.length,
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching user interactions:', error);
+      return ctx.badRequest('Error fetching user interactions');
+    }
+  },
+
+  }));

@@ -1214,10 +1214,49 @@ export interface ApiImageUploadImageUpload extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiInteractionTypesInteractionType
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'interaction_types';
+  info: {
+    description: 'Types of user interactions with articles';
+    displayName: 'Interaction Type';
+    pluralName: 'interaction-types';
+    singularName: 'interaction-type';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    color: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    display_name: Schema.Attribute.String & Schema.Attribute.Required;
+    display_name_en: Schema.Attribute.String & Schema.Attribute.Required;
+    icon: Schema.Attribute.String;
+    likes: Schema.Attribute.Relation<'oneToMany', 'api::like.like'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::interaction-types.interaction-type'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiLikeLike extends Struct.CollectionTypeSchema {
   collectionName: 'likes';
   info: {
-    description: 'User likes on articles';
+    description: 'User interactions on articles';
     displayName: 'Like';
     pluralName: 'likes';
     singularName: 'like';
@@ -1234,6 +1273,11 @@ export interface ApiLikeLike extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::like.like'> &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    type: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::interaction-types.interaction-type'
+    > &
+      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1961,6 +2005,7 @@ declare module '@strapi/strapi' {
       'api::footer.footer': ApiFooterFooter;
       'api::global-check.global-check': ApiGlobalCheckGlobalCheck;
       'api::image-upload.image-upload': ApiImageUploadImageUpload;
+      'api::interaction-types.interaction-type': ApiInteractionTypesInteractionType;
       'api::like.like': ApiLikeLike;
       'api::main-category.main-category': ApiMainCategoryMainCategory;
       'api::metadata-page.metadata-page': ApiMetadataPageMetadataPage;

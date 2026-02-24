@@ -5,7 +5,7 @@
     "singularName": "like",
     "pluralName": "likes",
     "displayName": "Like",
-    "description": "User interactions on articles"
+    "description": "User likes on articles"
   },
   "options": {
     "draftAndPublish": false
@@ -23,11 +23,10 @@
       "target": "plugin::users-permissions.user"
     },
     "type": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::interaction-types.interaction-type",
-      "inversedBy": "likes",
-      "required": true
+      "type": "enumeration",
+      "enum": ["me_gusta", "me_interesa"],
+      "required": true,
+      "default": "me_gusta"
     }
   }
 }
