@@ -312,32 +312,17 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         `, [documentId, typeId]);
 
         const likeId = result.rows[0].id;
-        console.log('Like creado con ID:', likeId);
 
         // Insertar relaciones directamente en tablas de links
-        try {
-          const articleLinkResult = await strapi.db.connection.raw(`
-            INSERT INTO likes_article_lnk (like_id, article_id)
-            VALUES (?, ?)
-            RETURNING *
-          `, [likeId, articleId]);
-          console.log('Article link creado:', articleLinkResult.rows);
-        } catch (error) {
-          console.error('Error creando article link:', error.message);
-          console.error('Detalles:', error);
-        }
+        await strapi.db.connection.raw(`
+          INSERT INTO likes_article_lnk (like_id, article_id)
+          VALUES (?, ?)
+        `, [likeId, articleId]);
 
-        try {
-          const userLinkResult = await strapi.db.connection.raw(`
-            INSERT INTO likes_user_lnk (like_id, user_id)
-            VALUES (?, ?)
-            RETURNING *
-          `, [likeId, userId]);
-          console.log('User link creado:', userLinkResult.rows);
-        } catch (error) {
-          console.error('Error creando user link:', error.message);
-          console.error('Detalles:', error);
-        }
+        await strapi.db.connection.raw(`
+          INSERT INTO likes_user_lnk (like_id, user_id)
+          VALUES (?, ?)
+        `, [likeId, userId]);
 
         return ctx.send({
           message: `Interaction added`,
@@ -383,7 +368,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         where: whereClause,
         populate: {
           article: {
-            populate: ['cover', 'category', 'author', 'main_category', 'sub_categories']
+            populate: ['cover', 'category', 'author']
           },
           type: true,
           user: {
@@ -393,10 +378,60 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         orderBy: { createdAt: 'desc' },
       });
 
+      // Enriquecer cada interacción con conteos y estado del usuario
+      const enrichedInteractions = await Promise.all(
+        interactions.map(async (interaction) => {
+          if (!interaction.article) return interaction;
+
+          const articleId = interaction.article.id;
+
+          // Contar likes del artículo
+          const likesCount = await strapi.db.query('api::like.like').count({
+            where: { article: articleId }
+          });
+
+          // Contar comentarios del artículo
+          const commentsCount = await strapi.db.query('api::comment.comment').count({
+            where: { article: articleId }
+          });
+
+          // Verificar si el usuario ya dio like a este artículo
+          const userLike = await strapi.db.query('api::like.like').findOne({
+            where: { 
+              article: articleId,
+              user: userId 
+            }
+          });
+
+          // Verificar si el usuario ya comentó en este artículo
+          const userComment = await strapi.db.query('api::comment.comment').findOne({
+            where: { 
+              article: articleId,
+              author: userId 
+            }
+          });
+
+          return {
+            ...interaction,
+            article: {
+              ...interaction.article,
+              stats: {
+                likesCount,
+                commentsCount
+              },
+              userInteraction: {
+                liked: !!userLike,
+                commented: !!userComment
+              }
+            }
+          };
+        })
+      );
+
       return ctx.send({
-        data: interactions,
+        data: enrichedInteractions,
         meta: {
-          total: interactions.length,
+          total: enrichedInteractions.length,
         },
       });
     } catch (error) {
