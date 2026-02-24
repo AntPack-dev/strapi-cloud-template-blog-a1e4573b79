@@ -1,9 +1,11 @@
+'use strict';
+
 module.exports = {
   routes: [
     {
-      method: 'POST',
-      path: '/likes/toggle-interaction',
-      handler: 'like.toggleInteraction',
+      method: 'GET',
+      path: '/interaction-types',
+      handler: 'interaction-type.find',
       config: {
         policies: [],
         middlewares: [],
@@ -11,8 +13,8 @@ module.exports = {
     },
     {
       method: 'GET',
-      path: '/likes/my-interactions',
-      handler: 'like.getMyInteractions',
+      path: '/interaction-types/:id',
+      handler: 'interaction-type.findOne',
       config: {
         policies: [],
         middlewares: [],
