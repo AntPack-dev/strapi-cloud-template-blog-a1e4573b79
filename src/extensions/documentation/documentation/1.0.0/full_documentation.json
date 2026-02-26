@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-01-27T14:30:55.199Z"
+    "x-generation-date": "2026-02-26T16:25:22.213Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -10024,6 +10024,10 @@
               "readingTime": {
                 "type": "integer"
               },
+              "creationDate": {
+                "type": "string",
+                "format": "date"
+              },
               "locale": {
                 "type": "string"
               },
@@ -11641,6 +11645,10 @@
                                         "readingTime": {
                                           "type": "integer"
                                         },
+                                        "creationDate": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -12039,6 +12047,10 @@
           },
           "readingTime": {
             "type": "integer"
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date"
           },
           "createdAt": {
             "type": "string",
@@ -14045,6 +14057,10 @@
                 "readingTime": {
                   "type": "integer"
                 },
+                "creationDate": {
+                  "type": "string",
+                  "format": "date"
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -15065,6 +15081,10 @@
                                       },
                                       "readingTime": {
                                         "type": "integer"
+                                      },
+                                      "creationDate": {
+                                        "type": "string",
+                                        "format": "date"
                                       },
                                       "createdAt": {
                                         "type": "string",
@@ -16550,6 +16570,10 @@
                           },
                           "readingTime": {
                             "type": "integer"
+                          },
+                          "creationDate": {
+                            "type": "string",
+                            "format": "date"
                           },
                           "createdAt": {
                             "type": "string",
@@ -18373,6 +18397,10 @@
                                         "readingTime": {
                                           "type": "integer"
                                         },
+                                        "creationDate": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -20051,6 +20079,10 @@
                             "readingTime": {
                               "type": "integer"
                             },
+                            "creationDate": {
+                              "type": "string",
+                              "format": "date"
+                            },
                             "createdAt": {
                               "type": "string",
                               "format": "date-time"
@@ -21219,6 +21251,10 @@
                                       },
                                       "readingTime": {
                                         "type": "integer"
+                                      },
+                                      "creationDate": {
+                                        "type": "string",
+                                        "format": "date"
                                       },
                                       "createdAt": {
                                         "type": "string",
@@ -23194,6 +23230,10 @@
                                       "readingTime": {
                                         "type": "integer"
                                       },
+                                      "creationDate": {
+                                        "type": "string",
+                                        "format": "date"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -25011,6 +25051,10 @@
                                       "readingTime": {
                                         "type": "integer"
                                       },
+                                      "creationDate": {
+                                        "type": "string",
+                                        "format": "date"
+                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -26324,6 +26368,10 @@
                                         "readingTime": {
                                           "type": "integer"
                                         },
+                                        "creationDate": {
+                                          "type": "string",
+                                          "format": "date"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -27606,6 +27654,10 @@
                                       },
                                       "readingTime": {
                                         "type": "integer"
+                                      },
+                                      "creationDate": {
+                                        "type": "string",
+                                        "format": "date"
                                       },
                                       "createdAt": {
                                         "type": "string",
@@ -29021,6 +29073,10 @@
                               },
                               "readingTime": {
                                 "type": "integer"
+                              },
+                              "creationDate": {
+                                "type": "string",
+                                "format": "date"
                               },
                               "createdAt": {
                                 "type": "string",
