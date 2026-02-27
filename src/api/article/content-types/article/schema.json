@@ -184,6 +184,14 @@
         }
       },
       "required": true
+    },
+    "creationDate": {
+      "type": "date",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }
