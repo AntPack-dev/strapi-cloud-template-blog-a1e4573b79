@@ -368,7 +368,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         where: whereClause,
         populate: {
           article: {
-            populate: ['cover', 'category', 'author', 'mainCategory']
+            populate: ['cover', 'category', 'author', 'main_category']
           },
           type: true,
           user: {

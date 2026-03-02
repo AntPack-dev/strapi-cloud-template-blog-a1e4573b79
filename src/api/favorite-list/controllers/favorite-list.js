@@ -340,7 +340,7 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
         populate: {
           articles: {
             select: ['id', 'title', 'slug', 'description'],
-            populate: ['cover', 'category', 'author', 'mainCategory']
+            populate: ['cover', 'category', 'author', 'main_category']
           }
         },
         orderBy: { isDefault: 'desc', createdAt: 'desc' }
