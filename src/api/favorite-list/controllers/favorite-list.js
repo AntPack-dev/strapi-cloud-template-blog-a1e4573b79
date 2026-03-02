@@ -198,6 +198,71 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
   },
 
+  // Eliminar múltiples artículos de una lista de favoritos
+  async removeMultipleArticles(ctx) {
+    const { user } = ctx.state;
+    const { articleIds, listId } = ctx.request.body;
+    const userId = user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    if (!articleIds || !Array.isArray(articleIds) || articleIds.length === 0) {
+      return ctx.badRequest('Article IDs array is required and must not be empty');
+    }
+
+    if (!listId) {
+      return ctx.badRequest('List ID is required');
+    }
+
+    try {
+      // Verificar que la lista pertenece al usuario
+      const favoriteList = await strapi.db.query('api::favorite-list.favorite-list').findOne({
+        where: {
+          id: listId,
+          user: { id: userId }
+        },
+        populate: ['articles']
+      });
+
+      if (!favoriteList) {
+        return ctx.notFound('Favorite list not found');
+      }
+
+      // Obtener los IDs de los artículos que están actualmente en la lista
+      const currentArticleIds = (favoriteList.articles || []).map(article => article.id);
+      
+      // Filtrar solo los artículos que existen en la lista
+      const validArticleIds = articleIds.filter(id => currentArticleIds.includes(id));
+
+      if (validArticleIds.length === 0) {
+        return ctx.badRequest('None of the provided articles are in this list');
+      }
+
+      // Desconectar los artículos de la lista
+      const updatedList = await strapi.db.query('api::favorite-list.favorite-list').update({
+        where: { id: listId },
+        data: {
+          articles: {
+            disconnect: validArticleIds.map(id => ({ id }))
+          }
+        },
+        populate: ['articles']
+      });
+
+      return ctx.send({
+        data: updatedList,
+        message: `Removed ${validArticleIds.length} articles from favorites list`,
+        removedCount: validArticleIds.length,
+        notFoundCount: articleIds.length - validArticleIds.length
+      });
+    } catch (error) {
+      console.error('Error removing multiple articles from favorites:', error);
+      return ctx.badRequest('Error removing articles from favorites');
+    }
+  },
+
   // Eliminar todos los artículos de una lista de favoritos
   async clearList(ctx) {
     const { user } = ctx.state;
@@ -275,7 +340,7 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
         populate: {
           articles: {
             select: ['id', 'title', 'slug', 'description'],
-            populate: ['cover', 'category', 'author']
+            populate: ['cover', 'category', 'author', 'mainCategory']
           }
         },
         orderBy: { isDefault: 'desc', createdAt: 'desc' }
