@@ -126,6 +126,15 @@ module.exports = {
       data: userData,
     });
 
+    // Create default favorite list for new user
+    try {
+      const favoriteListService = strapi.service('api::favorite-list.favorite-list-service');
+      await favoriteListService.createDefaultFavoriteList(user.id);
+    } catch (error) {
+      strapi.log.error('Error creating default favorite list for new user:', error);
+      // Don't fail registration if favorite list creation fails
+    }
+
     // If notificationActive is true, add user to Mailchimp
     if (params.notificationActive === true) {
       try {

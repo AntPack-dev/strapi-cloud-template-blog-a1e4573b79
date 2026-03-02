@@ -198,6 +198,65 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
   },
 
+  // Eliminar todos los artículos de una lista de favoritos
+  async clearList(ctx) {
+    const { user } = ctx.state;
+    const { listId } = ctx.request.body;
+    const userId = user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    if (!listId) {
+      return ctx.badRequest('List ID is required');
+    }
+
+    try {
+      // Verificar que la lista pertenece al usuario
+      const favoriteList = await strapi.db.query('api::favorite-list.favorite-list').findOne({
+        where: {
+          id: listId,
+          user: { id: userId }
+        },
+        populate: ['articles']
+      });
+
+      if (!favoriteList) {
+        return ctx.notFound('Favorite list not found');
+      }
+
+      // Obtener los IDs de todos los artículos para desconectarlos
+      const articleIds = (favoriteList.articles || []).map(article => article.id);
+
+      if (articleIds.length === 0) {
+        return ctx.send({
+          data: favoriteList,
+          message: 'List is already empty'
+        });
+      }
+
+      // Desconectar todos los artículos de la lista
+      const updatedList = await strapi.db.query('api::favorite-list.favorite-list').update({
+        where: { id: listId },
+        data: {
+          articles: {
+            disconnect: articleIds.map(id => ({ id }))
+          }
+        },
+        populate: ['articles']
+      });
+
+      return ctx.send({
+        data: updatedList,
+        message: `Cleared ${articleIds.length} articles from favorites list`
+      });
+    } catch (error) {
+      console.error('Error clearing favorite list:', error);
+      return ctx.badRequest('Error clearing favorite list');
+    }
+  },
+
   // Obtener todas las listas del usuario
   async getUserLists(ctx) {
     const { user } = ctx.state;
