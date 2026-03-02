@@ -65,6 +65,18 @@ module.exports = {
     },
     {
       method: 'POST',
+      path: '/favorite-lists/remove-multiple',
+      handler: 'favorite-list.removeMultipleArticles',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'POST',
       path: '/favorite-lists/clear',
       handler: 'favorite-list.clearList',
       config: {
