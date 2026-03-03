@@ -109,4 +109,126 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
       return ctx.badRequest('Error deleting comment');
     }
   },
+
+  // Obtener comentarios de un artículo específico
+  async getCommentsByArticle(ctx) {
+    const { articleId } = ctx.params;
+    const { page = 1, limit = 10 } = ctx.query;
+
+    if (!articleId) {
+      return ctx.badRequest('Article ID is required');
+    }
+
+    try {
+      // Verificar que el artículo existe
+      const article = await strapi.db.query('api::article.article').findOne({
+        where: { id: articleId }
+      });
+
+      if (!article) {
+        return ctx.notFound('Article not found');
+      }
+
+      // Convertir a números
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const offset = (pageNum - 1) * limitNum;
+
+      // Obtener comentarios con paginación
+      const comments = await strapi.db.query('api::comment.comment').findMany({
+        where: {
+          article: articleId
+        },
+        populate: {
+          author: {
+            select: ['id', 'username', 'firstName', 'lastName']
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        limit: limitNum,
+        offset: offset
+      });
+
+      // Contar total de comentarios para paginación
+      const total = await strapi.db.query('api::comment.comment').count({
+        where: {
+          article: articleId
+        }
+      });
+
+      return ctx.send({
+        data: comments,
+        meta: {
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: total,
+            pageCount: Math.ceil(total / limitNum)
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return ctx.badRequest('Error fetching comments');
+    }
+  },
+
+  // Obtener comentarios del usuario autenticado
+  async getMyComments(ctx) {
+    const userId = ctx.state.user?.id;
+    const { page = 1, limit = 10 } = ctx.query;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in to view your comments');
+    }
+
+    try {
+      // Convertir a números
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const offset = (pageNum - 1) * limitNum;
+
+      // Obtener comentarios del usuario con paginación
+      const comments = await strapi.db.query('api::comment.comment').findMany({
+        where: {
+          author: userId
+        },
+        populate: {
+          article: {
+            select: ['id', 'title', 'slug']
+          },
+          author: {
+            select: ['id', 'username', 'firstName', 'lastName']
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        limit: limitNum,
+        offset: offset
+      });
+
+      // Contar total de comentarios para paginación
+      const total = await strapi.db.query('api::comment.comment').count({
+        where: {
+          author: userId
+        }
+      });
+
+      return ctx.send({
+        data: comments,
+        meta: {
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: total,
+            pageCount: Math.ceil(total / limitNum)
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching user comments:', error);
+      return ctx.badRequest('Error fetching comments');
+    }
+  }
 }));

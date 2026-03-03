@@ -345,7 +345,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
 
   async getMyInteractions(ctx) {
     const userId = ctx.state.user?.id;
-    const { type, articleId } = ctx.query;
+    const { type, articleId, search } = ctx.query;
 
     if (!userId) {
       return ctx.unauthorized('You must be logged in to view your interactions');
@@ -378,9 +378,39 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         orderBy: { createdAt: 'desc' },
       });
 
+      // Filtrar resultados basados en parámetro de búsqueda
+      let filteredInteractions = interactions;
+
+      // Búsqueda unificada: nombre de artículo, nombre de categoría, o nombre de main category
+      if (search) {
+        const searchTerm = search.toLowerCase();
+        filteredInteractions = filteredInteractions.filter(interaction => {
+          if (!interaction.article) return false;
+          
+          const article = interaction.article;
+          
+          // Buscar en título del artículo
+          const titleMatch = article.title && 
+            article.title.toLowerCase().includes(searchTerm);
+          
+          // Buscar en nombre de categoría
+          const categoryMatch = article.category && 
+            article.category.name && 
+            article.category.name.toLowerCase().includes(searchTerm);
+          
+          // Buscar en nombre de main category
+          const mainCategoryMatch = article.main_category && 
+            article.main_category.name && 
+            article.main_category.name.toLowerCase().includes(searchTerm);
+          
+          // Retornar si coincide con alguno de los tres campos
+          return titleMatch || categoryMatch || mainCategoryMatch;
+        });
+      }
+
       // Enriquecer cada interacción con conteos y estado del usuario
       const enrichedInteractions = await Promise.all(
-        interactions.map(async (interaction) => {
+        filteredInteractions.map(async (interaction) => {
           if (!interaction.article) return interaction;
 
           const articleId = interaction.article.id;
@@ -432,6 +462,11 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         data: enrichedInteractions,
         meta: {
           total: enrichedInteractions.length,
+          filters: {
+            search,
+            type,
+            articleId
+          }
         },
       });
     } catch (error) {
