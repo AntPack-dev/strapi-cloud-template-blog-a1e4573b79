@@ -59,5 +59,42 @@ module.exports = createCoreService('api::favorite-list.favorite-list', ({ strapi
       },
       populate: ['articles']
     });
+  },
+
+  // Método para eliminar una lista de favoritos completa
+  async deleteFavoriteList(listId, userId) {
+    try {
+      // Verificar que la lista existe y pertenece al usuario
+      const favoriteList = await strapi.db.query('api::favorite-list.favorite-list').findOne({
+        where: {
+          id: listId,
+          user: { id: userId }
+        }
+      });
+
+      if (!favoriteList) {
+        throw new Error('Favorite list not found or does not belong to user');
+      }
+
+      // No permitir eliminar la lista por defecto
+      if (favoriteList.isDefault) {
+        throw new Error('Cannot delete default favorite list');
+      }
+
+      // Eliminar la lista (Strapi manejará automáticamente las relaciones)
+      await strapi.db.query('api::favorite-list.favorite-list').delete({
+        where: { id: listId }
+      });
+
+      return {
+        success: true,
+        message: 'Favorite list deleted successfully',
+        deletedListId: listId
+      };
+
+    } catch (error) {
+      strapi.log.error('Error deleting favorite list:', error);
+      throw error;
+    }
   }
 }));
