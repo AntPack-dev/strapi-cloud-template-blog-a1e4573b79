@@ -88,6 +88,18 @@ module.exports = {
       }
     },
     {
+      method: 'DELETE',
+      path: '/favorite-lists/:listId',
+      handler: 'favorite-list.deleteFavoriteList',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
       method: 'POST',
       path: '/favorite-lists',
       handler: 'favorite-list.create',

@@ -456,6 +456,46 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
   },
 
+  // Eliminar una lista de favoritos completa
+  async deleteFavoriteList(ctx) {
+    const { user } = ctx.state;
+    const { listId } = ctx.params;
+    const userId = user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    if (!listId) {
+      return ctx.badRequest('List ID is required');
+    }
+
+    try {
+      const favoriteListService = strapi.service('api::favorite-list.favorite-list');
+      const result = await favoriteListService.deleteFavoriteList(listId, userId);
+
+      return ctx.send({
+        data: {
+          deletedListId: result.deletedListId
+        },
+        message: result.message
+      });
+
+    } catch (error) {
+      console.error('Error deleting favorite list:', error);
+      
+      if (error.message.includes('not found')) {
+        return ctx.notFound(error.message);
+      }
+      
+      if (error.message.includes('Cannot delete default')) {
+        return ctx.badRequest(error.message);
+      }
+      
+      return ctx.badRequest('Error deleting favorite list');
+    }
+  },
+
   // Crear nueva lista de favoritos
   async create(ctx) {
     const { user } = ctx.state;
