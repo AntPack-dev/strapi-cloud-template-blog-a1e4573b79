@@ -383,25 +383,37 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
 
       // Búsqueda unificada: nombre de artículo, nombre de categoría, o nombre de main category
       if (search) {
-        const searchTerm = search.toLowerCase();
+        // Función para normalizar texto (quitar acentos y caracteres especiales)
+        const normalizeText = (text) => {
+          return text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Quitar diacríticos (acentos)
+            .replace(/[¡!¿?]/g, '') // Quitar signos de interrogación y exclamación
+            .replace(/[^\w\s]/g, '') // Quitar caracteres especiales excepto espacios y alfanuméricos
+            .trim();
+        };
+        
+        const normalizedSearchTerm = normalizeText(search);
+        
         filteredInteractions = filteredInteractions.filter(interaction => {
           if (!interaction.article) return false;
           
           const article = interaction.article;
           
-          // Buscar en título del artículo
+          // Buscar en título del artículo (normalizado)
           const titleMatch = article.title && 
-            article.title.toLowerCase().includes(searchTerm);
+            normalizeText(article.title).includes(normalizedSearchTerm);
           
-          // Buscar en nombre de categoría
+          // Buscar en nombre de categoría (normalizado)
           const categoryMatch = article.category && 
             article.category.name && 
-            article.category.name.toLowerCase().includes(searchTerm);
+            normalizeText(article.category.name).includes(normalizedSearchTerm);
           
-          // Buscar en nombre de main category
+          // Buscar en nombre de main category (normalizado)
           const mainCategoryMatch = article.main_category && 
             article.main_category.name && 
-            article.main_category.name.toLowerCase().includes(searchTerm);
+            normalizeText(article.main_category.name).includes(normalizedSearchTerm);
           
           // Retornar si coincide con alguno de los tres campos
           return titleMatch || categoryMatch || mainCategoryMatch;
