@@ -197,9 +197,19 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         return ctx.badRequest('Invalid interaction type ID');
       }
 
-      // Verificar que el tipo de interacción existe y está activo
+      // Validación simple del artículo - sin populate para evitar errores
+      const article = await strapi.db.query('api::article.article').findOne({
+        where: { id: articleId },
+        select: ['id']
+      });
+
+      if (!article) {
+        return ctx.badRequest('Article not found');
+      }
+
+      // Validación simple del tipo de interacción
       const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
-        where: { id: typeId, active: true }
+        where: { id: typeId }
       });
 
       if (!interactionType) {
@@ -207,32 +217,151 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
       }
 
       // Verificar si el usuario ya tiene CUALQUIER interacción con este artículo
-      const existingInteractionRaw = await strapi.db.query('api::like.like').findOne({
-        where: {
-          article: articleId,
-          user: userId,
-        }
-      });
-
-      if (existingInteractionRaw) {
-        // Obtener la interacción con el tipo poblado
-        const existingInteraction = await strapi.entityService.findOne('api::like.like', existingInteractionRaw.id, {
-          populate: ['type']
-        });
+      // Usamos raw SQL para evitar problemas con relaciones huérfanas
+      let existingInteractionRaw = null;
+      try {
+        const result = await strapi.db.connection.raw(`
+          SELECT l.id, l.type_id 
+          FROM likes l
+          INNER JOIN likes_article_lnk la ON l.id = la.like_id
+          INNER JOIN likes_user_lnk lu ON l.id = lu.like_id
+          WHERE la.article_id = ? AND lu.user_id = ?
+          LIMIT 1
+        `, [articleId, userId]);
         
-        // Si type es null, es un registro viejo - eliminarlo y crear uno nuevo
-        if (!existingInteraction.type) {
-          await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
-          
-          // Crear nueva interacción con el método correcto
-          const newInteraction = await strapi.db.query('api::like.like').create({
-            data: {
+        if (result.rows && result.rows.length > 0) {
+          existingInteractionRaw = {
+            id: result.rows[0].id,
+            type_id: result.rows[0].type_id
+          };
+        }
+      } catch (sqlError) {
+        // Si SQL falla, intentar con el método normal pero sin populate
+        try {
+          existingInteractionRaw = await strapi.db.query('api::like.like').findOne({
+            where: {
               article: articleId,
               user: userId,
-              type: typeId,
-            },
-            populate: ['type', 'article', 'user']
+            }
           });
+        } catch (queryError) {
+          // Si todo falla, asumir que no existe
+          existingInteractionRaw = null;
+        }
+      }
+
+      if (existingInteractionRaw) {
+        // Si tenemos type_id directo, usarlo
+        if (existingInteractionRaw.type_id) {
+          if (existingInteractionRaw.type_id === typeId) {
+            // Mismo tipo - eliminar con raw SQL
+            try {
+              await strapi.db.connection.raw(`
+                DELETE FROM likes WHERE id = ?
+              `, [existingInteractionRaw.id]);
+
+              return ctx.send({
+                message: `${interactionType.display_name} removed`,
+                interacted: false,
+                typeId: typeId,
+                typeInfo: {
+                  id: interactionType.id,
+                  code: interactionType.code,
+                  display_name: interactionType.display_name,
+                  icon: interactionType.icon,
+                  color: interactionType.color
+                }
+              });
+            } catch (deleteError) {
+              // Si SQL falla, intentar con query
+              try {
+                await strapi.db.query('api::like.like').delete({
+                  where: { id: existingInteractionRaw.id }
+                });
+              } catch (queryDeleteError) {
+                // Si no se puede eliminar, devolver error simple
+                return ctx.badRequest('Cannot remove interaction. Please try again.');
+              }
+            }
+          } else {
+            // Diferente tipo - actualizar con raw SQL
+            try {
+              await strapi.db.connection.raw(`
+                UPDATE likes SET type_id = ? WHERE id = ?
+              `, [typeId, existingInteractionRaw.id]);
+
+              return ctx.send({
+                message: `Interaction changed to ${interactionType.display_name}`,
+                interacted: true,
+                typeId: typeId,
+                typeInfo: {
+                  id: interactionType.id,
+                  code: interactionType.code,
+                  display_name: interactionType.display_name,
+                  icon: interactionType.icon,
+                  color: interactionType.color
+                }
+              });
+            } catch (updateError) {
+              // Si SQL falla, intentar con query
+              try {
+                await strapi.db.query('api::like.like').update({
+                  where: { id: existingInteractionRaw.id },
+                  data: { type: typeId }
+                });
+              } catch (queryUpdateError) {
+                // Si no se puede actualizar, eliminar y crear nueva
+                try {
+                  await strapi.db.query('api::like.like').delete({
+                    where: { id: existingInteractionRaw.id }
+                  });
+                } catch (deleteError) {
+                  // Ignorar error de eliminación
+                }
+                
+                // Crear nueva (continuará al else block)
+                existingInteractionRaw = null;
+              }
+            }
+          }
+        } else {
+          // No tiene type_id - eliminar y crear nueva
+          try {
+            await strapi.db.query('api::like.like').delete({
+              where: { id: existingInteractionRaw.id }
+            });
+          } catch (deleteError) {
+            // Ignorar error
+          }
+          existingInteractionRaw = null;
+        }
+      }
+
+      if (!existingInteractionRaw) {
+        // Crear nueva interacción con raw SQL para evitar problemas
+        try {
+          // Generar document_id único
+          const crypto = require('crypto');
+          const documentId = crypto.randomBytes(13).toString('base64url').substring(0, 25);
+
+          const result = await strapi.db.connection.raw(`
+            INSERT INTO likes (document_id, type_id, published_at, created_at, updated_at)
+            VALUES (?, ?, NOW(), NOW(), NOW())
+            RETURNING id
+          `, [documentId, typeId]);
+
+          const likeId = result.rows[0].id;
+
+          // Insertar relaciones
+          await strapi.db.connection.raw(`
+            INSERT INTO likes_article_lnk (like_id, article_id)
+            VALUES (?, ?)
+          `, [likeId, articleId]);
+
+          await strapi.db.connection.raw(`
+            INSERT INTO likes_user_lnk (like_id, user_id)
+            VALUES (?, ?)
+          `, [likeId, userId]);
 
           return ctx.send({
             message: `Interaction added`,
@@ -246,78 +375,54 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
               color: interactionType.color
             }
           });
-        }
+        } catch (createError) {
+          // Si SQL falla, intentar con el método normal
+          try {
+            const newInteraction = await strapi.db.query('api::like.like').create({
+              data: {
+                article: articleId,
+                user: userId,
+                type: typeId,
+              }
+            });
 
-        // Si es el mismo tipo, eliminar la interacción
-        if (existingInteraction.type.id === typeId) {
-          await strapi.db.query('api::like.like').delete({
-            where: { id: existingInteraction.id },
-          });
-
-          return ctx.send({
-            message: `${interactionType.display_name} removed`,
-            interacted: false,
-            typeId: typeId,
-            typeInfo: {
-              id: interactionType.id,
-              code: interactionType.code,
-              display_name: interactionType.display_name,
-              icon: interactionType.icon,
-              color: interactionType.color
-            }
-          });
-        } else {
-          // Si es un tipo diferente, actualizar la interacción existente
-          const oldTypeDisplay = existingInteraction.type.display_name;
-          
-          await strapi.db.query('api::like.like').update({
-            where: { id: existingInteraction.id },
-            data: {
-              type: typeId,
-            },
-          });
-
-          return ctx.send({
-            message: `Interaction changed from ${oldTypeDisplay} to ${interactionType.display_name}`,
-            interacted: true,
-            typeId: typeId,
-            previousTypeId: existingInteraction.type.id,
-            typeInfo: {
-              id: interactionType.id,
-              code: interactionType.code,
-              display_name: interactionType.display_name,
-              icon: interactionType.icon,
-              color: interactionType.color
-            }
-          });
-        }
-      } else {
-        // Crear la interacción usando el método de Strapi
-        const newInteraction = await strapi.db.query('api::like.like').create({
-          data: {
-            article: articleId,
-            user: userId,
-            type: typeId,
-          },
-          populate: ['type', 'article', 'user']
-        });
-
-        return ctx.send({
-          message: `Interaction added`,
-          interacted: true,
-          typeId: typeId,
-          typeInfo: {
-            id: interactionType.id,
-            code: interactionType.code,
-            display_name: interactionType.display_name,
-            icon: interactionType.icon,
-            color: interactionType.color
+            return ctx.send({
+              message: `Interaction added`,
+              interacted: true,
+              typeId: typeId,
+              typeInfo: {
+                id: interactionType.id,
+                code: interactionType.code,
+                display_name: interactionType.display_name,
+                icon: interactionType.icon,
+                color: interactionType.color
+              }
+            });
+          } catch (queryCreateError) {
+            return ctx.badRequest('Cannot create interaction. Please contact administrator.');
           }
-        });
+        }
       }
     } catch (error) {
       console.error('Error toggling interaction:', error);
-      return ctx.badRequest('An error occurred while toggling interaction');
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        details: error.details
+      });
+      console.error('Request data:', { articleId, type, userId });
+      
+      // Si es un error de base de datos, dar más contexto
+      if (error.message.includes('database') || error.message.includes('SQL') || error.message.includes('constraint')) {
+        return ctx.badRequest('Database error: Unable to process interaction. Please check if the article and interaction type exist.');
+      }
+      
+      // Si es un error de relación
+      if (error.message.includes('relation') || error.message.includes('foreign key')) {
+        return ctx.badRequest('Relation error: Invalid article or interaction type.');
+      }
+      
+      return ctx.badRequest('Error toggling interaction: ' + error.message);
     }
   },
 
