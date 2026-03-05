@@ -2,6 +2,14 @@
 
 module.exports = {
   async up(knex) {
+    // Verificar si la tabla existe primero
+    const hasTable = await knex.schema.hasTable('likes');
+    
+    if (!hasTable) {
+      console.log('Table "likes" does not exist yet, skipping migration (will be created by Strapi)');
+      return;
+    }
+
     const hasColumn = await knex.schema.hasColumn('likes', 'type');
     
     if (hasColumn) {
