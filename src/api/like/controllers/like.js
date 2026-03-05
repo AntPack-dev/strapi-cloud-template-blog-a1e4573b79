@@ -197,9 +197,19 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         return ctx.badRequest('Invalid interaction type ID');
       }
 
-      // Verificar que el tipo de interacción existe y está activo
+      // Validación simple del artículo - sin populate para evitar errores
+      const article = await strapi.db.query('api::article.article').findOne({
+        where: { id: articleId },
+        select: ['id']
+      });
+
+      if (!article) {
+        return ctx.badRequest('Article not found');
+      }
+
+      // Validación simple del tipo de interacción
       const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
-        where: { id: typeId, active: true }
+        where: { id: typeId }
       });
 
       if (!interactionType) {
@@ -214,33 +224,32 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         }
       });
 
-      // Si no hay interacción del usuario, verificar si hay interacciones huérfanas en este artículo
+      // Si no hay interacción del usuario, verificar rápidamente si hay problemas básicos
       if (!existingInteractionRaw) {
-        // Buscar todas las interacciones para este artículo para detectar problemas
-        const allArticleInteractions = await strapi.db.query('api::like.like').findMany({
-          where: { article: articleId },
-          populate: ['type', 'user']
-        });
-
-        // Limpiar interacciones corruptas o huérfanas
-        for (const interaction of allArticleInteractions) {
-          try {
-            // Si la interacción no tiene usuario o tipo válido, eliminarla
-            if (!interaction.user || !interaction.type) {
-              await strapi.db.query('api::like.like').delete({
-                where: { id: interaction.id }
-              });
+        try {
+          // Solo verificar si hay interacciones sin relaciones básicas
+          const problematicInteractions = await strapi.db.query('api::like.like').findMany({
+            where: { 
+              article: articleId,
+              OR: [
+                { user: null },
+                { type: null }
+              ]
             }
-          } catch (error) {
-            // Si hay error al verificar, intentar eliminar
+          });
+
+          // Limpiar solo las que claramente están corruptas (sin usuario o tipo)
+          for (const interaction of problematicInteractions) {
             try {
               await strapi.db.query('api::like.like').delete({
                 where: { id: interaction.id }
               });
             } catch (deleteError) {
-              // Ignorar si no se puede eliminar
+              // Ignorar errores de eliminación
             }
           }
+        } catch (cleanupError) {
+          // Ignorar errores de limpieza, no deben bloquear la operación
         }
       }
 
@@ -389,14 +398,13 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           });
         }
       } else {
-        // Crear la interacción usando el método de Strapi
+        // Crear la interacción de forma simple
         const newInteraction = await strapi.db.query('api::like.like').create({
           data: {
             article: articleId,
             user: userId,
             type: typeId,
-          },
-          populate: ['type', 'article', 'user']
+          }
         });
 
         return ctx.send({
