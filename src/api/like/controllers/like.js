@@ -224,23 +224,15 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         if (!existingInteraction.type) {
           await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
           
-          const result = await strapi.db.connection.raw(`
-            INSERT INTO likes (type_id, published_at, created_at, updated_at)
-            VALUES (?, NOW(), NOW(), NOW())
-            RETURNING id
-          `, [typeId]);
-
-          const likeId = result.rows[0].id;
-
-          await strapi.db.connection.raw(`
-            INSERT INTO likes_article_lnk (like_id, article_id)
-            VALUES (?, ?)
-          `, [likeId, articleId]);
-
-          await strapi.db.connection.raw(`
-            INSERT INTO likes_user_lnk (like_id, user_id)
-            VALUES (?, ?)
-          `, [likeId, userId]);
+          // Crear nueva interacción con el método correcto
+          const newInteraction = await strapi.db.query('api::like.like').create({
+            data: {
+              article: articleId,
+              user: userId,
+              type: typeId,
+            },
+            populate: ['type', 'article', 'user']
+          });
 
           return ctx.send({
             message: `Interaction added`,
@@ -300,29 +292,15 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           });
         }
       } else {
-        // Generar un document_id único
-        const crypto = require('crypto');
-        const documentId = crypto.randomBytes(13).toString('base64url').substring(0, 25);
-
-        // Crear el like con SQL raw
-        const result = await strapi.db.connection.raw(`
-          INSERT INTO likes (document_id, type_id, published_at, created_at, updated_at)
-          VALUES (?, ?, NOW(), NOW(), NOW())
-          RETURNING id
-        `, [documentId, typeId]);
-
-        const likeId = result.rows[0].id;
-
-        // Insertar relaciones directamente en tablas de links
-        await strapi.db.connection.raw(`
-          INSERT INTO likes_article_lnk (like_id, article_id)
-          VALUES (?, ?)
-        `, [likeId, articleId]);
-
-        await strapi.db.connection.raw(`
-          INSERT INTO likes_user_lnk (like_id, user_id)
-          VALUES (?, ?)
-        `, [likeId, userId]);
+        // Crear la interacción usando el método de Strapi
+        const newInteraction = await strapi.db.query('api::like.like').create({
+          data: {
+            article: articleId,
+            user: userId,
+            type: typeId,
+          },
+          populate: ['type', 'article', 'user']
+        });
 
         return ctx.send({
           message: `Interaction added`,
