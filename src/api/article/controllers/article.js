@@ -409,4 +409,85 @@ module.exports = createCoreController('api::article.article', ({ strapi }) => ({
       return ctx.badRequest('Error fetching article');
     }
   },
+
+  // Obtener artículo con información de interacción del usuario
+  async findOneWithUserInteraction(ctx) {
+    const { id } = ctx.params;
+    const userId = ctx.state.user?.id;
+
+    try {
+      // Obtener el artículo solo con campos básicos (sin relaciones pesadas)
+      const article = await strapi.db.query('api::article.article').findOne({
+        where: { id },
+        select: [
+          'id', 
+          'title', 
+          'slug', 
+          'description', 
+          'isFeatured',
+          'isFeaturedMain',
+          'currentStatus',
+          'readingTime',
+          'creationDate',
+          'publishedAt', 
+          'createdAt', 
+          'updatedAt'
+        ]
+      });
+
+      if (!article) {
+        return ctx.notFound('Article not found');
+      }
+
+      // Inicializar objeto de respuesta
+      const articleWithInteraction = {
+        ...article,
+        userInteraction: {
+          hasLiked: false,
+          hasCommented: false,
+          likedTypes: []
+        }
+      };
+
+      // Si el usuario está autenticado, verificar sus interacciones
+      if (userId) {
+        // Verificar si el usuario ha dado like a este artículo (cualquier tipo)
+        const userLikes = await strapi.db.query('api::like.like').findMany({
+          where: {
+            article: id,
+            user: userId
+          },
+          populate: ['type']
+        });
+
+        // Verificar si el usuario ha comentado en este artículo
+        const userComment = await strapi.db.query('api::comment.comment').findOne({
+          where: {
+            article: id,
+            author: userId
+          }
+        });
+
+        // Actualizar información de interacción
+        articleWithInteraction.userInteraction = {
+          hasLiked: userLikes.length > 0,
+          hasCommented: !!userComment,
+          likedTypes: userLikes.map(like => ({
+            id: like.type?.id,
+            code: like.type?.code,
+            displayName: like.type?.display_name,
+            icon: like.type?.icon,
+            color: like.type?.color
+          }))
+        };
+      }
+
+      return ctx.send({
+        data: articleWithInteraction,
+      });
+    } catch (error) {
+      console.error('Error fetching article with user interaction:', error);
+      return ctx.badRequest('Error fetching article');
+    }
+  },
 }));
