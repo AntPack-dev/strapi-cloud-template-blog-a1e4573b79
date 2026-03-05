@@ -224,45 +224,19 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         }
       });
 
-      // Si no hay interacción del usuario, verificar rápidamente si hay problemas básicos
-      if (!existingInteractionRaw) {
-        try {
-          // Solo verificar si hay interacciones sin relaciones básicas
-          const problematicInteractions = await strapi.db.query('api::like.like').findMany({
-            where: { 
-              article: articleId,
-              OR: [
-                { user: null },
-                { type: null }
-              ]
-            }
-          });
-
-          // Limpiar solo las que claramente están corruptas (sin usuario o tipo)
-          for (const interaction of problematicInteractions) {
-            try {
-              await strapi.db.query('api::like.like').delete({
-                where: { id: interaction.id }
-              });
-            } catch (deleteError) {
-              // Ignorar errores de eliminación
-            }
-          }
-        } catch (cleanupError) {
-          // Ignorar errores de limpieza, no deben bloquear la operación
-        }
-      }
-
       if (existingInteractionRaw) {
         try {
-          // Obtener la interacción con el tipo poblado
-          const existingInteraction = await strapi.entityService.findOne('api::like.like', existingInteractionRaw.id, {
+          // Intentar obtener el tipo directamente con query simple
+          const interactionWithType = await strapi.db.query('api::like.like').findOne({
+            where: { id: existingInteractionRaw.id },
             populate: ['type']
           });
           
-          // Si no se puede cargar la interacción o está corrupta, eliminarla y crear nueva
-          if (!existingInteraction) {
-            await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
+          // Si no se puede cargar o no tiene tipo, eliminar y crear nueva
+          if (!interactionWithType || !interactionWithType.type) {
+            await strapi.db.query('api::like.like').delete({
+              where: { id: existingInteractionRaw.id }
+            });
             
             // Crear nueva interacción
             const newInteraction = await strapi.db.query('api::like.like').create({
@@ -270,36 +244,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
                 article: articleId,
                 user: userId,
                 type: typeId,
-              },
-              populate: ['type', 'article', 'user']
-            });
-
-            return ctx.send({
-              message: `Interaction added`,
-              interacted: true,
-              typeId: typeId,
-              typeInfo: {
-                id: interactionType.id,
-                code: interactionType.code,
-                display_name: interactionType.display_name,
-                icon: interactionType.icon,
-                color: interactionType.color
               }
-            });
-          }
-          
-          // Si type es null, es un registro viejo - eliminarlo y crear uno nuevo
-          if (!existingInteraction.type) {
-            await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
-            
-            // Crear nueva interacción con el método correcto
-            const newInteraction = await strapi.db.query('api::like.like').create({
-              data: {
-                article: articleId,
-                user: userId,
-                type: typeId,
-              },
-              populate: ['type', 'article', 'user']
             });
 
             return ctx.send({
@@ -316,10 +261,10 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
             });
           }
 
-          // Si es el mismo tipo, eliminar la interacción
-          if (existingInteraction.type.id === typeId) {
+          // Si es el mismo tipo, eliminar
+          if (interactionWithType.type.id === typeId) {
             await strapi.db.query('api::like.like').delete({
-              where: { id: existingInteraction.id },
+              where: { id: existingInteractionRaw.id }
             });
 
             return ctx.send({
@@ -335,21 +280,16 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
               }
             });
           } else {
-            // Si es un tipo diferente, actualizar la interacción existente
-            const oldTypeDisplay = existingInteraction.type.display_name;
-            
+            // Si es diferente tipo, actualizar
             await strapi.db.query('api::like.like').update({
-              where: { id: existingInteraction.id },
-              data: {
-                type: typeId,
-              },
+              where: { id: existingInteractionRaw.id },
+              data: { type: typeId }
             });
 
             return ctx.send({
-              message: `Interaction changed from ${oldTypeDisplay} to ${interactionType.display_name}`,
+              message: `Interaction changed to ${interactionType.display_name}`,
               interacted: true,
               typeId: typeId,
-              previousTypeId: existingInteraction.type.id,
               typeInfo: {
                 id: interactionType.id,
                 code: interactionType.code,
@@ -359,20 +299,14 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
               }
             });
           }
-        } catch (populateError) {
-          // Si hay error al cargar, eliminar la interacción corrupta y crear nueva
+        } catch (error) {
+          // Si hay cualquier error, eliminar la existente y crear nueva
           try {
-            await strapi.entityService.delete('api::like.like', existingInteractionRaw.id);
+            await strapi.db.query('api::like.like').delete({
+              where: { id: existingInteractionRaw.id }
+            });
           } catch (deleteError) {
-            // Si no se puede eliminar, intentar con query directo
-            try {
-              await strapi.db.query('api::like.like').delete({
-                where: { id: existingInteractionRaw.id }
-              });
-            } catch (directDeleteError) {
-              // Si nada funciona, devolver error específico
-              return ctx.badRequest('Unable to process corrupted interaction data. Please contact administrator.');
-            }
+            // Si no se puede eliminar, continuar
           }
           
           const newInteraction = await strapi.db.query('api::like.like').create({
@@ -380,12 +314,11 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
               article: articleId,
               user: userId,
               type: typeId,
-            },
-            populate: ['type', 'article', 'user']
+            }
           });
 
           return ctx.send({
-            message: `Interaction added (corrupted data fixed)`,
+            message: `Interaction added`,
             interacted: true,
             typeId: typeId,
             typeInfo: {
