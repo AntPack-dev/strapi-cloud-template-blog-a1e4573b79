@@ -4,9 +4,7 @@
  * article-enhanced controller
  */
 
-const { createController } = require('@strapi/strapi').factories;
-
-module.exports = createController('api::article.article', ({ strapi }) => ({
+module.exports = {
   // Enhanced find method with stats, user interaction, search, filters and random
   async findEnhanced(ctx) {
     const userId = ctx.state.user?.id;
@@ -65,7 +63,7 @@ module.exports = createController('api::article.article', ({ strapi }) => ({
             select: ['id', 'name', 'slug']
           },
           author: {
-            select: ['id', 'name', 'slug']
+            select: ['id', 'name', 'email']
           }
         },
         orderBy: { publishedAt: 'desc' }
@@ -237,7 +235,7 @@ module.exports = createController('api::article.article', ({ strapi }) => ({
             select: ['id', 'name', 'slug']
           },
           author: {
-            select: ['id', 'name', 'slug']
+            select: ['id', 'name', 'email']
           }
         }
       });
@@ -306,4 +304,4 @@ module.exports = createController('api::article.article', ({ strapi }) => ({
       return ctx.badRequest('Error fetching enhanced article: ' + error.message);
     }
   }
-}));
+};
