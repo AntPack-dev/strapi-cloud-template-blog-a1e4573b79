@@ -177,6 +177,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
   async toggleInteraction(ctx) {
     const userId = ctx.state.user?.id;
     const { articleId, type } = ctx.request.body;
+    let article = null;
 
     if (!userId) {
       return ctx.unauthorized('You must be logged in to interact with articles');
@@ -197,15 +198,36 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         return ctx.badRequest('Invalid interaction type ID');
       }
 
-      // Validación simple del artículo - sin populate para evitar errores
-      const article = await strapi.db.query('api::article.article').findOne({
-        where: { id: articleId },
-        select: ['id']
-      });
+      // Validación del artículo - intentar por documentId primero, luego por id
+      // Usar entityService en lugar de db.query para evitar problemas de permisos
+      
+      // Si articleId es un string (documentId), buscar por documentId
+      if (typeof articleId === 'string' && isNaN(parseInt(articleId))) {
+        article = await strapi.entityService.findMany('api::article.article', {
+          filters: { documentId: articleId },
+          fields: ['id', 'documentId'],
+          publicationState: 'preview'
+        });
+        article = article && article.length > 0 ? article[0] : null;
+      } else {
+        // Si es un número o string numérico, buscar por id
+        const numericId = parseInt(articleId);
+        if (!isNaN(numericId)) {
+          article = await strapi.entityService.findMany('api::article.article', {
+            filters: { id: numericId },
+            fields: ['id', 'documentId'],
+            publicationState: 'preview'
+          });
+          article = article && article.length > 0 ? article[0] : null;
+        }
+      }
 
       if (!article) {
         return ctx.badRequest('Article not found');
       }
+      
+      // Usar el id numérico del artículo para las operaciones de base de datos
+      const articleNumericId = article.id;
 
       // Validación simple del tipo de interacción
       const interactionType = await strapi.db.query('api::interaction-types.interaction-type').findOne({
@@ -227,7 +249,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           INNER JOIN likes_user_lnk lu ON l.id = lu.like_id
           WHERE la.article_id = ? AND lu.user_id = ?
           LIMIT 1
-        `, [articleId, userId]);
+        `, [articleNumericId, userId]);
         
         if (result.rows && result.rows.length > 0) {
           existingInteractionRaw = {
@@ -240,7 +262,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         try {
           existingInteractionRaw = await strapi.db.query('api::like.like').findOne({
             where: {
-              article: articleId,
+              article: articleNumericId,
               user: userId,
             }
           });
@@ -356,7 +378,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           await strapi.db.connection.raw(`
             INSERT INTO likes_article_lnk (like_id, article_id)
             VALUES (?, ?)
-          `, [likeId, articleId]);
+          `, [likeId, articleNumericId]);
 
           await strapi.db.connection.raw(`
             INSERT INTO likes_user_lnk (like_id, user_id)
@@ -380,7 +402,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           try {
             const newInteraction = await strapi.db.query('api::like.like').create({
               data: {
-                article: articleId,
+                article: articleNumericId,
                 user: userId,
                 type: typeId,
               }
@@ -410,7 +432,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         stack: error.stack,
         details: error.details
       });
-      console.error('Request data:', { articleId, type, userId });
+      console.error('Request data:', { articleId, articleNumericId: article?.id, type, userId });
       
       // Si es un error de base de datos, dar más contexto
       if (error.message.includes('database') || error.message.includes('SQL') || error.message.includes('constraint')) {
