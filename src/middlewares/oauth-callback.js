@@ -86,14 +86,22 @@ module.exports = (config, { strapi }) => {
                 }
               }
               
+              // Prepare update data with provider and image
+              const updateData = {
+                providers: {
+                  ...user.providers,
+                  [provider]: true
+                }
+              };
+              
+              // Update imageUrl if user doesn't have one and profile has a picture
+              if (!user.imageUrl && profile.picture) {
+                updateData.imageUrl = profile.picture;
+              }
+              
               const updatedUser = await strapi.query('plugin::users-permissions.user').update({
                 where: { id: user.id },
-                data: {
-                  providers: {
-                    ...user.providers,
-                    [provider]: true
-                  }
-                }
+                data: updateData
               });
 
               const jwt = strapi.plugin('users-permissions').service('jwt').issue({
@@ -128,6 +136,15 @@ module.exports = (config, { strapi }) => {
                   });
                   user.role = defaultRole;
                 }
+              }
+              
+              // Update imageUrl if user doesn't have one and profile has a picture
+              if (!user.imageUrl && profile.picture) {
+                await strapi.query('plugin::users-permissions.user').update({
+                  where: { id: user.id },
+                  data: { imageUrl: profile.picture }
+                });
+                user.imageUrl = profile.picture;
               }
               
               const jwt = strapi.plugin('users-permissions').service('jwt').issue({
@@ -182,6 +199,15 @@ module.exports = (config, { strapi }) => {
           const newUser = await strapi.query('plugin::users-permissions.user').create({
             data: userData
           });
+
+          // Create default favorite list for new OAuth user
+          try {
+            const favoriteListService = strapi.service('api::favorite-list.favorite-list-service');
+            await favoriteListService.createDefaultFavoriteList(newUser.id);
+          } catch (error) {
+            strapi.log.error('Error creating default favorite list for OAuth user:', error);
+            // Don't fail registration if favorite list creation fails
+          }
 
           const jwt = strapi.plugin('users-permissions').service('jwt').issue({
             id: newUser.id,
