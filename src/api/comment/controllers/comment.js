@@ -120,14 +120,33 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
     }
 
     try {
-      // Verificar que el artículo existe
-      const article = await strapi.db.query('api::article.article').findOne({
-        where: { id: articleId }
-      });
+      // Verificar que el artículo existe - usar entityService para evitar problemas de permisos con OAuth
+      let article = null;
+      
+      if (typeof articleId === 'string' && isNaN(parseInt(articleId))) {
+        const articles = await strapi.entityService.findMany('api::article.article', {
+          filters: { documentId: articleId },
+          fields: ['id', 'documentId'],
+          publicationState: 'preview'
+        });
+        article = articles && articles.length > 0 ? articles[0] : null;
+      } else {
+        const numericId = parseInt(articleId);
+        if (!isNaN(numericId)) {
+          const articles = await strapi.entityService.findMany('api::article.article', {
+            filters: { id: numericId },
+            fields: ['id', 'documentId'],
+            publicationState: 'preview'
+          });
+          article = articles && articles.length > 0 ? articles[0] : null;
+        }
+      }
 
       if (!article) {
         return ctx.notFound('Article not found');
       }
+      
+      const articleNumericId = article.id;
 
       // Convertir a números
       const pageNum = parseInt(page, 10);
@@ -137,7 +156,7 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
       // Obtener comentarios con paginación
       const comments = await strapi.db.query('api::comment.comment').findMany({
         where: {
-          article: articleId
+          article: articleNumericId
         },
         populate: {
           author: {
@@ -152,7 +171,7 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
       // Contar total de comentarios para paginación
       const total = await strapi.db.query('api::comment.comment').count({
         where: {
-          article: articleId
+          article: articleNumericId
         }
       });
 

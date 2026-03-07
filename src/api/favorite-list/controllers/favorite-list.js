@@ -74,14 +74,33 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
 
     try {
-      // Verificar que el artículo existe
-      const article = await strapi.db.query('api::article.article').findOne({
-        where: { id: articleId }
-      });
+      // Verificar que el artículo existe - usar entityService para evitar problemas de permisos con OAuth
+      let article = null;
+      
+      if (typeof articleId === 'string' && isNaN(parseInt(articleId))) {
+        const articles = await strapi.entityService.findMany('api::article.article', {
+          filters: { documentId: articleId },
+          fields: ['id', 'documentId'],
+          publicationState: 'preview'
+        });
+        article = articles && articles.length > 0 ? articles[0] : null;
+      } else {
+        const numericId = parseInt(articleId);
+        if (!isNaN(numericId)) {
+          const articles = await strapi.entityService.findMany('api::article.article', {
+            filters: { id: numericId },
+            fields: ['id', 'documentId'],
+            publicationState: 'preview'
+          });
+          article = articles && articles.length > 0 ? articles[0] : null;
+        }
+      }
 
       if (!article) {
         return ctx.notFound('Article not found');
       }
+      
+      const articleNumericId = article.id;
 
       let targetList;
 
@@ -122,7 +141,7 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
       const existingRelation = await strapi.db.query('api::favorite-list.favorite-list').findOne({
         where: {
           id: targetList.id,
-          articles: { id: articleId }
+          articles: { id: articleNumericId }
         }
       });
 
@@ -135,7 +154,7 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
         where: { id: targetList.id },
         data: {
           articles: {
-            connect: [{ id: articleId }]
+            connect: [{ id: articleNumericId }]
           }
         },
         populate: ['articles']
