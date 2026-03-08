@@ -74,25 +74,23 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
 
     try {
-      // Verificar que el artículo existe - usar entityService para evitar problemas de permisos con OAuth
+      // Verificar que el artículo existe - usar db.query directamente
       let article = null;
       
+      // Si articleId es un string no numérico (documentId), buscar por documentId
       if (typeof articleId === 'string' && isNaN(parseInt(articleId))) {
-        const articles = await strapi.entityService.findMany('api::article.article', {
-          filters: { documentId: articleId },
-          fields: ['id', 'documentId'],
-          publicationState: 'preview'
+        article = await strapi.db.query('api::article.article').findOne({
+          where: { documentId: articleId },
+          select: ['id', 'documentId']
         });
-        article = articles && articles.length > 0 ? articles[0] : null;
       } else {
+        // Si es un número o string numérico, buscar por id
         const numericId = parseInt(articleId);
         if (!isNaN(numericId)) {
-          const articles = await strapi.entityService.findMany('api::article.article', {
-            filters: { id: numericId },
-            fields: ['id', 'documentId'],
-            publicationState: 'preview'
+          article = await strapi.db.query('api::article.article').findOne({
+            where: { id: numericId },
+            select: ['id', 'documentId']
           });
-          article = articles && articles.length > 0 ? articles[0] : null;
         }
       }
 
