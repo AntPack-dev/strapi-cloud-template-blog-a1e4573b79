@@ -199,26 +199,22 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
       }
 
       // Validación del artículo - intentar por documentId primero, luego por id
-      // Usar entityService en lugar de db.query para evitar problemas de permisos
+      // Usar db.query directamente para evitar filtros de permisos
       
-      // Si articleId es un string (documentId), buscar por documentId
+      // Si articleId es un string no numérico (documentId), buscar por documentId
       if (typeof articleId === 'string' && isNaN(parseInt(articleId))) {
-        article = await strapi.entityService.findMany('api::article.article', {
-          filters: { documentId: articleId },
-          fields: ['id', 'documentId'],
-          publicationState: 'preview'
+        article = await strapi.db.query('api::article.article').findOne({
+          where: { documentId: articleId },
+          select: ['id', 'documentId']
         });
-        article = article && article.length > 0 ? article[0] : null;
       } else {
         // Si es un número o string numérico, buscar por id
         const numericId = parseInt(articleId);
         if (!isNaN(numericId)) {
-          article = await strapi.entityService.findMany('api::article.article', {
-            filters: { id: numericId },
-            fields: ['id', 'documentId'],
-            publicationState: 'preview'
+          article = await strapi.db.query('api::article.article').findOne({
+            where: { id: numericId },
+            select: ['id', 'documentId']
           });
-          article = article && article.length > 0 ? article[0] : null;
         }
       }
 
