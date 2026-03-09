@@ -53,6 +53,18 @@ module.exports = {
     },
     {
       method: 'GET',
+      path: '/favorite-lists/:listId',
+      handler: 'favorite-list.getListById',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'GET',
       path: '/favorite-lists/check/:articleId',
       handler: 'favorite-list.checkArticleFavorite',
       config: {

@@ -431,6 +431,99 @@ module.exports = createCoreController('api::favorite-list.favorite-list', ({ str
     }
   },
 
+  // Obtener una lista específica por ID
+  async getListById(ctx) {
+    const { user } = ctx.state;
+    const { listId } = ctx.params;
+    const userId = user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be logged in');
+    }
+
+    if (!listId) {
+      return ctx.badRequest('List ID is required');
+    }
+
+    try {
+      // Buscar la lista específica del usuario
+      const list = await strapi.db.query('api::favorite-list.favorite-list').findOne({
+        where: {
+          id: listId,
+          user: userId
+        },
+        populate: {
+          articles: {
+            select: ['id', 'title', 'slug', 'description'],
+            populate: ['cover', 'category', 'author', 'main_category']
+          }
+        }
+      });
+
+      if (!list) {
+        return ctx.notFound('Favorite list not found');
+      }
+
+      // Enriquecer cada artículo en la lista con conteos y estado del usuario
+      const enrichedArticles = await Promise.all(
+        (list.articles || []).map(async (article) => {
+          const articleId = article.id;
+
+          // Contar likes del artículo
+          const likesCount = await strapi.db.query('api::like.like').count({
+            where: { article: articleId }
+          });
+
+          // Contar comentarios del artículo
+          const commentsCount = await strapi.db.query('api::comment.comment').count({
+            where: { article: articleId }
+          });
+
+          // Verificar si el usuario ya dio like a este artículo
+          const userLike = await strapi.db.query('api::like.like').findOne({
+            where: { 
+              article: articleId,
+              user: userId 
+            }
+          });
+
+          // Verificar si el usuario ya comentó en este artículo
+          const userComment = await strapi.db.query('api::comment.comment').findOne({
+            where: { 
+              article: articleId,
+              author: userId 
+            }
+          });
+
+          return {
+            ...article,
+            stats: {
+              likesCount,
+              commentsCount
+            },
+            userInteraction: {
+              liked: !!userLike,
+              commented: !!userComment
+            }
+          };
+        })
+      );
+
+      const enrichedList = {
+        ...list,
+        articles: enrichedArticles
+      };
+
+      return ctx.send({
+        data: enrichedList
+      });
+    } catch (error) {
+      console.error('Error getting favorite list by ID:', error);
+      console.error('Error details:', error.message);
+      return ctx.badRequest('Error getting favorite list');
+    }
+  },
+
   // Verificar si un artículo está en favoritos del usuario
   async checkArticleFavorite(ctx) {
     const { user } = ctx.state;
