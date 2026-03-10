@@ -27,6 +27,15 @@ module.exports = {
       return ctx.unauthorized('Invalid credentials');
     }
 
+    // Reactivar cuenta si está desactivada
+    if (user.statusProfile === 'deactivated') {
+      await strapi.query('plugin::users-permissions.user').update({
+        where: { id: user.id },
+        data: { statusProfile: 'active' }
+      });
+      user.statusProfile = 'active';
+    }
+
     // Check if the user is active.
     if (!user.active) {
       return ctx.unauthorized('Your account has been disabled.');

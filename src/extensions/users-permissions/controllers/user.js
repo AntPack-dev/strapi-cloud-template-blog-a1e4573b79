@@ -86,5 +86,55 @@ module.exports = {
       console.error('Error updating user:', error);
       return ctx.badRequest('Error updating profile: ' + error.message);
     }
+  },
+
+  /**
+   * Deactivate user account - changes statusProfile to 'deactivated'
+   */
+  async deactivateAccount(ctx) {
+    const authenticatedUser = ctx.state.user;
+
+    // Verificar que el usuario está autenticado
+    if (!authenticatedUser) {
+      return ctx.unauthorized('You must be logged in to deactivate your account');
+    }
+
+    try {
+      // Cambiar status a 'deactivated'
+      const updatedUser = await strapi.query('plugin::users-permissions.user').update({
+        where: { id: authenticatedUser.id },
+        data: { statusProfile: 'deactivated' },
+        populate: ['role']
+      });
+
+      if (!updatedUser) {
+        return ctx.notFound('User not found');
+      }
+
+      // Sanitizar la respuesta
+      const sanitizedUser = {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        statusProfile: updatedUser.statusProfile,
+        provider: updatedUser.provider,
+        providers: updatedUser.providers ? Object.keys(updatedUser.providers) : [],
+        confirmed: updatedUser.confirmed,
+        blocked: updatedUser.blocked,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt
+      };
+
+      return ctx.send({
+        user: sanitizedUser,
+        message: 'Account deactivated successfully. Your content will no longer be visible, but your data is preserved. You can reactivate your account by logging back in.'
+      });
+
+    } catch (error) {
+      console.error('Error deactivating account:', error);
+      return ctx.badRequest('Error deactivating account: ' + error.message);
+    }
   }
 };
