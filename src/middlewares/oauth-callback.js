@@ -65,6 +65,15 @@ module.exports = (config, { strapi }) => {
             // Usuario existe - hacer login o agregar provider
             const user = users[0];
             
+            // Reactivar cuenta si está desactivada
+            if (user.statusProfile === 'deactivated') {
+              await strapi.query('plugin::users-permissions.user').update({
+                where: { id: user.id },
+                data: { statusProfile: 'active' }
+              });
+              user.statusProfile = 'active';
+            }
+            
             // Verificar si ya tiene este provider
             const hasProvider = user.providers && user.providers[provider];
             

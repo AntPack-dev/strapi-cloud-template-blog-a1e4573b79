@@ -125,7 +125,16 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
 
       const interactions = await strapi.db.query('api::like.like').findMany({
         where: whereClause,
-        populate: ['article', 'user', 'type'],
+        populate: {
+          article: true,
+          user: {
+            select: ['id', 'username', 'firstName', 'lastName'],
+            where: {
+              statusProfile: 'active'
+            }
+          },
+          type: true
+        },
         sort: { createdAt: 'desc' },
       });
 
@@ -446,13 +455,18 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
 
   async getMyInteractions(ctx) {
     const userId = ctx.state.user?.id;
-    const { type, articleId, search } = ctx.query;
+    const { type, articleId, search, page = 1, limit = 10 } = ctx.query;
 
     if (!userId) {
       return ctx.unauthorized('You must be logged in to view your interactions');
     }
 
     try {
+      // Convertir a números
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const offset = (pageNum - 1) * limitNum;
+
       // Construir where clause
       const whereClause = { user: userId };
 
@@ -464,7 +478,7 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
         whereClause.article = articleId;
       }
 
-      // Usar db.query con populate
+      // Usar db.query con populate y paginación
       const interactions = await strapi.db.query('api::like.like').findMany({
         where: whereClause,
         populate: {
@@ -477,6 +491,13 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
           }
         },
         orderBy: { createdAt: 'desc' },
+        limit: limitNum,
+        offset: offset
+      });
+
+      // Contar total de interacciones para paginación
+      const total = await strapi.db.query('api::like.like').count({
+        where: whereClause
       });
 
       // Filtrar resultados basados en parámetro de búsqueda
@@ -574,7 +595,12 @@ module.exports = createCoreController('api::like.like', ({ strapi }) => ({
       return ctx.send({
         data: enrichedInteractions,
         meta: {
-          total: enrichedInteractions.length,
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: total,
+            pageCount: Math.ceil(total / limitNum)
+          },
           filters: {
             search,
             type,

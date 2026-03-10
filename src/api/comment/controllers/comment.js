@@ -151,14 +151,20 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
       const limitNum = parseInt(limit, 10);
       const offset = (pageNum - 1) * limitNum;
 
-      // Obtener comentarios con paginación
+      // Obtener comentarios con paginación, filtrando por usuarios activos
       const comments = await strapi.db.query('api::comment.comment').findMany({
         where: {
-          article: articleNumericId
+          article: articleNumericId,
+          author: {
+            statusProfile: 'active'
+          }
         },
         populate: {
           author: {
-            select: ['id', 'username', 'firstName', 'lastName']
+            select: ['id', 'username', 'firstName', 'lastName'],
+            where: {
+              statusProfile: 'active'
+            }
           }
         },
         orderBy: { createdAt: 'desc' },
@@ -166,10 +172,13 @@ module.exports = createCoreController('api::comment.comment', ({ strapi }) => ({
         offset: offset
       });
 
-      // Contar total de comentarios para paginación
+      // Contar total de comentarios para paginación (solo de usuarios activos)
       const total = await strapi.db.query('api::comment.comment').count({
         where: {
-          article: articleNumericId
+          article: articleNumericId,
+          author: {
+            statusProfile: 'active'
+          }
         }
       });
 
