@@ -17,7 +17,31 @@ module.exports = {
     },
     {
       method: 'DELETE',
-      path: '/multi-provider/providers/:provider',
+      path: '/multi-provider/providers/facebook',
+      handler: 'multi-provider.removeProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'DELETE',
+      path: '/multi-provider/providers/google',
+      handler: 'multi-provider.removeProvider',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: {
+          scope: []
+        }
+      }
+    },
+    {
+      method: 'DELETE',
+      path: '/multi-provider/providers/local',
       handler: 'multi-provider.removeProvider',
       config: {
         policies: [],
