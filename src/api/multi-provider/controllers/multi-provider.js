@@ -16,8 +16,8 @@ module.exports = {
     }
 
     try {
-      const multiProviderService = strapi.plugin('users-permissions').service('multi-provider');
-      const providers = multiProviderService.getUserProviders(user);
+      const multiProviderService = strapi.service('api::multi-provider.multi-provider');
+      const providers = multiProviderService.getProviders(user);
       
       return ctx.send({
         providers: providers,
@@ -33,14 +33,29 @@ module.exports = {
    */
   async removeProvider(ctx) {
     const user = ctx.state.user;
-    const { provider } = ctx.params;
     
     if (!user) {
       return ctx.unauthorized('User not authenticated');
     }
 
+    // Extract provider from the URL path
+    const urlPath = ctx.request.url;
+    let provider = null;
+    
+    if (urlPath.includes('/multi-provider/providers/facebook')) {
+      provider = 'facebook';
+    } else if (urlPath.includes('/multi-provider/providers/google')) {
+      provider = 'google';
+    } else if (urlPath.includes('/multi-provider/providers/local')) {
+      provider = 'local';
+    }
+
+    if (!provider) {
+      return ctx.badRequest('Provider not found in request');
+    }
+
     try {
-      const multiProviderService = strapi.plugin('users-permissions').service('multi-provider');
+      const multiProviderService = strapi.service('api::multi-provider.multi-provider');
       
       // Cannot remove local provider if user has password
       if (provider === 'local' && user.password) {
@@ -74,7 +89,7 @@ module.exports = {
     }
 
     try {
-      const multiProviderService = strapi.plugin('users-permissions').service('multi-provider');
+      const multiProviderService = strapi.service('api::multi-provider.multi-provider');
       
       const updatedUser = await multiProviderService.updateProfileImageFromProvider(user, provider);
       
