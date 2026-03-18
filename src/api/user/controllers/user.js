@@ -1,13 +1,6 @@
 'use strict';
 
-/**
- * Multi-provider controller
- */
-
 module.exports = {
-  /**
-   * Remove a provider from user
-   */
   async removeProvider(ctx) {
     const user = ctx.state.user;
     const { provider } = ctx.params;
@@ -47,26 +40,9 @@ module.exports = {
         }
       });
 
-      // Transform response like comments
-      const providersArray = [];
-      if (updatedUser.providers) {
-        if (updatedUser.providers.local) providersArray.push('local');
-        if (updatedUser.providers.google) providersArray.push('google');
-        if (updatedUser.providers.facebook) providersArray.push('facebook');
-      }
-
-      const transformedUser = {
-        id: updatedUser.id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        providers: providersArray
-      };
-
       return ctx.send({
         message: `Provider ${provider} removed successfully`,
-        user: transformedUser
+        user: updatedUser
       });
     } catch (error) {
       return ctx.badRequest(error.message);
