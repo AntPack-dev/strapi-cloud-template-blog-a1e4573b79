@@ -1,0 +1,13 @@
+{
+  "kind": "singleType",
+  "collectionName": "multi_providers",
+  "info": {
+    "singularName": "multi-provider",
+    "pluralName": "multi-providers",
+    "displayName": "Multi-Provider"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {}
+}
