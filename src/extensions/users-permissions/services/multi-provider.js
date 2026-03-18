@@ -118,10 +118,32 @@ module.exports = {
     }
 
     const currentProviders = user.providers;
+    const providerKeys = Object.keys(currentProviders);
     
     // Cannot remove if it's the only provider
-    if (Object.keys(currentProviders).length === 1) {
+    if (providerKeys.length === 1) {
       throw new Error('Cannot remove the only authentication method');
+    }
+
+    // Special validation: cannot remove local if user has password
+    if (providerToRemove === 'local' && user.password) {
+      throw new Error('Cannot remove local authentication while password exists');
+    }
+
+    // Cannot remove the provider if it would leave only OAuth providers without local
+    // and user doesn't have a password (to prevent being locked out)
+    if (providerToRemove !== 'local' && currentProviders.local && !user.password) {
+      const remainingProviders = providerKeys.filter(p => p !== providerToRemove);
+      const hasLocalRemaining = remainingProviders.includes('local');
+      
+      if (!hasLocalRemaining && remainingProviders.every(p => ['google', 'facebook'].includes(p))) {
+        throw new Error('Cannot remove all OAuth providers when local authentication has no password');
+      }
+    }
+
+    // Check if provider exists
+    if (!currentProviders[providerToRemove]) {
+      throw new Error(`Provider ${providerToRemove} not found for this user`);
     }
 
     // Remove the provider
