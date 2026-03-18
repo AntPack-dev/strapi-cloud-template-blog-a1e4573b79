@@ -11,7 +11,7 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: ['users-permissions']
+          scope: []
         }
       }
     },
@@ -23,7 +23,7 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: ['users-permissions']
+          scope: []
         }
       }
     },
@@ -59,7 +59,7 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: ['users-permissions']
+          scope: []
         }
       }
     },
@@ -71,7 +71,7 @@ module.exports = {
         policies: [],
         middlewares: [],
         auth: {
-          scope: ['users-permissions']
+          scope: []
         }
       }
     },
