@@ -5,8 +5,8 @@ module.exports = {
   routes: [
     {
       method: 'DELETE',
-      path: '/multi-provider/providers/:provider',
-      handler: 'multi-provider.removeProvider',
+      path: '/users/remove-provider/:provider',
+      handler: 'user.removeProvider',
       config: {
         policies: [],
         middlewares: [],
