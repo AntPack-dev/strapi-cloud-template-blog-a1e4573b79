@@ -40,6 +40,7 @@ module.exports = ({ env }) => {
           uploadStream: {},
           delete: {},
         },
+        sizeLimit: 512 * 1024 * 1024, // 512MB
       },
     },
     'users-permissions': {
