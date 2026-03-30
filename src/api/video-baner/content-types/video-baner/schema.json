@@ -23,7 +23,7 @@
         }
       },
       "multiple": false,
-      "required": true,
+      "required": false,
       "allowedTypes": [
         "files",
         "videos"
@@ -37,11 +37,27 @@
         }
       },
       "multiple": false,
-      "required": true,
+      "required": false,
       "allowedTypes": [
         "files",
         "videos"
       ]
+    },
+    "url_media_desktop": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "url_media_mobile": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     },
     "title_modal": {
       "type": "string",

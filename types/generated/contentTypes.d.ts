@@ -1581,14 +1581,12 @@ export interface ApiVideoBanerVideoBaner extends Struct.CollectionTypeSchema {
       'api::video-baner.video-baner'
     >;
     media_desktop: Schema.Attribute.Media<'files' | 'videos'> &
-      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
     media_mobile: Schema.Attribute.Media<'files' | 'videos'> &
-      Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1618,6 +1616,18 @@ export interface ApiVideoBanerVideoBaner extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    url_media_desktop: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    url_media_mobile: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
   };
 }
 
