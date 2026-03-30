@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-03-27T16:40:50.788Z"
+    "x-generation-date": "2026-03-30T20:47:52.879Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -20717,6 +20717,12 @@
                     }
                   }
                 }
+              },
+              "url_media_desktop": {
+                "type": "string"
+              },
+              "url_media_mobile": {
+                "type": "string"
               },
               "title_modal": {
                 "type": "string"
@@ -49871,8 +49877,6 @@
         "properties": {
           "data": {
             "required": [
-              "media_desktop",
-              "media_mobile",
               "title_modal",
               "description_modal",
               "active",
@@ -49901,6 +49905,12 @@
                   }
                 ],
                 "example": "string or id"
+              },
+              "url_media_desktop": {
+                "type": "string"
+              },
+              "url_media_mobile": {
+                "type": "string"
               },
               "title_modal": {
                 "type": "string"
@@ -49984,8 +49994,6 @@
       "VideoBaner": {
         "type": "object",
         "required": [
-          "media_desktop",
-          "media_mobile",
           "title_modal",
           "description_modal",
           "active",
@@ -50725,6 +50733,12 @@
               }
             }
           },
+          "url_media_desktop": {
+            "type": "string"
+          },
+          "url_media_mobile": {
+            "type": "string"
+          },
           "title_modal": {
             "type": "string"
           },
@@ -51171,6 +51185,12 @@
                       }
                     }
                   }
+                },
+                "url_media_desktop": {
+                  "type": "string"
+                },
+                "url_media_mobile": {
+                  "type": "string"
                 },
                 "title_modal": {
                   "type": "string"
