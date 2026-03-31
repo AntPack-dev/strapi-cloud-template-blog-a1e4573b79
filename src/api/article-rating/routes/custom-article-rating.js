@@ -7,7 +7,6 @@ module.exports = {
       config: {
         policies: [],
         middlewares: [],
-        auth: false,
       },
     },
     {
@@ -17,7 +16,6 @@ module.exports = {
       config: {
         policies: [],
         middlewares: [],
-        auth: false,
       },
     },
   ],
