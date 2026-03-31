@@ -7,6 +7,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
   async create(ctx) {
     const { data } = ctx.request.body;
     const ip = ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() || ctx.request.ip;
+    strapi.log.debug(`[article-rating] create — x-forwarded-for: ${ctx.request.headers['x-forwarded-for']} | resolved ip: ${ip}`);
 
     if (!data?.article) {
       return ctx.badRequest('Article is required');
@@ -29,7 +30,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
     try {
       const existing = await strapi.db.query('api::article-rating.article-rating').findOne({
         where: {
-          article: articleId,
+          article_id: articleId,
           ip_address: ip,
         },
       });
@@ -38,27 +39,20 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
         return ctx.conflict('This IP has already rated this article');
       }
 
-      const article = await strapi.db.query('api::article.article').findOne({
-        where: { id: articleId },
-        select: ['id', 'documentId'],
-      });
-
-      if (!article) {
-        return ctx.badRequest('Article not found');
-      }
-
-      const rating = await strapi.documents('api::article-rating.article-rating').create({
+      const rating = await strapi.db.query('api::article-rating.article-rating').create({
         data: {
+          article_id: articleId,
           ip_address: ip,
           rating: data.rating,
-          article: { connect: [{ documentId: article.documentId }] },
         },
-        populate: ['article'],
       });
 
       return ctx.send({ data: rating });
     } catch (error) {
-      console.error('Error creating article rating:', error);
+      if (error.code === '23505') {
+        return ctx.conflict('This IP has already rated this article');
+      }
+      strapi.log.error('[article-rating] Error creating rating:', error);
       return ctx.badRequest('Error saving rating');
     }
   },
@@ -66,6 +60,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
   async check(ctx) {
     const { article } = ctx.query;
     const ip = ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() || ctx.request.ip;
+    strapi.log.debug(`[article-rating] check — x-forwarded-for: ${ctx.request.headers['x-forwarded-for']} | resolved ip: ${ip}`);
 
     if (!article) {
       return ctx.badRequest('Article ID is required');
@@ -79,7 +74,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
     try {
       const existing = await strapi.db.query('api::article-rating.article-rating').findOne({
         where: {
-          article: articleId,
+          article_id: articleId,
           ip_address: ip,
         },
       });
@@ -89,7 +84,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
         rating: existing?.rating ?? null,
       });
     } catch (error) {
-      console.error('Error checking article rating:', error);
+      strapi.log.error('[article-rating] Error checking rating:', error);
       return ctx.badRequest('Error checking rating');
     }
   },
