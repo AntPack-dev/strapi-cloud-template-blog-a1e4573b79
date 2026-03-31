@@ -38,31 +38,25 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
         return ctx.conflict('This IP has already rated this article');
       }
 
-      const crypto = require('crypto');
-      const documentId = crypto.randomBytes(13).toString('base64url').substring(0, 25);
+      const article = await strapi.db.query('api::article.article').findOne({
+        where: { id: articleId },
+        select: ['id', 'documentId'],
+      });
 
-      const result = await strapi.db.connection.raw(`
-        INSERT INTO article_ratings (document_id, ip_address, rating, created_at, updated_at)
-        VALUES (?, ?, ?, NOW(), NOW())
-        RETURNING id
-      `, [documentId, ip, data.rating]);
+      if (!article) {
+        return ctx.badRequest('Article not found');
+      }
 
-      const ratingId = result.rows[0].id;
-
-      await strapi.db.connection.raw(`
-        INSERT INTO article_ratings_article_lnk (article_rating_id, article_id)
-        VALUES (?, ?)
-      `, [ratingId, articleId]);
-
-      return ctx.send({
+      const rating = await strapi.documents('api::article-rating.article-rating').create({
         data: {
-          id: ratingId,
-          documentId,
           ip_address: ip,
           rating: data.rating,
-          article: articleId,
+          article: { connect: [{ documentId: article.documentId }] },
         },
+        populate: ['article'],
       });
+
+      return ctx.send({ data: rating });
     } catch (error) {
       console.error('Error creating article rating:', error);
       return ctx.badRequest('Error saving rating');
