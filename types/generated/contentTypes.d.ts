@@ -536,6 +536,41 @@ export interface ApiAboutUsAboutUs extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiArticleRatingArticleRating
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'article_ratings';
+  info: {
+    description: 'Content quality ratings per article tracked by IP';
+    displayName: 'Article Rating';
+    pluralName: 'article-ratings';
+    singularName: 'article-rating';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    article: Schema.Attribute.Relation<'manyToOne', 'api::article.article'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ip_address: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::article-rating.article-rating'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    rating: Schema.Attribute.Enumeration<
+      ['cinco_tildes', 'neutral', 'sin_tilde']
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   collectionName: 'articles';
   info: {
@@ -2188,6 +2223,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::about-section.about-section': ApiAboutSectionAboutSection;
       'api::about-us.about-us': ApiAboutUsAboutUs;
+      'api::article-rating.article-rating': ApiArticleRatingArticleRating;
       'api::article.article': ApiArticleArticle;
       'api::author.author': ApiAuthorAuthor;
       'api::banner.banner': ApiBannerBanner;
