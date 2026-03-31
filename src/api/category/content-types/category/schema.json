@@ -30,6 +30,14 @@
       "targetField": "name",
       "required": true
     },
+    "tooltip_message": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
     "main_category": {
       "type": "relation",
       "relation": "manyToOne",

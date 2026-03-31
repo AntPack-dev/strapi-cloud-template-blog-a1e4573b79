@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-03-30T20:47:52.879Z"
+    "x-generation-date": "2026-03-31T02:57:44.466Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -14005,6 +14005,9 @@
                             "slug": {
                               "type": "string"
                             },
+                            "tooltip_message": {
+                              "type": "string"
+                            },
                             "main_category": {
                               "type": "object",
                               "properties": {
@@ -17144,6 +17147,9 @@
                                   "slug": {
                                     "type": "string"
                                   },
+                                  "tooltip_message": {
+                                    "type": "string"
+                                  },
                                   "main_category": {
                                     "type": "object",
                                     "properties": {
@@ -18779,6 +18785,9 @@
                             "type": "string"
                           },
                           "slug": {
+                            "type": "string"
+                          },
+                          "tooltip_message": {
                             "type": "string"
                           },
                           "main_category": {
@@ -21105,6 +21114,9 @@
               "slug": {
                 "type": "string"
               },
+              "tooltip_message": {
+                "type": "string"
+              },
               "main_category": {
                 "oneOf": [
                   {
@@ -21203,6 +21215,9 @@
             "type": "string"
           },
           "slug": {
+            "type": "string"
+          },
+          "tooltip_message": {
             "type": "string"
           },
           "main_category": {
@@ -21588,6 +21603,9 @@
                                 "type": "string"
                               },
                               "slug": {
+                                "type": "string"
+                              },
+                              "tooltip_message": {
                                 "type": "string"
                               },
                               "main_category": {
@@ -23929,6 +23947,9 @@
                                 "slug": {
                                   "type": "string"
                                 },
+                                "tooltip_message": {
+                                  "type": "string"
+                                },
                                 "main_category": {
                                   "type": "object",
                                   "properties": {
@@ -26217,6 +26238,9 @@
                               "type": "string"
                             },
                             "slug": {
+                              "type": "string"
+                            },
+                            "tooltip_message": {
                               "type": "string"
                             },
                             "main_category": {
@@ -28743,6 +28767,9 @@
                                 "slug": {
                                   "type": "string"
                                 },
+                                "tooltip_message": {
+                                  "type": "string"
+                                },
                                 "main_category": {
                                   "type": "object",
                                   "properties": {
@@ -30358,6 +30385,9 @@
                             "type": "string"
                           },
                           "slug": {
+                            "type": "string"
+                          },
+                          "tooltip_message": {
                             "type": "string"
                           },
                           "main_category": {
@@ -33344,6 +33374,9 @@
                                             "slug": {
                                               "type": "string"
                                             },
+                                            "tooltip_message": {
+                                              "type": "string"
+                                            },
                                             "main_category": {
                                               "type": "object",
                                               "properties": {
@@ -35358,6 +35391,9 @@
                             "type": "string"
                           },
                           "slug": {
+                            "type": "string"
+                          },
+                          "tooltip_message": {
                             "type": "string"
                           },
                           "main_category": {
@@ -37822,6 +37858,9 @@
                             "type": "string"
                           },
                           "slug": {
+                            "type": "string"
+                          },
+                          "tooltip_message": {
                             "type": "string"
                           },
                           "main_category": {
@@ -40951,6 +40990,9 @@
                                 "slug": {
                                   "type": "string"
                                 },
+                                "tooltip_message": {
+                                  "type": "string"
+                                },
                                 "main_category": {
                                   "type": "object",
                                   "properties": {
@@ -42633,6 +42675,9 @@
                               "type": "string"
                             },
                             "slug": {
+                              "type": "string"
+                            },
+                            "tooltip_message": {
                               "type": "string"
                             },
                             "main_category": {
@@ -44563,6 +44608,9 @@
                             "type": "string"
                           },
                           "slug": {
+                            "type": "string"
+                          },
+                          "tooltip_message": {
                             "type": "string"
                           },
                           "main_category": {
@@ -46521,6 +46569,9 @@
                 "type": "string"
               },
               "slug": {
+                "type": "string"
+              },
+              "tooltip_message": {
                 "type": "string"
               },
               "main_category": {
