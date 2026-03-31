@@ -11,11 +11,17 @@
     "draftAndPublish": false
   },
   "pluginOptions": {},
+  "indexes": [
+    {
+      "name": "unique_ip_article_rating",
+      "columns": ["ip_address", "article_id"],
+      "unique": true
+    }
+  ],
   "attributes": {
-    "article": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::article.article"
+    "article_id": {
+      "type": "integer",
+      "required": true
     },
     "ip_address": {
       "type": "string",
