@@ -7,7 +7,6 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
   async create(ctx) {
     const { data } = ctx.request.body;
     const ip = ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() || ctx.request.ip;
-    strapi.log.debug(`[article-rating] create — x-forwarded-for: ${ctx.request.headers['x-forwarded-for']} | resolved ip: ${ip}`);
 
     if (!data?.article) {
       return ctx.badRequest('Article is required');
@@ -60,7 +59,6 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
   async check(ctx) {
     const { article } = ctx.query;
     const ip = ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() || ctx.request.ip;
-    strapi.log.debug(`[article-rating] check — x-forwarded-for: ${ctx.request.headers['x-forwarded-for']} | resolved ip: ${ip}`);
 
     if (!article) {
       return ctx.badRequest('Article ID is required');
