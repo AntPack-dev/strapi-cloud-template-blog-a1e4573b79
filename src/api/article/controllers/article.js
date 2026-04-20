@@ -410,6 +410,118 @@ module.exports = createCoreController('api::article.article', ({ strapi }) => ({
     }
   },
 
+  async randomizeFeatured(ctx) {
+    try {
+      console.log('=== INICIANDO RANDOMIZE FEATURED ===');
+      
+      // 1. Obtener todos los artículos publicados y aprobados con main_category
+      //    main_category NO es localizado -> es el mismo para todos los locales del artículo
+      const publishedArticles = await strapi.db.query('api::article.article').findMany({
+        where: {
+          publishedAt: { $notNull: true },
+          currentStatus: 'approved',
+        },
+        populate: { main_category: true },
+        select: ['id', 'documentId', 'locale', 'title', 'isFeatured'],
+      });
+
+      console.log(`Artículos publicados encontrados: ${publishedArticles.length}`);
+      console.log('Primeros 5 artículos:', publishedArticles.slice(0, 5).map(a => ({id: a.id, docId: a.documentId, locale: a.locale, title: a.title, isFeatured: a.isFeatured})));
+
+      // 2. Agrupar documentIds únicos por main_category (deduplicar locales)
+      const byMainCategory = {};
+      const seenDocumentIds = new Set();
+
+      for (const article of publishedArticles) {
+        if (!article.main_category) continue;
+        const catId = article.main_category.id;
+        const docId = article.documentId;
+
+        if (seenDocumentIds.has(docId)) continue;
+        seenDocumentIds.add(docId);
+
+        if (!byMainCategory[catId]) byMainCategory[catId] = [];
+        byMainCategory[catId].push(docId);
+      }
+
+      console.log(`Categorías encontradas: ${Object.keys(byMainCategory).length}`);
+      console.log('DocumentIds por categoría:', byMainCategory);
+
+      // 3. Seleccionar aleatoriamente hasta 3 documentIds por mainCategory (Fisher-Yates)
+      const selectedDocumentIds = new Set();
+      for (const docIds of Object.values(byMainCategory)) {
+        const shuffled = [...docIds];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        shuffled.slice(0, 3).forEach(id => selectedDocumentIds.add(id));
+      }
+
+      console.log(`DocumentIds seleccionados: ${[...selectedDocumentIds]}`);
+
+      // 4. Reset: poner isFeatured = false en todos los artículos publicados y aprobados (todos los locales)
+      // Como isFeatured es localizado, debemos actualizar cada locale individualmente
+      const allLocales = await strapi.plugins.i18n.services.locales.find();
+      console.log(`Locales encontrados: ${allLocales.map(l => l.code)}`);
+      
+      for (const locale of allLocales) {
+        console.log(`Reseteando isFeatured=false para locale: ${locale.code}`);
+        const resetResult = await strapi.db.query('api::article.article').updateMany({
+          where: { locale: locale.code },
+          data: { isFeatured: false },
+        });
+        console.log(`Reset result para ${locale.code}:`, resetResult);
+      }
+
+      // 5. Marcar los seleccionados: isFeatured = true (draft y published)
+      if (selectedDocumentIds.size > 0) {
+        for (const locale of allLocales) {
+          console.log(`Marcando isFeatured=true para ${selectedDocumentIds.size} artículos en locale: ${locale.code}`);
+          const featuredResult = await strapi.db.query('api::article.article').updateMany({
+            where: {
+              documentId: { $in: [...selectedDocumentIds] },
+              locale: locale.code,
+            },
+            data: { isFeatured: true },
+          });
+          console.log(`Featured result para ${locale.code}:`, featuredResult);
+        }
+      }
+
+      // Verificar resultados finales
+      const finalCheck = await strapi.db.query('api::article.article').findMany({
+        where: {
+          isFeatured: true,
+          publishedAt: { $notNull: true },
+        },
+        select: ['id', 'documentId', 'locale', 'title', 'isFeatured'],
+      });
+      
+      console.log(`=== VERIFICACIÓN FINAL: ${finalCheck.length} artículos con isFeatured=true ===`);
+      console.log('Artículos destacados:', finalCheck.map(a => ({id: a.id, docId: a.documentId, locale: a.locale, title: a.title})));
+
+      return ctx.send({
+        success: true,
+        message: 'Featured articles randomized successfully',
+        data: {
+          totalFeatured: selectedDocumentIds.size,
+          categoriesProcessed: Object.keys(byMainCategory).length,
+          featuredDocumentIds: [...selectedDocumentIds],
+          localesProcessed: allLocales.length,
+          debugInfo: {
+            totalArticles: publishedArticles.length,
+            finalFeaturedCount: finalCheck.length,
+            featuredArticles: finalCheck.map(a => ({id: a.id, docId: a.documentId, locale: a.locale, title: a.title}))
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Error randomizing featured articles:', error);
+      return ctx.internalServerError('Error randomizing featured articles');
+    }
+  },
+
   // Obtener artículo con información de interacción del usuario
   async findOneWithUserInteraction(ctx) {
     const { id } = ctx.params;
