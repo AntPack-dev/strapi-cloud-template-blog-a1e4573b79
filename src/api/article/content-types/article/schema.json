@@ -208,6 +208,11 @@
           "localized": true
         }
       }
+    },
+    "users_main_category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::users-main-category.users-main-category"
     }
   }
 }

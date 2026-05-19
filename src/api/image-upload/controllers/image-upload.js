@@ -84,6 +84,64 @@ module.exports = createCoreController('api::image-upload.image-upload', ({ strap
     }
   },
 
+  async uploadUserImage(ctx) {
+    if (!ctx.state.user) {
+      return ctx.unauthorized('Debes iniciar sesión para subir imágenes');
+    }
+
+    try {
+      if (!ctx.request.files || !ctx.request.files.file) {
+        return ctx.badRequest('No se encontró ningún archivo. Envía el archivo en el campo "file"');
+      }
+
+      const file = ctx.request.files.file;
+      const fileName = file.name || file.originalFilename || file.filename;
+
+      if (!fileName) {
+        return ctx.badRequest('No se pudo determinar el nombre del archivo');
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+      const fileExtension = path.extname(fileName).toLowerCase();
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        return ctx.badRequest('Tipo de archivo no permitido. Solo se aceptan JPG, PNG y WEBP');
+      }
+
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return ctx.badRequest('El archivo supera el tamaño máximo permitido de 5MB');
+      }
+
+      const uploaded = await strapi.plugin('upload').service('upload').upload({
+        files: file,
+        data: {
+          fileInfo: {
+            name: fileName,
+            caption: null,
+            alternativeText: null,
+          },
+        },
+      });
+
+      const media = uploaded[0];
+
+      return ctx.created({
+        data: {
+          id:   media.id,
+          name: media.name,
+          url:  media.url,
+          mime: media.mime,
+          size: media.size,
+        },
+      });
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      return ctx.badRequest('Error al subir la imagen: ' + error.message);
+    }
+  },
+
   async update(ctx) {
     return ctx.send({ message: 'Image upload service - use POST /upload to upload images' });
   },

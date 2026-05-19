@@ -55,6 +55,12 @@
       "relation": "manyToMany",
       "target": "api::article.article",
       "mappedBy": "countries"
+    },
+    "users_main_categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::users-main-category.users-main-category",
+      "mappedBy": "countries"
     }
   }
 }

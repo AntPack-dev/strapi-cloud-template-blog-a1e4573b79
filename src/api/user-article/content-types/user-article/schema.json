@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_articles",
+  "info": {
+    "singularName": "user-article",
+    "pluralName": "user-articles",
+    "displayName": "User Article",
+    "description": "Ownership record — tracks which user created which article"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "article": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::article.article"
+    }
+  }
+}
