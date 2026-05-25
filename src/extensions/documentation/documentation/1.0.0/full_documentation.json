@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-05-19T15:44:48.937Z"
+    "x-generation-date": "2026-05-25T19:32:18.436Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -9371,6 +9371,260 @@
         }
       }
     },
+    "/user-articles/{id}": {
+      "patch": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User-article"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "deprecated": false,
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "operationId": "patch/user-articles/{id}"
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User-article"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "deprecated": false,
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "operationId": "get/user-articles/{id}"
+      }
+    },
+    "/user-articles/{id}/submit": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserArticleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User-article"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "deprecated": false,
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "operationId": "post/user-articles/{id}/submit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserArticleRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/user-articles/my-articles": {
       "get": {
         "responses": {
@@ -14189,6 +14443,12 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedRichTextComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedSubtitleComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedUserQuoteComponent"
                     }
                   ]
                 },
@@ -14197,7 +14457,9 @@
                   "mapping": {
                     "shared.media": "#/components/schemas/SharedMediaComponent",
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                   }
                 }
               },
@@ -14265,6 +14527,17 @@
                 "format": "date"
               },
               "users_main_category": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "example": "string or id"
+              },
+              "userAuthor": {
                 "oneOf": [
                   {
                     "type": "integer"
@@ -16294,6 +16567,12 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedRichTextComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                               }
                                             ]
                                           },
@@ -16302,7 +16581,9 @@
                                             "mapping": {
                                               "shared.media": "#/components/schemas/SharedMediaComponent",
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                              "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           }
                                         },
@@ -17473,6 +17754,24 @@
                                             }
                                           }
                                         },
+                                        "userAuthor": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                }
+                                              ]
+                                            },
+                                            "documentId": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -18004,6 +18303,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/SharedRichTextComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/SharedSubtitleComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/SharedUserQuoteComponent"
                 }
               ]
             },
@@ -18012,7 +18317,9 @@
               "mapping": {
                 "shared.media": "#/components/schemas/SharedMediaComponent",
                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
               }
             }
           },
@@ -18108,6 +18415,24 @@
             "format": "date"
           },
           "users_main_category": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "documentId": {
+                "type": "string"
+              }
+            }
+          },
+          "userAuthor": {
             "type": "object",
             "properties": {
               "id": {
@@ -18450,6 +18775,57 @@
             ]
           },
           "body": {
+            "type": "string"
+          }
+        }
+      },
+      "SharedSubtitleComponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "__component": {
+            "type": "string",
+            "enum": [
+              "shared.subtitle"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "SharedUserQuoteComponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "__component": {
+            "type": "string",
+            "enum": [
+              "shared.user-quote"
+            ]
+          },
+          "body": {
+            "type": "string"
+          },
+          "source": {
             "type": "string"
           }
         }
@@ -21337,6 +21713,12 @@
                       },
                       {
                         "$ref": "#/components/schemas/SharedRichTextComponent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SharedSubtitleComponent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SharedUserQuoteComponent"
                       }
                     ]
                   },
@@ -21345,7 +21727,9 @@
                     "mapping": {
                       "shared.media": "#/components/schemas/SharedMediaComponent",
                       "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                      "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                      "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                      "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                      "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                     }
                   }
                 },
@@ -22397,6 +22781,24 @@
                   "format": "date"
                 },
                 "users_main_category": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "documentId": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "userAuthor": {
                   "type": "object",
                   "properties": {
                     "id": {
@@ -23635,6 +24037,12 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedRichTextComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           ]
                                         },
@@ -23643,7 +24051,9 @@
                                           "mapping": {
                                             "shared.media": "#/components/schemas/SharedMediaComponent",
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                            "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                           }
                                         }
                                       },
@@ -24811,6 +25221,24 @@
                                                 }
                                               }
                                             }
+                                          }
+                                        }
+                                      },
+                                      "userAuthor": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ]
+                                          },
+                                          "documentId": {
+                                            "type": "string"
                                           }
                                         }
                                       },
@@ -27332,6 +27760,12 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedRichTextComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                 }
                               ]
                             },
@@ -27340,7 +27774,9 @@
                               "mapping": {
                                 "shared.media": "#/components/schemas/SharedMediaComponent",
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                               }
                             }
                           },
@@ -28508,6 +28944,24 @@
                                     }
                                   }
                                 }
+                              }
+                            }
+                          },
+                          "userAuthor": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
+                              },
+                              "documentId": {
+                                "type": "string"
                               }
                             }
                           },
@@ -31009,6 +31463,12 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedRichTextComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedSubtitleComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedUserQuoteComponent"
                     }
                   ]
                 },
@@ -31017,7 +31477,9 @@
                   "mapping": {
                     "shared.media": "#/components/schemas/SharedMediaComponent",
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                   }
                 }
               },
@@ -32069,6 +32531,24 @@
                 "format": "date"
               },
               "users_main_category": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "documentId": {
+                    "type": "string"
+                  }
+                }
+              },
+              "userAuthor": {
                 "type": "object",
                 "properties": {
                   "id": {
@@ -34179,6 +34659,12 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedRichTextComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                               }
                                             ]
                                           },
@@ -34187,7 +34673,9 @@
                                             "mapping": {
                                               "shared.media": "#/components/schemas/SharedMediaComponent",
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                              "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           }
                                         },
@@ -35355,6 +35843,24 @@
                                                   }
                                                 }
                                               }
+                                            }
+                                          }
+                                        },
+                                        "userAuthor": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                }
+                                              ]
+                                            },
+                                            "documentId": {
+                                              "type": "string"
                                             }
                                           }
                                         },
@@ -37471,6 +37977,12 @@
                                   },
                                   {
                                     "$ref": "#/components/schemas/SharedRichTextComponent"
+                                  },
+                                  {
+                                    "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                  },
+                                  {
+                                    "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                   }
                                 ]
                               },
@@ -37479,7 +37991,9 @@
                                 "mapping": {
                                   "shared.media": "#/components/schemas/SharedMediaComponent",
                                   "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                  "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                  "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                  "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                  "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                 }
                               }
                             },
@@ -38647,6 +39161,24 @@
                                       }
                                     }
                                   }
+                                }
+                              }
+                            },
+                            "userAuthor": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                },
+                                "documentId": {
+                                  "type": "string"
                                 }
                               }
                             },
@@ -40106,6 +40638,12 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedRichTextComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           ]
                                         },
@@ -40114,7 +40652,9 @@
                                           "mapping": {
                                             "shared.media": "#/components/schemas/SharedMediaComponent",
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                            "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                           }
                                         }
                                       },
@@ -41282,6 +41822,24 @@
                                                 }
                                               }
                                             }
+                                          }
+                                        }
+                                      },
+                                      "userAuthor": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ]
+                                          },
+                                          "documentId": {
+                                            "type": "string"
                                           }
                                         }
                                       },
@@ -44390,6 +44948,12 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedRichTextComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                 }
                               ]
                             },
@@ -44398,7 +44962,9 @@
                               "mapping": {
                                 "shared.media": "#/components/schemas/SharedMediaComponent",
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                               }
                             }
                           },
@@ -44959,6 +45525,24 @@
                             "format": "date"
                           },
                           "users_main_category": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
+                              },
+                              "documentId": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "userAuthor": {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -47195,6 +47779,12 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedRichTextComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           ]
                                         },
@@ -47203,7 +47793,9 @@
                                           "mapping": {
                                             "shared.media": "#/components/schemas/SharedMediaComponent",
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                            "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                           }
                                         }
                                       },
@@ -48371,6 +48963,24 @@
                                                 }
                                               }
                                             }
+                                          }
+                                        }
+                                      },
+                                      "userAuthor": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ]
+                                          },
+                                          "documentId": {
+                                            "type": "string"
                                           }
                                         }
                                       },
@@ -50670,6 +51280,12 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedRichTextComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           ]
                                         },
@@ -50678,7 +51294,9 @@
                                           "mapping": {
                                             "shared.media": "#/components/schemas/SharedMediaComponent",
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                            "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                           }
                                         }
                                       },
@@ -51846,6 +52464,24 @@
                                                 }
                                               }
                                             }
+                                          }
+                                        }
+                                      },
+                                      "userAuthor": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ]
+                                          },
+                                          "documentId": {
+                                            "type": "string"
                                           }
                                         }
                                       },
@@ -55118,6 +55754,12 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedRichTextComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedSubtitleComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedUserQuoteComponent"
                     }
                   ]
                 },
@@ -55126,7 +55768,9 @@
                   "mapping": {
                     "shared.media": "#/components/schemas/SharedMediaComponent",
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                   }
                 }
               },
@@ -56178,6 +56822,24 @@
                 "format": "date"
               },
               "users_main_category": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "documentId": {
+                    "type": "string"
+                  }
+                }
+              },
+              "userAuthor": {
                 "type": "object",
                 "properties": {
                   "id": {
@@ -57477,6 +58139,12 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedRichTextComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                               }
                                             ]
                                           },
@@ -57485,7 +58153,9 @@
                                             "mapping": {
                                               "shared.media": "#/components/schemas/SharedMediaComponent",
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                              "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           }
                                         },
@@ -58653,6 +59323,24 @@
                                                   }
                                                 }
                                               }
+                                            }
+                                          }
+                                        },
+                                        "userAuthor": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                }
+                                              ]
+                                            },
+                                            "documentId": {
+                                              "type": "string"
                                             }
                                           }
                                         },
@@ -60247,6 +60935,12 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedRichTextComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           ]
                                         },
@@ -60255,7 +60949,9 @@
                                           "mapping": {
                                             "shared.media": "#/components/schemas/SharedMediaComponent",
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                            "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                            "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                           }
                                         }
                                       },
@@ -61423,6 +62119,24 @@
                                                 }
                                               }
                                             }
+                                          }
+                                        }
+                                      },
+                                      "userAuthor": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "oneOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ]
+                                          },
+                                          "documentId": {
+                                            "type": "string"
                                           }
                                         }
                                       },
@@ -63191,6 +63905,12 @@
                                     },
                                     {
                                       "$ref": "#/components/schemas/SharedRichTextComponent"
+                                    },
+                                    {
+                                      "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                    },
+                                    {
+                                      "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                     }
                                   ]
                                 },
@@ -63199,7 +63919,9 @@
                                   "mapping": {
                                     "shared.media": "#/components/schemas/SharedMediaComponent",
                                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                    "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                   }
                                 }
                               },
@@ -64367,6 +65089,24 @@
                                         }
                                       }
                                     }
+                                  }
+                                }
+                              },
+                              "userAuthor": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  },
+                                  "documentId": {
+                                    "type": "string"
                                   }
                                 }
                               },
@@ -69303,6 +70043,12 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedRichTextComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                 }
                               ]
                             },
@@ -69311,7 +70057,9 @@
                               "mapping": {
                                 "shared.media": "#/components/schemas/SharedMediaComponent",
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                               }
                             }
                           },
@@ -69872,6 +70620,24 @@
                             "format": "date"
                           },
                           "users_main_category": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
+                              },
+                              "documentId": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "userAuthor": {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -71392,6 +72158,12 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedRichTextComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedSubtitleComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedUserQuoteComponent"
                                               }
                                             ]
                                           },
@@ -71400,7 +72172,9 @@
                                             "mapping": {
                                               "shared.media": "#/components/schemas/SharedMediaComponent",
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
-                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent"
+                                              "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
+                                              "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
                                             }
                                           }
                                         },
@@ -72568,6 +73342,24 @@
                                                   }
                                                 }
                                               }
+                                            }
+                                          }
+                                        },
+                                        "userAuthor": {
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "string"
+                                                },
+                                                {
+                                                  "type": "number"
+                                                }
+                                              ]
+                                            },
+                                            "documentId": {
+                                              "type": "string"
                                             }
                                           }
                                         },

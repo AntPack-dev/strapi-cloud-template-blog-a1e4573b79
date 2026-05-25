@@ -590,7 +590,13 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   attributes: {
     author: Schema.Attribute.Relation<'manyToOne', 'api::author.author'>;
     blocks: Schema.Attribute.DynamicZone<
-      ['shared.media', 'shared.quote', 'shared.rich-text']
+      [
+        'shared.media',
+        'shared.quote',
+        'shared.rich-text',
+        'shared.subtitle',
+        'shared.user-quote',
+      ]
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -709,6 +715,10 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    userAuthor: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     users_main_category: Schema.Attribute.Relation<
       'oneToOne',
       'api::users-main-category.users-main-category'

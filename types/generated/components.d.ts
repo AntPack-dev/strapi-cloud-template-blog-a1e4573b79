@@ -185,6 +185,29 @@ export interface SharedSocialMediaLink extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedSubtitle extends Struct.ComponentSchema {
+  collectionName: 'components_shared_subtitles';
+  info: {
+    displayName: 'Subtitle';
+    icon: 'heading';
+  };
+  attributes: {
+    text: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface SharedUserQuote extends Struct.ComponentSchema {
+  collectionName: 'components_shared_user_quotes';
+  info: {
+    displayName: 'User Quote';
+    icon: 'quote';
+  };
+  attributes: {
+    body: Schema.Attribute.Text & Schema.Attribute.Required;
+    source: Schema.Attribute.String;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
@@ -201,6 +224,8 @@ declare module '@strapi/strapi' {
       'shared.seo': SharedSeo;
       'shared.slider': SharedSlider;
       'shared.social-media-link': SharedSocialMediaLink;
+      'shared.subtitle': SharedSubtitle;
+      'shared.user-quote': SharedUserQuote;
     }
   }
 }
