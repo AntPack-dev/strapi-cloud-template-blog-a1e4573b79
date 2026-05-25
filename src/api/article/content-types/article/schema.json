@@ -167,7 +167,9 @@
       "components": [
         "shared.media",
         "shared.quote",
-        "shared.rich-text"
+        "shared.rich-text",
+        "shared.subtitle",
+        "shared.user-quote"
       ]
     },
     "global_checks": {
@@ -208,6 +210,16 @@
           "localized": true
         }
       }
+    },
+    "users_main_category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::users-main-category.users-main-category"
+    },
+    "userAuthor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
     }
   }
 }

@@ -12,11 +12,16 @@ async function syncBannerForPublishedArticle(strapi, articleDocumentId) {
   const article = await strapi.documents('api::article.article').findOne({
     documentId: articleDocumentId,
     status: 'published',
-    populate: { countries: true },
+    populate: { countries: true, users_main_category: true },
   });
 
   if (!article) {
     strapi.log.warn(`[banner-sync] Published article not found: ${articleDocumentId}`);
+    return;
+  }
+
+  if (article.users_main_category) {
+    strapi.log.info(`[banner-sync] Article ${articleDocumentId} has users_main_category — skipping banner sync`);
     return;
   }
 

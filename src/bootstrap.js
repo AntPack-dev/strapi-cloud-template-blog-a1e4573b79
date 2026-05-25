@@ -254,7 +254,6 @@ async function importSeedData() {
   });
 
   if (publicRole) {
-    // Permisos para marketing
     const marketingPermissions = [
       'api::marketing.marketing.sendNewsletter',
       'api::marketing.marketing.contact',
@@ -262,19 +261,12 @@ async function importSeedData() {
     ];
 
     for (const action of marketingPermissions) {
-      const existingPermission = await strapi.query('plugin::users-permissions.permission').findOne({
-        where: {
-          action: action,
-          role: publicRole.id,
-        },
+      const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+        where: { action, role: publicRole.id },
       });
-
-      if (!existingPermission) {
+      if (!existing) {
         await strapi.query('plugin::users-permissions.permission').create({
-          data: {
-            action: action,
-            role: publicRole.id,
-          },
+          data: { action, role: publicRole.id },
         });
       }
     }
@@ -286,6 +278,47 @@ async function importSeedData() {
   await importArticles();
   await importGlobal();
   await importAbout();
+}
+
+async function ensureRolePermissions(roleType, actions) {
+  const role = await strapi.query('plugin::users-permissions.role').findOne({
+    where: { type: roleType },
+  });
+  if (!role) return;
+
+  for (const action of actions) {
+    const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+      where: { action, role: role.id },
+    });
+    if (!existing) {
+      await strapi.query('plugin::users-permissions.permission').create({
+        data: { action, role: role.id },
+      });
+      strapi.log.info(`[Bootstrap] Permiso registrado (${roleType}): ${action}`);
+    }
+  }
+}
+
+async function ensurePublicPermissions() {
+  await ensureRolePermissions('public', [
+    'api::main-category.main-category.find',
+    'api::main-category.main-category.findOne',
+    'api::sub-category.sub-category.find',
+    'api::sub-category.sub-category.findOne',
+    'api::country.country.find',
+    'api::country.country.findOne',
+  ]);
+}
+
+async function ensureAuthenticatedPermissions() {
+  await ensureRolePermissions('authenticated', [
+    'api::user-article.user-article.createArticle',
+    'api::user-article.user-article.updateArticle',
+    'api::user-article.user-article.submitForReview',
+    'api::user-article.user-article.getMyArticles',
+    'api::user-article.user-article.getMyArticle',
+    'api::image-upload.image-upload.uploadUserImage',
+  ]);
 }
 
 async function main() {
@@ -648,5 +681,9 @@ module.exports = async () => {
 
   strapi.log.info('[Bootstrap] Ejecutando seedExampleApp...');
   await seedExampleApp();
+
+  await ensurePublicPermissions();
+  await ensureAuthenticatedPermissions();
+
   strapi.log.info('[Bootstrap] ===== Bootstrap completado =====');
 };

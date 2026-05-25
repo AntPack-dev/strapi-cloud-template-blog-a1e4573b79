@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_shared_user_quotes",
+  "info": {
+    "displayName": "User Quote",
+    "icon": "quote"
+  },
+  "options": {},
+  "attributes": {
+    "body": {
+      "type": "text",
+      "required": true
+    },
+    "source": {
+      "type": "string"
+    }
+  }
+}
