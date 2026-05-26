@@ -40,7 +40,24 @@ const ARTICLE_POPULATE = {
   category: { select: ['id', 'name', 'slug'] },
   main_category: { select: ['id', 'name', 'slug'] },
   sub_categories: { select: ['id', 'name', 'slug'] },
-  blocks: true,
+  blocks: { populate: { file: true } },
+};
+
+// Document Service (strapi.documents) uses 'fields' instead of 'select' for nested populate
+// and 'on' fragments for dynamic zone component-specific populate
+const ARTICLE_POPULATE_DOCS = {
+  cover: true,
+  imageCard: true,
+  author: { fields: ['id', 'name'] },
+  userAuthor: { fields: ['id', 'firstName', 'lastName', 'imageUrl'] },
+  category: { fields: ['id', 'name', 'slug'] },
+  main_category: { fields: ['id', 'name', 'slug'] },
+  sub_categories: { fields: ['id', 'name', 'slug'] },
+  blocks: {
+    on: {
+      'shared.media': { populate: { file: true } },
+    },
+  },
 };
 
 const EDITABLE_STATUSES = ['draft', 'rejected'];
@@ -61,7 +78,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
       const slug = slugify(title);
       const readingTime = calcReadingTime(blocks);
 
-      const article = await strapi.db.query('api::article.article').create({
+      const article = await strapi.documents('api::article.article').create({
         data: {
           title,
           description,
@@ -80,7 +97,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
           currentStatus: 'draft',
           publishedAt: null,
         },
-        populate: ARTICLE_POPULATE,
+        populate: ARTICLE_POPULATE_DOCS,
       });
 
       await strapi.db.query('api::user-article.user-article').create({
@@ -102,7 +119,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
 
     const ownership = await strapi.db.query('api::user-article.user-article').findOne({
       where: { article: id, user: userId },
-      populate: { article: { select: ['id', 'currentStatus'] } },
+      populate: { article: { select: ['id', 'documentId', 'currentStatus'] } },
     });
 
     if (!ownership) return ctx.forbidden('No tenés permiso para editar este artículo');
@@ -128,10 +145,10 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (blocks !== undefined)         { updateData.blocks = blocks; updateData.readingTime = calcReadingTime(blocks); }
 
     try {
-      const updated = await strapi.db.query('api::article.article').update({
-        where: { id },
+      const updated = await strapi.documents('api::article.article').update({
+        documentId: ownership.article.documentId,
         data: updateData,
-        populate: ARTICLE_POPULATE,
+        populate: ARTICLE_POPULATE_DOCS,
       });
 
       return ctx.send({ data: updated });
