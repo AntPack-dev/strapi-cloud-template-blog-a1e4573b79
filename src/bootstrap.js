@@ -309,6 +309,9 @@ async function ensurePublicPermissions() {
     'api::sub-category.sub-category.findOne',
     'api::country.country.find',
     'api::country.country.findOne',
+    // User articles approved — for the public "User Stories" feed
+    'api::user-article.user-article.find',
+    'api::user-article.user-article.findOne',
   ]);
 }
 
@@ -322,9 +325,13 @@ async function ensureAuthenticatedPermissions() {
     'api::sub-category.sub-category.findOne',
     'api::country.country.find',
     'api::country.country.findOne',
+    'api::user-article.user-article.find',
+    'api::user-article.user-article.findOne',
     'api::user-article.user-article.createArticle',
     'api::user-article.user-article.updateArticle',
     'api::user-article.user-article.submitForReview',
+    'api::user-article.user-article.withdrawFromReview',
+    'api::user-article.user-article.deleteArticle',
     'api::user-article.user-article.getMyArticles',
     'api::user-article.user-article.getMyArticle',
     'api::image-upload.image-upload.uploadUserImage',

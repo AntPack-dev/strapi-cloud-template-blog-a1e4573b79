@@ -5,21 +5,104 @@
     "singularName": "user-article",
     "pluralName": "user-articles",
     "displayName": "User Article",
-    "description": "Ownership record — tracks which user created which article"
+    "description": "Artículos creados por usuarios lectores — flujo completo de revisión editorial"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "user": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "maxLength": 80
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "cover": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "imageCard": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "userAuthor": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
     },
-    "article": {
+    "users_main_category": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::article.article"
+      "relation": "manyToOne",
+      "target": "api::users-main-category.users-main-category"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category"
+    },
+    "sub_categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::sub-category.sub-category"
+    },
+    "countries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::country.country"
+    },
+    "blocks": {
+      "type": "dynamiczone",
+      "components": [
+        "shared.rich-text",
+        "shared.media",
+        "shared.user-quote",
+        "shared.subtitle"
+      ]
+    },
+    "currentStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "in-review", "requires-changes", "approved"],
+      "default": "draft",
+      "required": true
+    },
+    "reviewer": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "reviewComments": {
+      "type": "richtext"
+    },
+    "submittedAt": {
+      "type": "datetime"
+    },
+    "assignedAt": {
+      "type": "datetime"
+    },
+    "reviewUpdatedAt": {
+      "type": "datetime"
+    },
+    "readingTime": {
+      "type": "integer",
+      "default": 1
+    },
+    "creationDate": {
+      "type": "date"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
     }
   }
 }

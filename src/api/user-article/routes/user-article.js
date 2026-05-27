@@ -22,6 +22,18 @@ module.exports = {
       config: { policies: [], middlewares: [] },
     },
     {
+      method: 'POST',
+      path: '/user-articles/:id/withdraw',
+      handler: 'user-article.withdrawFromReview',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'DELETE',
+      path: '/user-articles/:id',
+      handler: 'user-article.deleteArticle',
+      config: { policies: [], middlewares: [] },
+    },
+    {
       method: 'GET',
       path: '/user-articles/my-articles',
       handler: 'user-article.getMyArticles',

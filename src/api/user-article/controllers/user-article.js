@@ -24,43 +24,40 @@ function calcReadingTime(blocks = []) {
       words += block.text.split(/\s+/).filter(Boolean).length;
     } else if (type === 'shared.user-quote' && block.body) {
       words += block.body.split(/\s+/).filter(Boolean).length;
-    } else if (type === 'shared.quote') {
-      if (block.title) words += block.title.split(/\s+/).filter(Boolean).length;
-      if (block.body) words += block.body.split(/\s+/).filter(Boolean).length;
     }
   }
   return Math.max(1, Math.ceil(words / 200));
 }
 
-const ARTICLE_POPULATE = {
+// Full populate for single-article views (edit / preview)
+const FULL_POPULATE = {
   cover: true,
   imageCard: true,
-  author: { select: ['id', 'name'] },
-  userAuthor: { select: ['id', 'firstName', 'lastName', 'imageUrl'] },
-  category: { select: ['id', 'name', 'slug'] },
-  main_category: { select: ['id', 'name', 'slug'] },
-  sub_categories: { select: ['id', 'name', 'slug'] },
-  blocks: { populate: { file: true } },
-};
-
-// Document Service (strapi.documents) uses 'fields' instead of 'select' for nested populate
-// and 'on' fragments for dynamic zone component-specific populate
-const ARTICLE_POPULATE_DOCS = {
-  cover: true,
-  imageCard: true,
-  author: { fields: ['id', 'name'] },
   userAuthor: { fields: ['id', 'firstName', 'lastName', 'imageUrl'] },
+  reviewer: { fields: ['id', 'firstName', 'lastName', 'username'] },
+  users_main_category: { fields: ['id', 'name', 'slug', 'backgroundColor'] },
   category: { fields: ['id', 'name', 'slug'] },
-  main_category: { fields: ['id', 'name', 'slug'] },
   sub_categories: { fields: ['id', 'name', 'slug'] },
+  countries: { fields: ['id', 'name', 'code'] },
   blocks: {
     on: {
       'shared.media': { populate: { file: true } },
     },
   },
+  seo: true,
 };
 
-const EDITABLE_STATUSES = ['draft', 'rejected'];
+// Light populate for list views (no blocks)
+const LIST_POPULATE = {
+  cover: true,
+  imageCard: true,
+  userAuthor: { fields: ['id', 'firstName', 'lastName'] },
+  users_main_category: { fields: ['id', 'name', 'slug'] },
+  category: { fields: ['id', 'name', 'slug'] },
+};
+
+const EDITABLE_STATUSES = ['draft', 'requires-changes'];
+const DELETABLE_STATUSES = ['draft', 'requires-changes'];
 
 module.exports = createCoreController('api::user-article.user-article', ({ strapi }) => ({
 
@@ -69,25 +66,26 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (!userId) return ctx.unauthorized('Debes iniciar sesión para crear artículos');
 
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
-    const { title, description, cover, category, main_category, sub_categories, countries, blocks, seo, creationDate } = body;
+    const {
+      title, description, cover,
+      users_main_category, category, sub_categories,
+      countries, blocks, seo, creationDate,
+    } = body;
 
     if (!title) return ctx.badRequest('El campo title es requerido');
     if (!cover)  return ctx.badRequest('El campo cover es requerido');
 
     try {
-      const slug = slugify(title);
-      const readingTime = calcReadingTime(blocks);
-
-      const article = await strapi.documents('api::article.article').create({
+      const article = await strapi.documents('api::user-article.user-article').create({
         data: {
           title,
           description,
-          slug,
+          slug: slugify(title),
           cover,
           imageCard: cover,
-          readingTime,
+          readingTime: calcReadingTime(blocks),
+          users_main_category,
           category,
-          main_category,
           sub_categories,
           countries,
           blocks,
@@ -95,13 +93,8 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
           creationDate,
           userAuthor: userId,
           currentStatus: 'draft',
-          publishedAt: null,
         },
-        populate: ARTICLE_POPULATE_DOCS,
-      });
-
-      await strapi.db.query('api::user-article.user-article').create({
-        data: { user: userId, article: article.id },
+        populate: FULL_POPULATE,
       });
 
       return ctx.created({ data: article });
@@ -117,38 +110,40 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
 
     const { id } = ctx.params;
 
-    const ownership = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { article: id, user: userId },
-      populate: { article: { select: ['id', 'documentId', 'currentStatus'] } },
+    const existing = await strapi.db.query('api::user-article.user-article').findOne({
+      where: { id, userAuthor: userId },
+      select: ['id', 'documentId', 'currentStatus'],
     });
 
-    if (!ownership) return ctx.forbidden('No tenés permiso para editar este artículo');
-
-    const status = ownership.article?.currentStatus;
-    if (!EDITABLE_STATUSES.includes(status)) {
-      return ctx.forbidden(`No se puede editar un artículo en estado "${status}"`);
+    if (!existing) return ctx.forbidden('No tenés permiso para editar este artículo');
+    if (!EDITABLE_STATUSES.includes(existing.currentStatus)) {
+      return ctx.forbidden(`No se puede editar un artículo en estado "${existing.currentStatus}"`);
     }
 
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
-    const { title, description, cover, category, main_category, sub_categories, countries, blocks, seo, creationDate } = body;
+    const {
+      title, description, cover,
+      users_main_category, category, sub_categories,
+      countries, blocks, seo, creationDate,
+    } = body;
 
     const updateData = {};
-    if (title !== undefined)          { updateData.title = title; updateData.slug = slugify(title); }
-    if (description !== undefined)    updateData.description = description;
-    if (cover !== undefined)          { updateData.cover = cover; updateData.imageCard = cover; }
-    if (category !== undefined)       updateData.category = category;
-    if (main_category !== undefined)  updateData.main_category = main_category;
-    if (sub_categories !== undefined) updateData.sub_categories = sub_categories;
-    if (countries !== undefined)      updateData.countries = countries;
-    if (seo !== undefined)            updateData.seo = seo;
-    if (creationDate !== undefined)   updateData.creationDate = creationDate;
-    if (blocks !== undefined)         { updateData.blocks = blocks; updateData.readingTime = calcReadingTime(blocks); }
+    if (title !== undefined)                { updateData.title = title; updateData.slug = slugify(title); }
+    if (description !== undefined)          updateData.description = description;
+    if (cover !== undefined)                { updateData.cover = cover; updateData.imageCard = cover; }
+    if (users_main_category !== undefined)  updateData.users_main_category = users_main_category;
+    if (category !== undefined)             updateData.category = category;
+    if (sub_categories !== undefined)       updateData.sub_categories = sub_categories;
+    if (countries !== undefined)            updateData.countries = countries;
+    if (seo !== undefined)                  updateData.seo = seo;
+    if (creationDate !== undefined)         updateData.creationDate = creationDate;
+    if (blocks !== undefined)               { updateData.blocks = blocks; updateData.readingTime = calcReadingTime(blocks); }
 
     try {
-      const updated = await strapi.documents('api::article.article').update({
-        documentId: ownership.article.documentId,
+      const updated = await strapi.documents('api::user-article.user-article').update({
+        documentId: existing.documentId,
         data: updateData,
-        populate: ARTICLE_POPULATE_DOCS,
+        populate: FULL_POPULATE,
       });
 
       return ctx.send({ data: updated });
@@ -164,32 +159,28 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
 
     const { id } = ctx.params;
 
-    const ownership = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { article: id, user: userId },
-      populate: {
-        article: {
-          select: ['id', 'currentStatus', 'title'],
-          populate: { cover: true },
-        },
-      },
+    const existing = await strapi.db.query('api::user-article.user-article').findOne({
+      where: { id, userAuthor: userId },
+      select: ['id', 'documentId', 'currentStatus', 'title'],
+      populate: { cover: true },
     });
 
-    if (!ownership) return ctx.forbidden('No tenés permiso para enviar este artículo');
-
-    const article = ownership.article;
-    if (!EDITABLE_STATUSES.includes(article?.currentStatus)) {
-      return ctx.forbidden(`El artículo ya está en estado "${article?.currentStatus}"`);
+    if (!existing) return ctx.forbidden('No tenés permiso para enviar este artículo');
+    if (!EDITABLE_STATUSES.includes(existing.currentStatus)) {
+      return ctx.forbidden(`El artículo ya está en estado "${existing.currentStatus}"`);
     }
-
-    if (!article.title || !article.cover) {
+    if (!existing.title || !existing.cover) {
       return ctx.badRequest('El artículo necesita título y portada antes de enviarse a revisión');
     }
 
     try {
-      const updated = await strapi.db.query('api::article.article').update({
-        where: { id },
-        data: { currentStatus: 'in-review' },
-        populate: { cover: true, category: { select: ['id', 'name'] } },
+      const updated = await strapi.documents('api::user-article.user-article').update({
+        documentId: existing.documentId,
+        data: {
+          currentStatus: 'in-review',
+          submittedAt: new Date().toISOString(),
+        },
+        populate: LIST_POPULATE,
       });
 
       return ctx.send({ data: updated });
@@ -199,26 +190,84 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     }
   },
 
+  async withdrawFromReview(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Debes iniciar sesión');
+
+    const { id } = ctx.params;
+
+    const existing = await strapi.db.query('api::user-article.user-article').findOne({
+      where: { id, userAuthor: userId },
+      select: ['id', 'documentId', 'currentStatus'],
+    });
+
+    if (!existing) return ctx.forbidden('No tenés permiso sobre este artículo');
+    if (existing.currentStatus !== 'in-review') {
+      return ctx.badRequest('Solo se puede retirar un artículo que está en revisión');
+    }
+
+    try {
+      const updated = await strapi.documents('api::user-article.user-article').update({
+        documentId: existing.documentId,
+        data: { currentStatus: 'draft' },
+        populate: LIST_POPULATE,
+      });
+
+      return ctx.send({ data: updated });
+    } catch (error) {
+      strapi.log.error('[user-article] withdrawFromReview error:', error);
+      return ctx.badRequest('Error al retirar la revisión: ' + error.message);
+    }
+  },
+
+  async deleteArticle(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Debes iniciar sesión');
+
+    const { id } = ctx.params;
+
+    const existing = await strapi.db.query('api::user-article.user-article').findOne({
+      where: { id, userAuthor: userId },
+      select: ['id', 'documentId', 'currentStatus'],
+    });
+
+    if (!existing) return ctx.forbidden('No tenés permiso sobre este artículo');
+    if (!DELETABLE_STATUSES.includes(existing.currentStatus)) {
+      return ctx.forbidden(`No se puede eliminar un artículo en estado "${existing.currentStatus}"`);
+    }
+
+    try {
+      await strapi.documents('api::user-article.user-article').delete({
+        documentId: existing.documentId,
+      });
+
+      return ctx.send({ data: { message: 'Historia eliminada correctamente' } });
+    } catch (error) {
+      strapi.log.error('[user-article] deleteArticle error:', error);
+      return ctx.badRequest('Error al eliminar el artículo: ' + error.message);
+    }
+  },
+
   async getMyArticle(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
     const { id } = ctx.params;
 
-    const ownership = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { article: id, user: userId },
+    const check = await strapi.db.query('api::user-article.user-article').findOne({
+      where: { id, userAuthor: userId },
+      select: ['id', 'documentId'],
     });
 
-    if (!ownership) return ctx.forbidden('No tenés permiso para ver este artículo');
+    if (!check) return ctx.forbidden('No tenés permiso para ver este artículo');
 
     try {
-      const article = await strapi.db.query('api::article.article').findOne({
-        where: { id },
-        populate: ARTICLE_POPULATE,
+      const article = await strapi.documents('api::user-article.user-article').findOne({
+        documentId: check.documentId,
+        populate: FULL_POPULATE,
       });
 
       if (!article) return ctx.notFound('Artículo no encontrado');
-
       return ctx.send({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] getMyArticle error:', error);
@@ -234,43 +283,30 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const pageSize = Math.min(50, Math.max(1, parseInt(ctx.query.pageSize ?? 10, 10)));
     const currentStatusFilter = ctx.query.currentStatus;
 
-    const validStatuses = ['draft', 'in-review', 'rejected', 'approved'];
+    const validStatuses = ['draft', 'in-review', 'requires-changes', 'approved'];
     if (currentStatusFilter && !validStatuses.includes(currentStatusFilter)) {
       return ctx.badRequest('Valor de currentStatus inválido');
     }
 
-    try {
-      const baseWhere = {
-        user: userId,
-        ...(currentStatusFilter ? { article: { currentStatus: currentStatusFilter } } : {}),
-      };
+    const where = {
+      userAuthor: userId,
+      ...(currentStatusFilter ? { currentStatus: currentStatusFilter } : {}),
+    };
 
+    try {
       const [records, total] = await Promise.all([
         strapi.db.query('api::user-article.user-article').findMany({
-          where: baseWhere,
-          populate: {
-            article: {
-              populate: {
-                cover: true,
-                imageCard: true,
-                category: { select: ['id', 'name', 'slug'] },
-                main_category: { select: ['id', 'name', 'slug'] },
-              },
-            },
-          },
+          where,
+          populate: LIST_POPULATE,
           orderBy: { createdAt: 'desc' },
           limit: pageSize,
           offset: (page - 1) * pageSize,
         }),
-        strapi.db.query('api::user-article.user-article').count({
-          where: baseWhere,
-        }),
+        strapi.db.query('api::user-article.user-article').count({ where }),
       ]);
 
-      const articles = records.filter((r) => r.article !== null).map((r) => r.article);
-
       return ctx.send({
-        data: articles,
+        data: records,
         meta: {
           pagination: {
             page,
