@@ -76,24 +76,26 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (!cover)  return ctx.badRequest('El campo cover es requerido');
 
     try {
+      const createData = {
+        title,
+        slug: slugify(title),
+        cover,
+        imageCard: cover,
+        readingTime: calcReadingTime(blocks),
+        userAuthor: userId,
+        currentStatus: 'draft',
+      };
+      if (description !== undefined)         createData.description = description;
+      if (users_main_category !== undefined)  createData.users_main_category = users_main_category;
+      if (category !== undefined)             createData.category = category;
+      if (sub_categories !== undefined)       createData.sub_categories = sub_categories;
+      if (countries !== undefined)            createData.countries = countries;
+      if (blocks !== undefined)               { createData.blocks = blocks; createData.readingTime = calcReadingTime(blocks); }
+      if (seo !== undefined)                  createData.seo = seo;
+      if (creationDate !== undefined)         createData.creationDate = creationDate;
+
       const article = await strapi.documents('api::user-article.user-article').create({
-        data: {
-          title,
-          description,
-          slug: slugify(title),
-          cover,
-          imageCard: cover,
-          readingTime: calcReadingTime(blocks),
-          users_main_category,
-          category,
-          sub_categories,
-          countries,
-          blocks,
-          seo,
-          creationDate,
-          userAuthor: userId,
-          currentStatus: 'draft',
-        },
+        data: createData,
         populate: FULL_POPULATE,
       });
 
