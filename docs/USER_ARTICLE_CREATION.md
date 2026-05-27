@@ -1,6 +1,6 @@
 # User Article Creation — Frontend Integration Guide
 
-Guía completa para integrar el flujo de creación de artículos por usuarios lectores desde el frontend. Cubre todo el ciclo: subir imágenes, crear borrador, auto-guardar, enviar a revisión y consultar el estado.
+Guía completa para integrar el flujo de creación de artículos por usuarios lectores desde el frontend. Cubre todo el ciclo: subir imágenes, crear borrador, auto-guardar, enviar a revisión, retirar revisión, ver comentarios del editor y eliminar historia.
 
 ---
 
@@ -14,12 +14,16 @@ Guía completa para integrar el flujo de creación de artículos por usuarios le
 6. [Tipos de bloques](#6-tipos-de-bloques)
 7. [Auto-guardar (PATCH)](#7-auto-guardar-patch)
 8. [Enviar a revisión](#8-enviar-a-revisión)
-9. [Ver / previsualizar un artículo](#9-ver--previsualizar-un-artículo)
-10. [Mis artículos](#10-mis-artículos)
-11. [Selectores de categorías y países](#11-selectores-de-categorías-y-países)
-12. [Manejo de errores](#12-manejo-de-errores)
-13. [Flujo completo paso a paso](#13-flujo-completo-paso-a-paso)
-14. [Consideraciones importantes](#14-consideraciones-importantes)
+9. [Retirar revisión](#9-retirar-revisión)
+10. [Eliminar historia](#10-eliminar-historia)
+11. [Ver / previsualizar un artículo](#11-ver--previsualizar-un-artículo)
+12. [Mis artículos](#12-mis-artículos)
+13. [Feed público de historias aprobadas](#13-feed-público-de-historias-aprobadas)
+14. [Selectores de categorías y países](#14-selectores-de-categorías-y-países)
+15. [Detalles de la revisión](#15-detalles-de-la-revisión)
+16. [Manejo de errores](#16-manejo-de-errores)
+17. [Flujo completo paso a paso](#17-flujo-completo-paso-a-paso)
+18. [Consideraciones importantes](#18-consideraciones-importantes)
 
 ---
 
@@ -28,15 +32,17 @@ Guía completa para integrar el flujo de creación de artículos por usuarios le
 Los usuarios autenticados (lectores) pueden crear sus propias historias desde una interfaz externa sin acceder al panel de administración de Strapi. El flujo es:
 
 ```
-Usuario escribe → guarda borrador → envía a revisión → equipo editorial aprueba → se publica
+Usuario escribe → guarda borrador → envía a revisión → equipo editorial revisa → aprobado o requiere ajustes
 ```
 
 Los artículos creados por usuarios:
+- Viven en su **propia colección** (`/api/user-articles`) — completamente separados de los artículos editoriales
 - Empiezan siempre en estado `draft`
-- No se publican automáticamente — requieren aprobación del equipo editorial
-- Usan el mismo árbol de categorías que los artículos editoriales
-- Aparecen en el listado público de artículos solo cuando están publicados y aprobados
+- Requieren aprobación del equipo editorial para aparecer en el feed público
 - Identifican al autor con los datos del perfil del usuario (`firstName`, `lastName`, `imageUrl`)
+- Cuando son aprobados, aparecen en `GET /api/user-articles?filters[currentStatus][$eq]=approved`
+
+> **Importante para el front**: los artículos de usuarios NO están en `/api/articles`. El feed de historias aprobadas se obtiene desde `/api/user-articles` con filtro de estado.
 
 ---
 
@@ -55,20 +61,24 @@ El JWT se obtiene al hacer login. Ver `OAUTH_FRONTEND_GUIDE.md` y `USER_PROFILE_
 ## 3. Flujo de estados
 
 ```
-draft ──► in-review ──► approved  (se publica en Strapi)
+draft ──► in-review ──► approved
+  ▲            │
+  │◄───────────┘ (withdraw)
   ▲            │
   └────────────┘
-           rejected
+        requires-changes
 ```
 
-| Estado | Quién lo asigna | El usuario puede editar |
-|---|---|---|
-| `draft` | Backend al crear | ✅ Sí |
-| `in-review` | Usuario al solicitar revisión | ❌ No |
-| `rejected` | Equipo editorial (admin panel) | ✅ Sí |
-| `approved` | Equipo editorial (admin panel) | ❌ No |
+| Estado | Quién lo asigna | El usuario puede editar | El usuario puede retirar |
+|---|---|---|---|
+| `draft` | Backend al crear | ✅ Sí | — |
+| `in-review` | Usuario al solicitar revisión | ❌ No | ✅ Sí |
+| `requires-changes` | Equipo editorial | ✅ Sí | — |
+| `approved` | Equipo editorial | ❌ No | ❌ No |
 
-**Regla clave**: `PATCH` y `POST .../submit` solo funcionan cuando el artículo está en `draft` o `rejected`. Cualquier intento sobre un artículo `in-review` o `approved` devuelve `403 Forbidden`.
+**Regla clave**: `PATCH` y `POST .../submit` solo funcionan cuando el artículo está en `draft` o `requires-changes`. Intentar editar o enviar un artículo `in-review` o `approved` devuelve `403 Forbidden`.
+
+> **Cambio respecto a la versión anterior**: el estado `rejected` fue renombrado a `requires-changes`. Actualizar cualquier comparación de `currentStatus === 'rejected'` → `currentStatus === 'requires-changes'`.
 
 ---
 
@@ -104,15 +114,13 @@ Content-Type: multipart/form-data
 }
 ```
 
-### Uso
-
 El `id` de la respuesta (`42` en el ejemplo) es el valor que se envía como `cover` al crear o actualizar el artículo, y como `file` dentro de bloques de tipo imagen.
 
 ---
 
 ## 5. Crear artículo
 
-Crea un artículo nuevo en estado `draft` y registra la propiedad del usuario. El slug y el tiempo de lectura se calculan automáticamente en el backend.
+Crea un artículo nuevo en estado `draft`. El slug y el tiempo de lectura se calculan automáticamente en el backend.
 
 ### Endpoint
 
@@ -129,12 +137,14 @@ Content-Type: application/json
 | `title` | string | ✅ | Título del artículo |
 | `cover` | number | ✅ | ID del archivo de portada (obtenido del upload) |
 | `description` | string | ❌ | Subtítulo / descripción corta. Máximo 80 caracteres. |
-| `main_category` | number | ❌ | ID de la categoría principal |
+| `users_main_category` | number | ❌ | ID de la categoría principal de usuarios |
 | `category` | number | ❌ | ID de la categoría |
 | `sub_categories` | number[] | ❌ | Array de IDs de subcategorías |
 | `countries` | number[] | ❌ | Array de IDs de países |
 | `blocks` | array | ❌ | Bloques de contenido. Ver [sección 6](#6-tipos-de-bloques). |
 | `creationDate` | string (YYYY-MM-DD) | ❌ | Fecha de creación visible |
+
+> **Cambio respecto a la versión anterior**: el campo se llama `users_main_category`, no `main_category`. Actualizar el payload del formulario.
 
 ### Ejemplo de request
 
@@ -143,7 +153,7 @@ Content-Type: application/json
   "title": "Mi primera historia",
   "cover": 42,
   "description": "Un subtítulo de máximo 80 caracteres.",
-  "main_category": 1,
+  "users_main_category": 1,
   "category": 3,
   "sub_categories": [5, 6],
   "countries": [2],
@@ -182,8 +192,10 @@ Content-Type: application/json
     "description": "Un subtítulo de máximo 80 caracteres.",
     "currentStatus": "draft",
     "readingTime": 3,
-    "publishedAt": null,
     "creationDate": "2026-05-25",
+    "submittedAt": null,
+    "assignedAt": null,
+    "reviewUpdatedAt": null,
     "cover": {
       "id": 42,
       "url": "https://cdn.example.com/mi-portada.jpg"
@@ -198,21 +210,23 @@ Content-Type: application/json
       "lastName": "Meneses",
       "imageUrl": "https://cdn.example.com/avatar.jpg"
     },
-    "main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia" },
+    "reviewer": null,
+    "reviewComments": null,
+    "users_main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia", "backgroundColor": "#E3F2FD" },
     "category": { "id": 3, "name": "Desarrollo", "slug": "desarrollo" },
     "sub_categories": [
       { "id": 5, "name": "Frontend", "slug": "frontend" }
     ],
-    "blocks": [ ... ]
+    "blocks": [ "..." ]
   }
 }
 ```
 
 **Notas:**
-- `slug` → generado automáticamente desde `title`, no se envía
-- `readingTime` → calculado automáticamente desde el contenido de los bloques (palabras / 200 wpm, mínimo 1)
-- `imageCard` → copia exacta de `cover`, no se envía por separado
-- `publishedAt: null` → el artículo es un borrador, no visible públicamente
+- `slug` → generado automáticamente desde `title`
+- `readingTime` → calculado automáticamente (palabras / 200 wpm, mínimo 1)
+- `imageCard` → copia exacta de `cover`
+- `reviewer` / `reviewComments` → null hasta que el equipo editorial los complete
 
 ---
 
@@ -229,12 +243,6 @@ Cada bloque del cuerpo del artículo requiere el campo `__component` para identi
 }
 ```
 
-| Campo | Tipo | Requerido |
-|---|---|---|
-| `body` | string (richtext) | ❌ |
-
----
-
 ### `shared.subtitle` — Subtítulo
 
 ```json
@@ -243,12 +251,6 @@ Cada bloque del cuerpo del artículo requiere el campo `__component` para identi
   "text": "Título de sección dentro del artículo"
 }
 ```
-
-| Campo | Tipo | Requerido |
-|---|---|---|
-| `text` | string | ✅ |
-
----
 
 ### `shared.media` — Imagen
 
@@ -259,13 +261,7 @@ Cada bloque del cuerpo del artículo requiere el campo `__component` para identi
 }
 ```
 
-| Campo | Tipo | Requerido | Descripción |
-|---|---|---|---|
-| `file` | number | ❌ | ID del archivo previamente subido |
-
 La imagen se sube primero con el [endpoint de upload](#4-subir-imagen) y el `id` resultante va aquí.
-
----
 
 ### `shared.user-quote` — Cita
 
@@ -277,18 +273,13 @@ La imagen se sube primero con el [endpoint de upload](#4-subir-imagen) y el `id`
 }
 ```
 
-| Campo | Tipo | Requerido |
-|---|---|---|
-| `body` | string | ✅ |
-| `source` | string | ❌ |
-
-> **Importante**: Para artículos de usuarios usar siempre `shared.user-quote`, no `shared.quote`. El componente `shared.quote` es para uso editorial interno y tiene una estructura diferente.
+> **Importante**: usar siempre `shared.user-quote`, nunca `shared.quote`. El componente `shared.quote` es para uso editorial interno y tiene una estructura diferente.
 
 ---
 
 ## 7. Auto-guardar (PATCH)
 
-Actualiza un artículo existente. Todos los campos son opcionales — solo se actualizan los que se envían. Diseñado para auto-guardar mientras el usuario escribe.
+Actualiza un artículo existente. Todos los campos son opcionales — solo se actualizan los que se envían.
 
 ### Endpoint
 
@@ -301,7 +292,7 @@ Content-Type: application/json
 ### Restricciones
 
 - Solo funciona si el artículo pertenece al usuario autenticado
-- Solo funciona si `currentStatus` es `draft` o `rejected`
+- Solo funciona si `currentStatus` es `draft` o `requires-changes`
 - Devuelve `403` si el artículo está `in-review` o `approved`
 
 ### Body
@@ -311,13 +302,14 @@ Mismos campos que el [create](#5-crear-artículo), todos opcionales.
 ```json
 {
   "title": "Título actualizado",
+  "users_main_category": 2,
   "blocks": [
     { "__component": "shared.rich-text", "body": "Nuevo contenido..." }
   ]
 }
 ```
 
-> **Atención con los bloques**: al enviar `blocks`, se reemplaza el array completo. Siempre enviar el array entero con todos los bloques actuales, no solo el bloque modificado.
+> **Atención con los bloques**: al enviar `blocks`, se reemplaza el array completo. Siempre enviar el array entero con todos los bloques actuales.
 
 ### Respuesta exitosa `200 OK`
 
@@ -327,7 +319,7 @@ Misma estructura que el create, con los datos actualizados.
 
 ## 8. Enviar a revisión
 
-Cambia el estado del artículo de `draft` o `rejected` a `in-review`. Corresponde al botón "Solicitar aprobación" de la UI.
+Cambia el estado de `draft` o `requires-changes` a `in-review`. Corresponde al botón "Solicitar aprobación" de la UI. Auto-registra `submittedAt`.
 
 ### Endpoint
 
@@ -341,7 +333,7 @@ No requiere body.
 ### Restricciones
 
 - Solo funciona si el artículo pertenece al usuario autenticado
-- Solo funciona si `currentStatus` es `draft` o `rejected`
+- Solo funciona si `currentStatus` es `draft` o `requires-changes`
 - El artículo debe tener título y portada; si no, devuelve `400`
 
 ### Respuesta exitosa `200 OK`
@@ -351,17 +343,81 @@ No requiere body.
   "data": {
     "id": 101,
     "currentStatus": "in-review",
-    "cover": { ... },
-    "category": { ... }
+    "submittedAt": "2026-05-27T14:00:00.000Z",
+    "cover": { "..." },
+    "category": { "..." }
   }
 }
 ```
 
 ---
 
-## 9. Ver / previsualizar un artículo
+## 9. Retirar revisión
 
-Devuelve un artículo completo con todos sus bloques. Solo accesible por el propietario. Usar para cargar el editor en modo edición o para la previsualización.
+Saca el artículo del proceso de revisión y lo regresa a `draft`. Corresponde al botón "Retirar revisión" de la UI.
+
+### Endpoint
+
+```
+POST /api/user-articles/:id/withdraw
+Authorization: Bearer <jwt>
+```
+
+No requiere body.
+
+### Restricciones
+
+- Solo funciona si el artículo pertenece al usuario autenticado
+- Solo funciona si `currentStatus` es `in-review`
+- Devuelve `400` si el artículo no está en revisión
+
+### Respuesta exitosa `200 OK`
+
+```json
+{
+  "data": {
+    "id": 101,
+    "currentStatus": "draft",
+    "cover": { "..." },
+    "category": { "..." }
+  }
+}
+```
+
+---
+
+## 10. Eliminar historia
+
+Elimina permanentemente el artículo. Corresponde al botón "Eliminar historia" de la UI.
+
+### Endpoint
+
+```
+DELETE /api/user-articles/:id
+Authorization: Bearer <jwt>
+```
+
+### Restricciones
+
+- Solo funciona si el artículo pertenece al usuario autenticado
+- Solo funciona si `currentStatus` es `draft` o `requires-changes`
+- Devuelve `403` si el artículo está `in-review` o `approved`
+
+### Respuesta exitosa `200 OK`
+
+```json
+{
+  "data": {
+    "message": "Historia eliminada correctamente"
+  }
+}
+```
+
+---
+
+## 11. Ver / previsualizar un artículo
+
+Devuelve el artículo completo con todos sus bloques. Solo accesible por el propietario. Usar para cargar el editor en modo edición o para la previsualización.
 
 ### Endpoint
 
@@ -379,49 +435,41 @@ Authorization: Bearer <jwt>
     "title": "Mi primera historia",
     "slug": "mi-primera-historia",
     "description": "Un subtítulo de máximo 80 caracteres.",
-    "currentStatus": "draft",
+    "currentStatus": "requires-changes",
     "readingTime": 3,
-    "publishedAt": null,
     "creationDate": "2026-05-25",
+    "submittedAt": "2026-05-27T12:00:00.000Z",
+    "assignedAt": "2026-05-27T13:00:00.000Z",
+    "reviewUpdatedAt": "2026-05-27T13:30:00.000Z",
     "cover": {
       "id": 42,
       "url": "https://cdn.example.com/portada.jpg",
       "mime": "image/jpeg"
     },
-    "imageCard": { ... },
+    "imageCard": { "..." },
     "userAuthor": {
       "id": 7,
       "firstName": "Sebastián",
       "lastName": "Meneses",
       "imageUrl": "https://cdn.example.com/avatar.jpg"
     },
-    "main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia" },
+    "reviewer": {
+      "id": 3,
+      "firstName": "Ana",
+      "lastName": "García",
+      "username": "ana.garcia"
+    },
+    "reviewComments": "El artículo necesita más desarrollo en la sección de conclusiones.",
+    "users_main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia", "backgroundColor": "#E3F2FD" },
     "category": { "id": 3, "name": "Desarrollo", "slug": "desarrollo" },
     "sub_categories": [
       { "id": 5, "name": "Frontend", "slug": "frontend" }
     ],
     "blocks": [
-      {
-        "id": 1,
-        "__component": "shared.rich-text",
-        "body": "Contenido del primer párrafo."
-      },
-      {
-        "id": 2,
-        "__component": "shared.subtitle",
-        "text": "Un subtítulo"
-      },
-      {
-        "id": 3,
-        "__component": "shared.media",
-        "file": { "id": 43, "url": "https://cdn.example.com/imagen.jpg" }
-      },
-      {
-        "id": 4,
-        "__component": "shared.user-quote",
-        "body": "La cita.",
-        "source": "Autor"
-      }
+      { "id": 1, "__component": "shared.rich-text", "body": "Contenido..." },
+      { "id": 2, "__component": "shared.subtitle", "text": "Un subtítulo" },
+      { "id": 3, "__component": "shared.media", "file": { "id": 43, "url": "https://cdn.example.com/imagen.jpg" } },
+      { "id": 4, "__component": "shared.user-quote", "body": "La cita.", "source": "Autor" }
     ]
   }
 }
@@ -429,9 +477,9 @@ Authorization: Bearer <jwt>
 
 ---
 
-## 10. Mis artículos
+## 12. Mis artículos
 
-Lista paginada de todos los artículos del usuario autenticado. Para la pantalla "Mis historias".
+Lista paginada de todos los artículos del usuario autenticado.
 
 ### Endpoint
 
@@ -446,14 +494,14 @@ Authorization: Bearer <jwt>
 |---|---|---|---|
 | `page` | number | `1` | Página actual |
 | `pageSize` | number | `10` | Artículos por página (máximo 50) |
-| `currentStatus` | string | — | Filtrar por estado: `draft`, `in-review`, `rejected`, `approved` |
+| `currentStatus` | string | — | Filtrar: `draft`, `in-review`, `requires-changes`, `approved` |
 
 ### Ejemplos
 
 ```
 GET /api/user-articles/my-articles
+GET /api/user-articles/my-articles?currentStatus=requires-changes
 GET /api/user-articles/my-articles?page=2&pageSize=5
-GET /api/user-articles/my-articles?currentStatus=in-review
 ```
 
 ### Respuesta exitosa `200 OK`
@@ -466,16 +514,13 @@ GET /api/user-articles/my-articles?currentStatus=in-review
       "title": "Mi primera historia",
       "slug": "mi-primera-historia",
       "description": "Un subtítulo...",
-      "currentStatus": "draft",
+      "currentStatus": "requires-changes",
       "readingTime": 3,
-      "publishedAt": null,
       "creationDate": "2026-05-25",
-      "cover": {
-        "id": 42,
-        "url": "https://cdn.example.com/portada.jpg"
-      },
-      "imageCard": { ... },
-      "main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia" },
+      "submittedAt": "2026-05-27T12:00:00.000Z",
+      "cover": { "id": 42, "url": "https://cdn.example.com/portada.jpg" },
+      "imageCard": { "..." },
+      "users_main_category": { "id": 1, "name": "Tecnología", "slug": "tecnologia" },
       "category": { "id": 3, "name": "Desarrollo", "slug": "desarrollo" }
     }
   ],
@@ -490,15 +535,60 @@ GET /api/user-articles/my-articles?currentStatus=in-review
 }
 ```
 
-> La lista no incluye `blocks` por performance. Para cargar el contenido completo (editar o previsualizar) usar `GET /api/user-articles/:id`.
+> La lista no incluye `blocks` ni `reviewComments` por performance. Para cargar el contenido completo usar `GET /api/user-articles/:id`.
 
 ---
 
-## 11. Selectores de categorías y países
+## 13. Feed público de historias aprobadas
+
+Devuelve los artículos de usuarios que ya fueron aprobados. No requiere autenticación. Usar para la sección "Historias de usuarios" del frontend.
+
+### Endpoint
+
+```
+GET /api/user-articles?filters[currentStatus][$eq]=approved
+```
+
+### Populate recomendado
+
+```
+GET /api/user-articles?filters[currentStatus][$eq]=approved&populate[cover]=true&populate[userAuthor][fields][0]=firstName&populate[userAuthor][fields][1]=lastName&populate[userAuthor][fields][2]=imageUrl&populate[category][fields][0]=name&populate[category][fields][1]=slug
+```
+
+### Respuesta exitosa `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": 101,
+      "title": "Mi primera historia",
+      "slug": "mi-primera-historia",
+      "description": "Un subtítulo...",
+      "currentStatus": "approved",
+      "readingTime": 3,
+      "creationDate": "2026-05-25",
+      "cover": { "id": 42, "url": "https://cdn.example.com/portada.jpg" },
+      "userAuthor": {
+        "id": 7,
+        "firstName": "Sebastián",
+        "lastName": "Meneses",
+        "imageUrl": "https://cdn.example.com/avatar.jpg"
+      },
+      "category": { "id": 3, "name": "Desarrollo", "slug": "desarrollo" }
+    }
+  ],
+  "meta": { "pagination": { "..." } }
+}
+```
+
+---
+
+## 14. Selectores de categorías y países
 
 Endpoints públicos (no requieren autenticación) para poblar los dropdowns del formulario de creación.
 
-### Main categories
+### Main categories (categorías de usuarios)
 
 ```
 GET /api/main-categories
@@ -511,12 +601,13 @@ GET /api/main-categories
       "id": 1,
       "name": "Tecnología",
       "slug": "tecnologia",
-      "backgroundColor": "#E3F2FD",
-      "order": "first"
+      "backgroundColor": "#E3F2FD"
     }
   ]
 }
 ```
+
+> El `id` de este endpoint se envía como `users_main_category` al crear/actualizar el artículo.
 
 ### Categorías (filtradas por main_category)
 
@@ -563,7 +654,50 @@ GET /api/countries
 
 ---
 
-## 12. Manejo de errores
+## 15. Detalles de la revisión
+
+Cuando el artículo está en `in-review` o `requires-changes`, el usuario puede ver el panel de seguimiento. Todos los datos necesarios vienen del `GET /api/user-articles/:id`.
+
+### Campos relevantes para el panel
+
+| Campo | Uso en UI |
+|---|---|
+| `currentStatus` | Badge de estado: "En revisión" / "Requiere ajustes" |
+| `reviewer.firstName` + `reviewer.lastName` | "Responsable de la revisión" |
+| `reviewComments` | "Descripción corta" — comentarios del editor (solo cuando `requires-changes`) |
+| `submittedAt` | Historial: "Enviado a revisión" |
+| `assignedAt` | Historial: "Asignado a equipo editorial" |
+| `reviewUpdatedAt` | Historial: "Revisión en curso — Actualización hace X" |
+
+### Lógica de display recomendada
+
+```js
+// Mostrar panel de revisión cuando:
+const showReviewPanel = ['in-review', 'requires-changes'].includes(article.currentStatus);
+
+// Mostrar comentarios del editor solo cuando requiere ajustes:
+const showComments = article.currentStatus === 'requires-changes' && article.reviewComments;
+
+// Historial: solo mostrar entradas con timestamp (los null se omiten)
+const historyEvents = [
+  { label: 'Enviado a revisión',        timestamp: article.submittedAt },
+  { label: 'Asignado a equipo editorial', timestamp: article.assignedAt },
+  { label: 'Revisión en curso',          timestamp: article.reviewUpdatedAt },
+].filter(e => e.timestamp);
+```
+
+### Acciones disponibles según estado
+
+| Estado | Acciones disponibles |
+|---|---|
+| `draft` | Editar, Enviar a revisión, Eliminar |
+| `in-review` | Ver detalles, Retirar revisión |
+| `requires-changes` | Editar, Ver comentarios, Enviar a revisión, Eliminar |
+| `approved` | Solo lectura |
+
+---
+
+## 16. Manejo de errores
 
 Todos los endpoints siguen el mismo formato de error:
 
@@ -582,90 +716,87 @@ Todos los endpoints siguen el mismo formato de error:
 
 | Código | Significado | Causa más común |
 |---|---|---|
-| `400 Bad Request` | Datos inválidos o faltantes | Campo requerido ausente, formato incorrecto |
+| `400 Bad Request` | Datos inválidos o faltantes | Campo requerido ausente, estado incorrecto |
 | `401 Unauthorized` | Sin autenticación | JWT faltante o expirado |
 | `403 Forbidden` | Sin permiso | Artículo de otro usuario, o estado no editable |
 | `404 Not Found` | No encontrado | ID de artículo inexistente |
 | `500 Internal Server Error` | Error del servidor | Contactar al equipo de backend |
 
-### Casos especiales de `403`
-
-- Intentar editar (`PATCH`) un artículo en `in-review` o `approved`
-- Intentar hacer submit de un artículo que ya está `in-review`
-- Intentar acceder a un artículo que pertenece a otro usuario
-
 ---
 
-## 13. Flujo completo paso a paso
-
-### Crear una historia nueva
+## 17. Flujo completo paso a paso
 
 ```
 1. Usuario escribe el título
-   → frontend hace PATCH en background si ya existe el artículo
-   → o POST /user-articles/create-article con { title, cover } mínimo
+   → POST /user-articles/create-article con { title, cover } mínimo
+   → guardar el id devuelto para usar en los siguientes pasos
 
 2. Usuario sube imagen de portada
    → POST /api/image-uploads/user-upload  (multipart, campo "file")
-   → guarda el id devuelto
-   → hace PATCH /user-articles/:id con { cover: <id> }
+   → PATCH /user-articles/:id con { cover: <id> }
 
-3. Usuario agrega bloques de contenido
+3. Usuario selecciona categorías
+   → GET /api/main-categories  (para el primer dropdown)
+   → GET /api/categories?filters[main_category][id][$eq]=<id>  (para el segundo)
+   → PATCH /user-articles/:id con { users_main_category: X, category: Y }
+
+4. Usuario agrega bloques de contenido
    → imágenes dentro de bloques: primero upload, luego id en el bloque
-   → frontend envía PATCH con el array completo de blocks cada X segundos
-
-4. Usuario quiere previsualizar
-   → GET /api/user-articles/:id  (renderizar localmente sin llamada extra)
+   → PATCH con el array completo de blocks cada X segundos (auto-save)
 
 5. Usuario hace click en "Solicitar aprobación"
    → POST /api/user-articles/:id/submit
-   → deshabilitar edición en el frontend (currentStatus = "in-review")
+   → poner UI en modo solo lectura (currentStatus = "in-review")
+   → mostrar panel "Detalles de la revisión"
 
-6. Equipo editorial revisa en el panel de Strapi
-   → si aprueba: cambia status a "approved" y publica → el artículo aparece en /articles
-   → si rechaza: cambia status a "rejected"
+6. [Opcional] Usuario hace click en "Retirar revisión"
+   → POST /api/user-articles/:id/withdraw
+   → volver a modo edición (currentStatus = "draft")
 
-7. Si fue rechazado
-   → GET /api/user-articles/:id  → mostrar currentStatus: "rejected"
-   → habilitar edición nuevamente (draft y rejected son editables)
-   → usuario corrige y vuelve al paso 3
+7. Equipo editorial revisa en el panel de Strapi
+   → si aprueba: cambia status a "approved"
+   → si requiere cambios: cambia status a "requires-changes" y agrega reviewComments
+
+8. Si requiere ajustes
+   → GET /api/user-articles/:id → mostrar reviewComments en la UI
+   → habilitar edición nuevamente
+   → usuario corrige y vuelve al paso 4
+
+9. [Opcional] Usuario elimina la historia
+   → DELETE /api/user-articles/:id  (solo si draft o requires-changes)
+   → confirmar con modal antes de llamar al endpoint
 ```
 
 ---
 
-## 14. Consideraciones importantes
+## 18. Consideraciones importantes
 
-### Límite de `description`
-El campo `description` (subtítulo del artículo) tiene un límite de **80 caracteres** definido en el schema. Si se excede, Strapi devuelve un error de validación. Mostrar un contador de caracteres en el UI.
+### Campo renombrado: `users_main_category`
+El campo que antes se llamaba `main_category` en el payload ahora se llama `users_main_category`. Actualizar en todos los `POST create-article` y `PATCH update` donde se envíe este campo.
+
+### Estado renombrado: `requires-changes`
+El estado que antes se llamaba `rejected` ahora se llama `requires-changes`. Actualizar cualquier comparación `currentStatus === 'rejected'` → `currentStatus === 'requires-changes'`.
 
 ### Reemplazo total de bloques
 Cuando se envía `blocks` en un PATCH, **se reemplaza el array completo**. Nunca enviar solo el bloque modificado — siempre enviar todos los bloques actuales del artículo.
 
 ### Auto-save recomendado
-Implementar debounce de **2-3 segundos** después del último keystroke para evitar llamadas excesivas. Si el usuario está inactivo más de 30 segundos, hacer un save final.
-
-### Artículo nuevo vs existente
-Al abrir el editor en blanco, crear el artículo recién cuando el usuario escribe el primer carácter del título (o cuando sube la portada). Antes de eso, no hay artículo en el servidor.
-
-### Errores de upload de imagen
-Si el upload falla, no bloquear el flujo de escritura. Mostrar el error inline junto al bloque de imagen y permitir reintentar.
+Implementar debounce de **2-3 segundos** después del último keystroke. Si el usuario está inactivo más de 30 segundos, hacer un save final.
 
 ### Estado `in-review` en el UI
-Cuando `currentStatus === 'in-review'`, poner el editor en modo solo lectura. Mostrar un mensaje claro de que el artículo está siendo revisado. El botón "Solicitar aprobación" no debe mostrarse.
+Cuando `currentStatus === 'in-review'`, poner el editor en modo solo lectura. Mostrar el panel "Detalles de la revisión". El botón "Solicitar aprobación" no debe mostrarse — reemplazarlo por "Retirar revisión".
 
-### Artículos publicados en el listing general
-Cuando un artículo es aprobado y publicado, aparece en `GET /api/articles` y `GET /api/articles-enhanced` con los datos normales del artículo. Para mostrar el autor, usar el campo `userAuthor` (cuando `author` sea null, el artículo es de un usuario lector):
+### Estado `requires-changes` en el UI
+Habilitar edición nuevamente. Mostrar el panel "Comentarios de la revisión" con `reviewComments` y los datos del `reviewer`. El botón "Solicitar aprobación" vuelve a estar disponible.
 
-```json
-{
-  "author": null,
-  "userAuthor": {
-    "id": 7,
-    "firstName": "Sebastián",
-    "lastName": "Meneses",
-    "imageUrl": "https://cdn.example.com/avatar.jpg"
-  }
-}
-```
+### Eliminar historia — cuándo mostrar el botón
+Mostrar el botón "Eliminar historia" solo cuando `currentStatus` es `draft` o `requires-changes`. El backend rechaza la eliminación en otros estados con `403`.
 
-> **Nota para el front**: `article-enhanced` ya devuelve `userAuthor` en el populate. Si usás el endpoint estándar `/articles`, agregar `populate=userAuthor` en la query.
+### Artículo nuevo vs existente
+Al abrir el editor en blanco, crear el artículo recién cuando el usuario escribe el primer carácter del título o sube la portada. Antes de eso no hay artículo en el servidor.
+
+### Límite de `description`
+El campo `description` tiene un límite de **80 caracteres**. Mostrar un contador en el UI.
+
+### Errores de upload de imagen
+Si el upload falla, no bloquear el flujo de escritura. Mostrar el error inline y permitir reintentar.
