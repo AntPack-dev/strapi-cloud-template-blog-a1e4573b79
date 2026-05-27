@@ -1603,7 +1603,7 @@ export interface ApiSubscriptionSectionSubscriptionSection
 export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
   collectionName: 'user_articles';
   info: {
-    description: 'Ownership record \u2014 tracks which user created which article';
+    description: 'Art\u00EDculos creados por usuarios lectores \u2014 flujo completo de revisi\u00F3n editorial';
     displayName: 'User Article';
     pluralName: 'user-articles';
     singularName: 'user-article';
@@ -1612,10 +1612,32 @@ export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    article: Schema.Attribute.Relation<'oneToOne', 'api::article.article'>;
+    assignedAt: Schema.Attribute.DateTime;
+    blocks: Schema.Attribute.DynamicZone<
+      [
+        'shared.rich-text',
+        'shared.media',
+        'shared.user-quote',
+        'shared.subtitle',
+      ]
+    >;
+    category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
+    countries: Schema.Attribute.Relation<'manyToMany', 'api::country.country'>;
+    cover: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    creationDate: Schema.Attribute.Date;
+    currentStatus: Schema.Attribute.Enumeration<
+      ['draft', 'in-review', 'requires-changes', 'approved']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'draft'>;
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    imageCard: Schema.Attribute.Media<'images'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1623,12 +1645,31 @@ export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    readingTime: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
+    reviewComments: Schema.Attribute.RichText;
+    reviewer: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    reviewUpdatedAt: Schema.Attribute.DateTime;
+    seo: Schema.Attribute.Component<'shared.seo', false>;
+    slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
+    sub_categories: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::sub-category.sub-category'
+    >;
+    submittedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
+    userAuthor: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
+    >;
+    users_main_category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::users-main-category.users-main-category'
     >;
   };
 }
