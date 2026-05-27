@@ -303,6 +303,8 @@ async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
     'api::sub-category.sub-category.find',
     'api::sub-category.sub-category.findOne',
     'api::country.country.find',
@@ -312,6 +314,14 @@ async function ensurePublicPermissions() {
 
 async function ensureAuthenticatedPermissions() {
   await ensureRolePermissions('authenticated', [
+    'api::main-category.main-category.find',
+    'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
+    'api::sub-category.sub-category.find',
+    'api::sub-category.sub-category.findOne',
+    'api::country.country.find',
+    'api::country.country.findOne',
     'api::user-article.user-article.createArticle',
     'api::user-article.user-article.updateArticle',
     'api::user-article.user-article.submitForReview',

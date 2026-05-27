@@ -166,7 +166,12 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
 
     const ownership = await strapi.db.query('api::user-article.user-article').findOne({
       where: { article: id, user: userId },
-      populate: { article: { select: ['id', 'currentStatus', 'title', 'cover'] } },
+      populate: {
+        article: {
+          select: ['id', 'currentStatus', 'title'],
+          populate: { cover: true },
+        },
+      },
     });
 
     if (!ownership) return ctx.forbidden('No tenés permiso para enviar este artículo');
