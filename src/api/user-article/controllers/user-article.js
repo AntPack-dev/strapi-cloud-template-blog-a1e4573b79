@@ -17,6 +17,36 @@ function slugify(text) {
     .replace(/-+/g, '-');
 }
 
+// Strapi v5 bug: manyToOne relations (joinColumn) are skipped by the Document
+// Service's traverseEntityRelations (see node_modules/@strapi/core/dist/
+// services/document-service/transform/relations/utils/map-relation.js line 119).
+// Even with i18n on both sides, manyToOne needs the numeric entry id, not the
+// documentId, because the documentId -> id resolution never runs for it.
+async function resolveEntryId(uid, id, locale) {
+  if (id == null) return null;
+  const numericId = typeof id === 'number' ? id : (/^\d+$/.test(String(id)) ? Number(id) : null);
+  if (numericId != null) {
+    const e = await strapi.db.query(uid).findOne({ where: { id: numericId }, select: ['id'] });
+    return e?.id ?? null;
+  }
+  const where = { documentId: String(id) };
+  if (locale) where.locale = locale;
+  const e = await strapi.db.query(uid).findOne({ where, select: ['id'] });
+  return e?.id ?? null;
+}
+
+async function attachMainCategory(article) {
+  if (!article?.id) return article;
+  const row = await strapi.db.query('api::user-article.user-article').findOne({
+    where: { id: article.id },
+    populate: {
+      main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
+    },
+  });
+  article.main_category = row?.main_category ?? null;
+  return article;
+}
+
 function calcContent(blocks = []) {
   let words = 0;
   for (const block of blocks) {
@@ -65,7 +95,7 @@ const LIST_POPULATE = {
 const EDITABLE_STATUSES = ['draft', 'requires-changes'];
 const DELETABLE_STATUSES = ['draft', 'requires-changes'];
 
-async function findOwnedEntry(documentId, userId, locale, select = ['id', 'documentId', 'currentStatus']) {
+async function findOwnedEntry(documentId, userId, locale, select = ['id', 'documentId', 'currentStatus', 'locale']) {
   const where = { documentId, userAuthor: userId };
   if (locale) where.locale = locale;
   return strapi.db.query(UA_UID).findOne({ where, select });
@@ -101,7 +131,6 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
         currentStatus: 'draft',
       };
       if (description !== undefined)         createData.description = description;
-      if (main_category !== undefined)        createData.main_category = main_category;
       if (sub_categories !== undefined)       createData.sub_categories = sub_categories;
       if (countries !== undefined)            createData.countries = countries;
       if (blocks !== undefined)               {
@@ -119,6 +148,17 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
         populate: FULL_POPULATE,
       });
 
+      if (main_category !== undefined) {
+        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category, article.locale);
+        if (mcEntryId) {
+          await strapi.db.query(UA_UID).update({
+            where: { id: article.id },
+            data: { main_category: mcEntryId },
+          });
+        }
+      }
+
+      await attachMainCategory(article);
       return ctx.created({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] createArticle error:', error);
@@ -150,7 +190,6 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
     if (title !== undefined)                { updateData.title = title; updateData.slug = slugify(title); }
     if (description !== undefined)          updateData.description = description;
     if (cover !== undefined)                { updateData.cover = cover; updateData.imageCard = cover; }
-    if (main_category !== undefined)        updateData.main_category = main_category;
     if (sub_categories !== undefined)       updateData.sub_categories = sub_categories;
     if (countries !== undefined)            updateData.countries = countries;
     if (seo !== undefined)                  updateData.seo = seo;
@@ -170,6 +209,15 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
         populate: FULL_POPULATE,
       });
 
+      if (main_category !== undefined) {
+        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category, existing.locale);
+        await strapi.db.query(UA_UID).update({
+          where: { id: existing.id },
+          data: { main_category: mcEntryId },
+        });
+      }
+
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] updateArticle error:', error);
@@ -215,6 +263,7 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
         },
       });
 
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] submitForReview error:', error);
@@ -257,6 +306,7 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
         },
       });
 
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] withdrawFromReview error:', error);
@@ -308,6 +358,7 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
       });
 
       if (!article) return ctx.notFound('Artículo no encontrado');
+      await attachMainCategory(article);
       return ctx.send({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] getMyArticle error:', error);
