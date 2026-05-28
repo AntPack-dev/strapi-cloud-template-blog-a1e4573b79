@@ -40,20 +40,15 @@
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
     },
-    "users_main_category": {
+    "main_category": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::users-main-category.users-main-category"
-    },
-    "category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::category.category"
+      "target": "api::main-category.main-category"
     },
     "sub_categories": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "api::sub-category.sub-category"
+      "target": "api::user-sub-category.user-sub-category"
     },
     "countries": {
       "type": "relation",
@@ -78,23 +73,32 @@
     "reviewer": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::users-permissions.user"
+      "target": "admin::user"
     },
     "reviewComments": {
       "type": "richtext"
     },
-    "submittedAt": {
-      "type": "datetime"
-    },
-    "assignedAt": {
-      "type": "datetime"
-    },
-    "reviewUpdatedAt": {
-      "type": "datetime"
+    "events": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-article-event.user-article-event",
+      "mappedBy": "user_article",
+      "pluginOptions": {
+        "content-manager": {
+          "visible": false
+        },
+        "content-type-builder": {
+          "visible": false
+        }
+      }
     },
     "readingTime": {
       "type": "integer",
       "default": 1
+    },
+    "wordCount": {
+      "type": "integer",
+      "default": 0
     },
     "creationDate": {
       "type": "date"

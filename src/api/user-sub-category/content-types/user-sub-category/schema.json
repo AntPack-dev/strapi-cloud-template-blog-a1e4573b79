@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_sub_categories",
+  "info": {
+    "singularName": "user-sub-category",
+    "pluralName": "user-sub-categories",
+    "displayName": "User SubCategory",
+    "description": "Subcategorías exclusivas para artículos creados por usuarios"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    }
+  }
+}

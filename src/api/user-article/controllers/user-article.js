@@ -14,7 +14,7 @@ function slugify(text) {
     .replace(/-+/g, '-');
 }
 
-function calcReadingTime(blocks = []) {
+function calcContent(blocks = []) {
   let words = 0;
   for (const block of blocks) {
     const type = block.__component;
@@ -26,7 +26,7 @@ function calcReadingTime(blocks = []) {
       words += block.body.split(/\s+/).filter(Boolean).length;
     }
   }
-  return Math.max(1, Math.ceil(words / 200));
+  return { wordCount: words, readingTime: Math.max(1, Math.ceil(words / 200)) };
 }
 
 // Full populate for single-article views (edit / preview)
@@ -34,11 +34,10 @@ const FULL_POPULATE = {
   cover: true,
   imageCard: true,
   userAuthor: { fields: ['id', 'firstName', 'lastName', 'imageUrl'] },
-  reviewer: { fields: ['id', 'firstName', 'lastName', 'username'] },
-  users_main_category: { fields: ['id', 'name', 'slug', 'backgroundColor'] },
-  category: { fields: ['id', 'name', 'slug'] },
-  sub_categories: { fields: ['id', 'name', 'slug'] },
-  countries: { fields: ['id', 'name', 'code'] },
+  reviewer: { fields: ['id', 'firstname', 'lastname', 'email'] },
+  main_category: { fields: ['id', 'name', 'slug', 'backgroundColor'] },
+  sub_categories: { fields: ['id', 'name', 'slug', 'description'] },
+  countries: { fields: ['id', 'name', 'slug'] },
   blocks: {
     on: {
       'shared.media': { populate: { file: true } },
@@ -52,8 +51,7 @@ const LIST_POPULATE = {
   cover: true,
   imageCard: true,
   userAuthor: { fields: ['id', 'firstName', 'lastName'] },
-  users_main_category: { fields: ['id', 'name', 'slug'] },
-  category: { fields: ['id', 'name', 'slug'] },
+  main_category: { fields: ['id', 'name', 'slug'] },
 };
 
 const EDITABLE_STATUSES = ['draft', 'requires-changes'];
@@ -68,7 +66,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
     const {
       title, description, cover,
-      users_main_category, category, sub_categories,
+      main_category, sub_categories,
       countries, blocks, seo, creationDate,
     } = body;
 
@@ -76,21 +74,27 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (!cover)  return ctx.badRequest('El campo cover es requerido');
 
     try {
+      const { wordCount, readingTime } = calcContent(blocks);
       const createData = {
         title,
         slug: slugify(title),
         cover,
         imageCard: cover,
-        readingTime: calcReadingTime(blocks),
+        readingTime,
+        wordCount,
         userAuthor: userId,
         currentStatus: 'draft',
       };
       if (description !== undefined)         createData.description = description;
-      if (users_main_category !== undefined)  createData.users_main_category = users_main_category;
-      if (category !== undefined)             createData.category = category;
+      if (main_category !== undefined)         createData.main_category = main_category;
       if (sub_categories !== undefined)       createData.sub_categories = sub_categories;
       if (countries !== undefined)            createData.countries = countries;
-      if (blocks !== undefined)               { createData.blocks = blocks; createData.readingTime = calcReadingTime(blocks); }
+      if (blocks !== undefined)               {
+        const content = calcContent(blocks);
+        createData.blocks = blocks;
+        createData.readingTime = content.readingTime;
+        createData.wordCount = content.wordCount;
+      }
       if (seo !== undefined)                  createData.seo = seo;
       if (creationDate !== undefined)         createData.creationDate = creationDate;
 
@@ -125,7 +129,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
     const {
       title, description, cover,
-      users_main_category, category, sub_categories,
+      main_category, sub_categories,
       countries, blocks, seo, creationDate,
     } = body;
 
@@ -133,13 +137,17 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (title !== undefined)                { updateData.title = title; updateData.slug = slugify(title); }
     if (description !== undefined)          updateData.description = description;
     if (cover !== undefined)                { updateData.cover = cover; updateData.imageCard = cover; }
-    if (users_main_category !== undefined)  updateData.users_main_category = users_main_category;
-    if (category !== undefined)             updateData.category = category;
+    if (main_category !== undefined)         updateData.main_category = main_category;
     if (sub_categories !== undefined)       updateData.sub_categories = sub_categories;
     if (countries !== undefined)            updateData.countries = countries;
     if (seo !== undefined)                  updateData.seo = seo;
     if (creationDate !== undefined)         updateData.creationDate = creationDate;
-    if (blocks !== undefined)               { updateData.blocks = blocks; updateData.readingTime = calcReadingTime(blocks); }
+    if (blocks !== undefined)               {
+      const content = calcContent(blocks);
+      updateData.blocks = blocks;
+      updateData.readingTime = content.readingTime;
+      updateData.wordCount = content.wordCount;
+    }
 
     try {
       const updated = await strapi.documents('api::user-article.user-article').update({
@@ -178,11 +186,18 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     try {
       const updated = await strapi.documents('api::user-article.user-article').update({
         documentId: existing.documentId,
-        data: {
-          currentStatus: 'in-review',
-          submittedAt: new Date().toISOString(),
-        },
+        data: { currentStatus: 'in-review' },
         populate: LIST_POPULATE,
+      });
+
+      await strapi.db.query('api::user-article-event.user-article-event').create({
+        data: {
+          type: 'submitted',
+          user_article: existing.id,
+          actorUser: userId,
+          fromStatus: existing.currentStatus,
+          toStatus: 'in-review',
+        },
       });
 
       return ctx.send({ data: updated });
@@ -213,6 +228,16 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         documentId: existing.documentId,
         data: { currentStatus: 'draft' },
         populate: LIST_POPULATE,
+      });
+
+      await strapi.db.query('api::user-article-event.user-article-event').create({
+        data: {
+          type: 'withdrawn',
+          user_article: existing.id,
+          actorUser: userId,
+          fromStatus: 'in-review',
+          toStatus: 'draft',
+        },
       });
 
       return ctx.send({ data: updated });

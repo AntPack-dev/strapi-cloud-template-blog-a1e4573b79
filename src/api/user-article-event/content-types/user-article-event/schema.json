@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_article_events",
+  "info": {
+    "singularName": "user-article-event",
+    "pluralName": "user-article-events",
+    "displayName": "User Article Event",
+    "description": "Eventos del flujo de revisión editorial de artículos de usuarios"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["submitted", "assigned", "comments-added", "status-changed", "withdrawn"],
+      "required": true
+    },
+    "user_article": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::user-article.user-article",
+      "inversedBy": "events"
+    },
+    "actorAdmin": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "admin::user"
+    },
+    "actorUser": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "fromStatus": {
+      "type": "string"
+    },
+    "toStatus": {
+      "type": "string"
+    },
+    "comment": {
+      "type": "text"
+    }
+  }
+}
