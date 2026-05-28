@@ -14,6 +14,59 @@ function slugify(text) {
     .replace(/-+/g, '-');
 }
 
+async function toRelation(uid, id) {
+  if (id == null) return id;
+  const numericId = typeof id === 'number' ? id : (/^\d+$/.test(String(id)) ? Number(id) : null);
+  const where = numericId != null ? { id: numericId } : { documentId: String(id) };
+  const e = await strapi.db.query(uid).findOne({ where, select: ['documentId', 'locale'] });
+  if (!e) return id;
+  return e.locale ? { documentId: e.documentId, locale: e.locale } : e.documentId;
+}
+
+async function toRelations(uid, ids) {
+  if (!Array.isArray(ids)) return ids;
+  return Promise.all(ids.map(id => toRelation(uid, id)));
+}
+
+// Strapi v5 has a bug: manyToOne relations across non-i18n -> i18n content types
+// can't be written OR populated via Document Service (traverseEntityRelations skips
+// joinColumn relations — see node_modules/@strapi/core/dist/services/document-service/
+// transform/relations/utils/map-relation.js line 119). We bypass it with db.query.
+async function resolveEntryId(uid, id) {
+  if (id == null) return null;
+  const numericId = typeof id === 'number' ? id : (/^\d+$/.test(String(id)) ? Number(id) : null);
+  const where = numericId != null ? { id: numericId } : { documentId: String(id) };
+  const e = await strapi.db.query(uid).findOne({ where, select: ['id'] });
+  return e?.id ?? null;
+}
+
+async function attachMainCategory(article) {
+  if (!article?.id) return article;
+  const row = await strapi.db.query('api::user-article.user-article').findOne({
+    where: { id: article.id },
+    populate: {
+      main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
+    },
+  });
+  article.main_category = row?.main_category ?? null;
+  return article;
+}
+
+async function attachMainCategoryList(articles) {
+  if (!Array.isArray(articles) || articles.length === 0) return articles;
+  const ids = articles.map(a => a.id).filter(Boolean);
+  const rows = await strapi.db.query('api::user-article.user-article').findMany({
+    where: { id: { $in: ids } },
+    select: ['id'],
+    populate: {
+      main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
+    },
+  });
+  const map = new Map(rows.map(r => [r.id, r.main_category ?? null]));
+  for (const a of articles) a.main_category = map.get(a.id) ?? null;
+  return articles;
+}
+
 function calcContent(blocks = []) {
   let words = 0;
   for (const block of blocks) {
@@ -40,7 +93,10 @@ const FULL_POPULATE = {
   countries: { fields: ['id', 'name', 'slug'] },
   blocks: {
     on: {
+      'shared.rich-text': true,
+      'shared.subtitle': true,
       'shared.media': { populate: { file: true } },
+      'shared.user-quote': true,
     },
   },
   seo: true,
@@ -86,8 +142,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         currentStatus: 'draft',
       };
       if (description !== undefined)         createData.description = description;
-      if (main_category !== undefined)         createData.main_category = main_category;
-      if (sub_categories !== undefined)       createData.sub_categories = sub_categories;
+      if (sub_categories !== undefined)       createData.sub_categories = await toRelations('api::user-sub-category.user-sub-category', sub_categories);
       if (countries !== undefined)            createData.countries = countries;
       if (blocks !== undefined)               {
         const content = calcContent(blocks);
@@ -103,6 +158,17 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         populate: FULL_POPULATE,
       });
 
+      if (main_category !== undefined) {
+        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category);
+        if (mcEntryId) {
+          await strapi.db.query('api::user-article.user-article').update({
+            where: { id: article.id },
+            data: { main_category: mcEntryId },
+          });
+        }
+      }
+
+      await attachMainCategory(article);
       return ctx.created({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] createArticle error:', error);
@@ -137,8 +203,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (title !== undefined)                { updateData.title = title; updateData.slug = slugify(title); }
     if (description !== undefined)          updateData.description = description;
     if (cover !== undefined)                { updateData.cover = cover; updateData.imageCard = cover; }
-    if (main_category !== undefined)         updateData.main_category = main_category;
-    if (sub_categories !== undefined)       updateData.sub_categories = sub_categories;
+    if (sub_categories !== undefined)       updateData.sub_categories = await toRelations('api::user-sub-category.user-sub-category', sub_categories);
     if (countries !== undefined)            updateData.countries = countries;
     if (seo !== undefined)                  updateData.seo = seo;
     if (creationDate !== undefined)         updateData.creationDate = creationDate;
@@ -156,6 +221,15 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         populate: FULL_POPULATE,
       });
 
+      if (main_category !== undefined) {
+        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category);
+        await strapi.db.query('api::user-article.user-article').update({
+          where: { id: existing.id },
+          data: { main_category: mcEntryId },
+        });
+      }
+
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] updateArticle error:', error);
@@ -200,6 +274,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         },
       });
 
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] submitForReview error:', error);
@@ -240,6 +315,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         },
       });
 
+      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] withdrawFromReview error:', error);
@@ -295,6 +371,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
       });
 
       if (!article) return ctx.notFound('Artículo no encontrado');
+      await attachMainCategory(article);
       return ctx.send({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] getMyArticle error:', error);
