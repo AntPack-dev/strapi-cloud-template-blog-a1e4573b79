@@ -41,6 +41,12 @@ module.exports = {
     },
     {
       method: 'GET',
+      path: '/user-articles/:documentId/events',
+      handler: 'user-article.getMyArticleEvents',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'GET',
       path: '/user-articles/:documentId',
       handler: 'user-article.getMyArticle',
       config: { policies: [], middlewares: [] },

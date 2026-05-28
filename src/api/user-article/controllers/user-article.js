@@ -366,6 +366,33 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
     }
   },
 
+  async getMyArticleEvents(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Debes iniciar sesión');
+
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
+
+    const check = await findOwnedEntry(documentId, userId, locale, ['id', 'documentId', 'locale']);
+    if (!check) return ctx.forbidden('No tenés permiso para ver este historial');
+
+    try {
+      const events = await strapi.db.query(EVENT_UID).findMany({
+        where: { user_article: check.id },
+        orderBy: { createdAt: 'asc' },
+        populate: {
+          actorAdmin: { select: ['id', 'firstname', 'lastname'] },
+          actorUser:  { select: ['id', 'firstName', 'lastName'] },
+        },
+      });
+
+      return ctx.send({ data: events });
+    } catch (error) {
+      strapi.log.error('[user-article] getMyArticleEvents error:', error);
+      return ctx.badRequest('Error al obtener el historial: ' + error.message);
+    }
+  },
+
   async getMyArticles(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión para ver tus artículos');

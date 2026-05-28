@@ -1,9 +1,18 @@
 'use strict';
 
+const { errors } = require('@strapi/utils');
+
 const UA_UID = 'api::user-article.user-article';
 const EVENT_UID = 'api::user-article-event.user-article-event';
 
 const _previousState = new Map();
+
+function isEmptyRichText(value) {
+  if (value == null) return true;
+  if (typeof value !== 'string') return false;
+  const stripped = value.replace(/<[^>]+>/g, '').replace(/\s+/g, '').trim();
+  return stripped.length === 0;
+}
 
 async function createEvent(strapi, data) {
   try {
@@ -18,20 +27,32 @@ module.exports = {
     const { data, where } = event.params;
     if (!where?.id || !data) return;
 
-    const tracks = [];
-    if (data.currentStatus !== undefined) tracks.push('currentStatus');
-    if (data.reviewer !== undefined)      tracks.push('reviewer');
-    if (data.reviewComments !== undefined) tracks.push('reviewComments');
-    if (tracks.length === 0) return;
+    const current = await strapi.db.query(UA_UID).findOne({
+      where: { id: where.id },
+      select: ['id', 'currentStatus', 'reviewComments'],
+      populate: { reviewer: { select: ['id'] } },
+    });
+    if (!current) return;
 
-    const select = ['id'];
-    const populate = {};
-    if (tracks.includes('currentStatus'))  select.push('currentStatus');
-    if (tracks.includes('reviewComments')) select.push('reviewComments');
-    if (tracks.includes('reviewer'))       populate.reviewer = { select: ['id'] };
+    if (data.currentStatus === 'requires-changes' && current.currentStatus !== 'requires-changes') {
+      const finalReviewerId = data.reviewer !== undefined
+        ? (typeof data.reviewer === 'object' ? data.reviewer?.id ?? null : data.reviewer)
+        : current.reviewer?.id ?? null;
+      const finalComments = data.reviewComments !== undefined
+        ? data.reviewComments
+        : current.reviewComments;
 
-    const current = await strapi.db.query(UA_UID).findOne({ where: { id: where.id }, select, populate });
-    if (current) {
+      if (!finalReviewerId) {
+        throw new errors.ApplicationError('Para pasar a "Requiere ajustes" se debe asignar un reviewer.');
+      }
+      if (isEmptyRichText(finalComments)) {
+        throw new errors.ApplicationError('Para pasar a "Requiere ajustes" se deben escribir los comentarios de la revisión.');
+      }
+    }
+
+    if (data.currentStatus !== undefined
+        || data.reviewer !== undefined
+        || data.reviewComments !== undefined) {
       _previousState.set(where.id, {
         currentStatus:   current.currentStatus,
         reviewComments:  current.reviewComments,

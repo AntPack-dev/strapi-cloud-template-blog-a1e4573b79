@@ -135,6 +135,8 @@ draft ──► in-review ──► approved
 
 **El estado es por idioma.** Si la versión en `es-US` está `approved` pero el editor aún no terminó la versión en `en`, los estados son independientes.
 
+**Transición a `requires-changes` (validación server-side):** cuando el editor (desde el admin panel) intenta pasar un artículo a `requires-changes`, el backend valida que el artículo tenga **reviewer asignado** y **`reviewComments` no vacío**. Si falta cualquiera de los dos, el update se rechaza con un error de aplicación. Esta validación protege al flujo: no se le pueden pedir cambios al usuario sin indicarle qué arreglar ni quién es el responsable.
+
 ---
 
 ## 5. Subir imagen
@@ -725,17 +727,39 @@ GET /api/user-articles/{documentId}?locale=es-US
   &populate[main_category]=true
 ```
 
-**Opción 2 — endpoint dedicado:**
+**Opción 2 — endpoint dedicado** (recomendado para mostrar solo el historial):
 
 ```
-GET /api/user-article-events
-  ?filters[user_article][documentId][$eq]={documentId}
-  &locale=es-US
-  &sort=createdAt:asc
-  &populate[actorAdmin][fields][0]=firstname
-  &populate[actorAdmin][fields][1]=lastname
-  &populate[actorUser][fields][0]=firstName
-  &populate[actorUser][fields][1]=lastName
+GET /api/user-articles/{documentId}/events?locale=es-US
+Authorization: Bearer <jwt>
+```
+
+Devuelve los eventos del artículo en el locale especificado, ordenados por fecha ascendente, con los actores poblados. Valida ownership: el usuario solo puede ver el historial de sus propios artículos.
+
+Respuesta:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "type": "submitted",
+      "fromStatus": "draft",
+      "toStatus": "in-review",
+      "comment": null,
+      "createdAt": "2026-05-27T12:00:00.000Z",
+      "actorAdmin": null,
+      "actorUser": { "id": 7, "firstName": "Sebastián", "lastName": "Meneses" }
+    },
+    {
+      "id": 2,
+      "type": "assigned",
+      "createdAt": "2026-05-27T13:00:00.000Z",
+      "actorAdmin": { "id": 3, "firstname": "Ana", "lastname": "García" },
+      "actorUser": null
+    }
+  ]
+}
 ```
 
 ### Estructura de un evento
