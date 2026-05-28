@@ -455,8 +455,7 @@ Authorization: Bearer <jwt>
     "reviewer": {
       "id": 3,
       "firstname": "Ana",
-      "lastname": "García",
-      "email": "ana@antpack.co"
+      "lastname": "García"
     },
     "reviewComments": "El artículo necesita más desarrollo en la sección de conclusiones.",
     "main_category": { "id": 1, "name": "El feed que importa", "slug": "el-feed-que-importa", "backgroundColor": "#E3F2FD" },
@@ -887,7 +886,7 @@ Si el upload falla, no bloquear el flujo de escritura. Mostrar el error inline y
 Estos dos campos se calculan en el backend cada vez que se actualizan los `blocks`. **No enviarlos en el payload** — cualquier valor enviado será sobrescrito.
 
 ### `reviewer` usa `firstname` / `lastname` en minúscula
-Por venir de `admin::user` (no de `users-permissions.user`), los campos son `firstname`, `lastname` y `email` — todo en minúscula. No confundir con `userAuthor` que sí usa camelCase.
+Por venir de `admin::user` (no de `users-permissions.user`), los campos son `firstname` y `lastname` — todo en minúscula. El campo `email` NO está disponible (es `private` en el schema interno de Strapi). No confundir con `userAuthor` que sí usa camelCase.
 
 ### Filtrado del feed por sección
 Para mostrar/ocultar una sección del frontend ("El feed que importa", "El pitch central", etc.) usar el endpoint público de `/api/user-articles` filtrando por `main_category.slug`. Si la respuesta no trae registros, la sección no se muestra. No hay endpoint dedicado para esto.
@@ -918,7 +917,7 @@ Los siguientes campos **ya no existen** en `user-article`:
 
 ### `reviewer` cambió de tipo de usuario
 
-Antes el `reviewer` venía de `users-permissions.user` y tenía campos `firstName`, `lastName`, `username`. Ahora viene de `admin::user` y tiene `firstname`, `lastname`, `email` (todo en minúscula).
+Antes el `reviewer` venía de `users-permissions.user` y tenía campos `firstName`, `lastName`, `username`. Ahora viene de `admin::user` y tiene `firstname`, `lastname` (todo en minúscula). El campo `email` NO se expone porque es `private: true` en el schema de `admin::user`.
 
 ### Subcategorías ahora son una colección propia
 

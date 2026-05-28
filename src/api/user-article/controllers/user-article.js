@@ -34,7 +34,7 @@ const FULL_POPULATE = {
   cover: true,
   imageCard: true,
   userAuthor: { fields: ['id', 'firstName', 'lastName', 'imageUrl'] },
-  reviewer: { fields: ['id', 'firstname', 'lastname', 'email'] },
+  reviewer: { fields: ['id', 'firstname', 'lastname'] },
   main_category: { fields: ['id', 'name', 'slug', 'backgroundColor'] },
   sub_categories: { fields: ['id', 'name', 'slug', 'description'] },
   countries: { fields: ['id', 'name', 'slug'] },
