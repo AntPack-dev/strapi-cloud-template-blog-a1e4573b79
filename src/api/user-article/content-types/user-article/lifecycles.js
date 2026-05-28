@@ -50,7 +50,7 @@ module.exports = {
 
     const updated = await strapi.db.query(UA_UID).findOne({
       where: { id: where.id },
-      select: ['id', 'currentStatus', 'reviewComments'],
+      select: ['id', 'locale', 'currentStatus', 'reviewComments'],
       populate: { reviewer: { select: ['id'] } },
     });
     if (!updated) return;
@@ -64,6 +64,7 @@ module.exports = {
         type: 'assigned',
         user_article: updated.id,
         actorAdmin: actorAdminId,
+        locale: updated.locale,
       });
     }
 
@@ -77,6 +78,7 @@ module.exports = {
         comment: typeof updated.reviewComments === 'string'
           ? updated.reviewComments.slice(0, 500)
           : null,
+        locale: updated.locale,
       });
     }
 
@@ -90,6 +92,7 @@ module.exports = {
         actorAdmin: actorAdminId,
         fromStatus: prev.currentStatus,
         toStatus: updated.currentStatus,
+        locale: updated.locale,
       });
     }
   },

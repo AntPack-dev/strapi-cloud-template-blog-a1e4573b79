@@ -2,6 +2,9 @@
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
+const UA_UID = 'api::user-article.user-article';
+const EVENT_UID = 'api::user-article-event.user-article-event';
+
 function slugify(text) {
   return text
     .toString()
@@ -12,59 +15,6 @@ function slugify(text) {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
-}
-
-async function toRelation(uid, id) {
-  if (id == null) return id;
-  const numericId = typeof id === 'number' ? id : (/^\d+$/.test(String(id)) ? Number(id) : null);
-  const where = numericId != null ? { id: numericId } : { documentId: String(id) };
-  const e = await strapi.db.query(uid).findOne({ where, select: ['documentId', 'locale'] });
-  if (!e) return id;
-  return e.locale ? { documentId: e.documentId, locale: e.locale } : e.documentId;
-}
-
-async function toRelations(uid, ids) {
-  if (!Array.isArray(ids)) return ids;
-  return Promise.all(ids.map(id => toRelation(uid, id)));
-}
-
-// Strapi v5 has a bug: manyToOne relations across non-i18n -> i18n content types
-// can't be written OR populated via Document Service (traverseEntityRelations skips
-// joinColumn relations — see node_modules/@strapi/core/dist/services/document-service/
-// transform/relations/utils/map-relation.js line 119). We bypass it with db.query.
-async function resolveEntryId(uid, id) {
-  if (id == null) return null;
-  const numericId = typeof id === 'number' ? id : (/^\d+$/.test(String(id)) ? Number(id) : null);
-  const where = numericId != null ? { id: numericId } : { documentId: String(id) };
-  const e = await strapi.db.query(uid).findOne({ where, select: ['id'] });
-  return e?.id ?? null;
-}
-
-async function attachMainCategory(article) {
-  if (!article?.id) return article;
-  const row = await strapi.db.query('api::user-article.user-article').findOne({
-    where: { id: article.id },
-    populate: {
-      main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
-    },
-  });
-  article.main_category = row?.main_category ?? null;
-  return article;
-}
-
-async function attachMainCategoryList(articles) {
-  if (!Array.isArray(articles) || articles.length === 0) return articles;
-  const ids = articles.map(a => a.id).filter(Boolean);
-  const rows = await strapi.db.query('api::user-article.user-article').findMany({
-    where: { id: { $in: ids } },
-    select: ['id'],
-    populate: {
-      main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
-    },
-  });
-  const map = new Map(rows.map(r => [r.id, r.main_category ?? null]));
-  for (const a of articles) a.main_category = map.get(a.id) ?? null;
-  return articles;
 }
 
 function calcContent(blocks = []) {
@@ -82,7 +32,10 @@ function calcContent(blocks = []) {
   return { wordCount: words, readingTime: Math.max(1, Math.ceil(words / 200)) };
 }
 
-// Full populate for single-article views (edit / preview)
+function getLocale(ctx) {
+  return ctx.query.locale || ctx.request.body?.locale || undefined;
+}
+
 const FULL_POPULATE = {
   cover: true,
   imageCard: true,
@@ -102,7 +55,6 @@ const FULL_POPULATE = {
   seo: true,
 };
 
-// Light populate for list views (no blocks)
 const LIST_POPULATE = {
   cover: true,
   imageCard: true,
@@ -113,12 +65,19 @@ const LIST_POPULATE = {
 const EDITABLE_STATUSES = ['draft', 'requires-changes'];
 const DELETABLE_STATUSES = ['draft', 'requires-changes'];
 
-module.exports = createCoreController('api::user-article.user-article', ({ strapi }) => ({
+async function findOwnedEntry(documentId, userId, locale, select = ['id', 'documentId', 'currentStatus']) {
+  const where = { documentId, userAuthor: userId };
+  if (locale) where.locale = locale;
+  return strapi.db.query(UA_UID).findOne({ where, select });
+}
+
+module.exports = createCoreController(UA_UID, ({ strapi }) => ({
 
   async createArticle(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión para crear artículos');
 
+    const locale = getLocale(ctx);
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
     const {
       title, description, cover,
@@ -142,7 +101,8 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
         currentStatus: 'draft',
       };
       if (description !== undefined)         createData.description = description;
-      if (sub_categories !== undefined)       createData.sub_categories = await toRelations('api::user-sub-category.user-sub-category', sub_categories);
+      if (main_category !== undefined)        createData.main_category = main_category;
+      if (sub_categories !== undefined)       createData.sub_categories = sub_categories;
       if (countries !== undefined)            createData.countries = countries;
       if (blocks !== undefined)               {
         const content = calcContent(blocks);
@@ -153,22 +113,12 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
       if (seo !== undefined)                  createData.seo = seo;
       if (creationDate !== undefined)         createData.creationDate = creationDate;
 
-      const article = await strapi.documents('api::user-article.user-article').create({
+      const article = await strapi.documents(UA_UID).create({
         data: createData,
+        locale,
         populate: FULL_POPULATE,
       });
 
-      if (main_category !== undefined) {
-        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category);
-        if (mcEntryId) {
-          await strapi.db.query('api::user-article.user-article').update({
-            where: { id: article.id },
-            data: { main_category: mcEntryId },
-          });
-        }
-      }
-
-      await attachMainCategory(article);
       return ctx.created({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] createArticle error:', error);
@@ -180,13 +130,10 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
-    const { id } = ctx.params;
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
 
-    const existing = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { id, userAuthor: userId },
-      select: ['id', 'documentId', 'currentStatus'],
-    });
-
+    const existing = await findOwnedEntry(documentId, userId, locale);
     if (!existing) return ctx.forbidden('No tenés permiso para editar este artículo');
     if (!EDITABLE_STATUSES.includes(existing.currentStatus)) {
       return ctx.forbidden(`No se puede editar un artículo en estado "${existing.currentStatus}"`);
@@ -203,7 +150,8 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     if (title !== undefined)                { updateData.title = title; updateData.slug = slugify(title); }
     if (description !== undefined)          updateData.description = description;
     if (cover !== undefined)                { updateData.cover = cover; updateData.imageCard = cover; }
-    if (sub_categories !== undefined)       updateData.sub_categories = await toRelations('api::user-sub-category.user-sub-category', sub_categories);
+    if (main_category !== undefined)        updateData.main_category = main_category;
+    if (sub_categories !== undefined)       updateData.sub_categories = sub_categories;
     if (countries !== undefined)            updateData.countries = countries;
     if (seo !== undefined)                  updateData.seo = seo;
     if (creationDate !== undefined)         updateData.creationDate = creationDate;
@@ -215,21 +163,13 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     }
 
     try {
-      const updated = await strapi.documents('api::user-article.user-article').update({
-        documentId: existing.documentId,
+      const updated = await strapi.documents(UA_UID).update({
+        documentId,
+        locale,
         data: updateData,
         populate: FULL_POPULATE,
       });
 
-      if (main_category !== undefined) {
-        const mcEntryId = await resolveEntryId('api::main-category.main-category', main_category);
-        await strapi.db.query('api::user-article.user-article').update({
-          where: { id: existing.id },
-          data: { main_category: mcEntryId },
-        });
-      }
-
-      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] updateArticle error:', error);
@@ -241,40 +181,40 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
-    const { id } = ctx.params;
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
 
-    const existing = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { id, userAuthor: userId },
-      select: ['id', 'documentId', 'currentStatus', 'title'],
-      populate: { cover: true },
-    });
-
+    const existing = await findOwnedEntry(
+      documentId, userId, locale,
+      ['id', 'documentId', 'currentStatus', 'title', 'locale'],
+    );
     if (!existing) return ctx.forbidden('No tenés permiso para enviar este artículo');
     if (!EDITABLE_STATUSES.includes(existing.currentStatus)) {
       return ctx.forbidden(`El artículo ya está en estado "${existing.currentStatus}"`);
     }
-    if (!existing.title || !existing.cover) {
-      return ctx.badRequest('El artículo necesita título y portada antes de enviarse a revisión');
+    if (!existing.title) {
+      return ctx.badRequest('El artículo necesita título antes de enviarse a revisión');
     }
 
     try {
-      const updated = await strapi.documents('api::user-article.user-article').update({
-        documentId: existing.documentId,
+      const updated = await strapi.documents(UA_UID).update({
+        documentId,
+        locale,
         data: { currentStatus: 'in-review' },
         populate: LIST_POPULATE,
       });
 
-      await strapi.db.query('api::user-article-event.user-article-event').create({
+      await strapi.db.query(EVENT_UID).create({
         data: {
           type: 'submitted',
           user_article: existing.id,
           actorUser: userId,
           fromStatus: existing.currentStatus,
           toStatus: 'in-review',
+          locale: existing.locale,
         },
       });
 
-      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] submitForReview error:', error);
@@ -286,36 +226,37 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
-    const { id } = ctx.params;
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
 
-    const existing = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { id, userAuthor: userId },
-      select: ['id', 'documentId', 'currentStatus'],
-    });
-
+    const existing = await findOwnedEntry(
+      documentId, userId, locale,
+      ['id', 'documentId', 'currentStatus', 'locale'],
+    );
     if (!existing) return ctx.forbidden('No tenés permiso sobre este artículo');
     if (existing.currentStatus !== 'in-review') {
       return ctx.badRequest('Solo se puede retirar un artículo que está en revisión');
     }
 
     try {
-      const updated = await strapi.documents('api::user-article.user-article').update({
-        documentId: existing.documentId,
+      const updated = await strapi.documents(UA_UID).update({
+        documentId,
+        locale,
         data: { currentStatus: 'draft' },
         populate: LIST_POPULATE,
       });
 
-      await strapi.db.query('api::user-article-event.user-article-event').create({
+      await strapi.db.query(EVENT_UID).create({
         data: {
           type: 'withdrawn',
           user_article: existing.id,
           actorUser: userId,
           fromStatus: 'in-review',
           toStatus: 'draft',
+          locale: existing.locale,
         },
       });
 
-      await attachMainCategory(updated);
       return ctx.send({ data: updated });
     } catch (error) {
       strapi.log.error('[user-article] withdrawFromReview error:', error);
@@ -327,21 +268,19 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
-    const { id } = ctx.params;
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
 
-    const existing = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { id, userAuthor: userId },
-      select: ['id', 'documentId', 'currentStatus'],
-    });
-
+    const existing = await findOwnedEntry(documentId, userId, locale);
     if (!existing) return ctx.forbidden('No tenés permiso sobre este artículo');
     if (!DELETABLE_STATUSES.includes(existing.currentStatus)) {
       return ctx.forbidden(`No se puede eliminar un artículo en estado "${existing.currentStatus}"`);
     }
 
     try {
-      await strapi.documents('api::user-article.user-article').delete({
-        documentId: existing.documentId,
+      await strapi.documents(UA_UID).delete({
+        documentId,
+        locale,
       });
 
       return ctx.send({ data: { message: 'Historia eliminada correctamente' } });
@@ -355,23 +294,20 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
 
-    const { id } = ctx.params;
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
 
-    const check = await strapi.db.query('api::user-article.user-article').findOne({
-      where: { id, userAuthor: userId },
-      select: ['id', 'documentId'],
-    });
-
+    const check = await findOwnedEntry(documentId, userId, locale, ['id', 'documentId']);
     if (!check) return ctx.forbidden('No tenés permiso para ver este artículo');
 
     try {
-      const article = await strapi.documents('api::user-article.user-article').findOne({
-        documentId: check.documentId,
+      const article = await strapi.documents(UA_UID).findOne({
+        documentId,
+        locale,
         populate: FULL_POPULATE,
       });
 
       if (!article) return ctx.notFound('Artículo no encontrado');
-      await attachMainCategory(article);
       return ctx.send({ data: article });
     } catch (error) {
       strapi.log.error('[user-article] getMyArticle error:', error);
@@ -383,6 +319,7 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión para ver tus artículos');
 
+    const locale = getLocale(ctx);
     const page     = Math.max(1, parseInt(ctx.query.page ?? 1, 10));
     const pageSize = Math.min(50, Math.max(1, parseInt(ctx.query.pageSize ?? 10, 10)));
     const currentStatusFilter = ctx.query.currentStatus;
@@ -394,19 +331,20 @@ module.exports = createCoreController('api::user-article.user-article', ({ strap
 
     const where = {
       userAuthor: userId,
+      ...(locale ? { locale } : {}),
       ...(currentStatusFilter ? { currentStatus: currentStatusFilter } : {}),
     };
 
     try {
       const [records, total] = await Promise.all([
-        strapi.db.query('api::user-article.user-article').findMany({
+        strapi.db.query(UA_UID).findMany({
           where,
           populate: LIST_POPULATE,
           orderBy: { createdAt: 'desc' },
           limit: pageSize,
           offset: (page - 1) * pageSize,
         }),
-        strapi.db.query('api::user-article.user-article').count({ where }),
+        strapi.db.query(UA_UID).count({ where }),
       ]);
 
       return ctx.send({

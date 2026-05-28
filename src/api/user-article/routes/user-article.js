@@ -11,25 +11,25 @@ module.exports = {
     },
     {
       method: 'PATCH',
-      path: '/user-articles/:id',
+      path: '/user-articles/:documentId',
       handler: 'user-article.updateArticle',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'POST',
-      path: '/user-articles/:id/submit',
+      path: '/user-articles/:documentId/submit',
       handler: 'user-article.submitForReview',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'POST',
-      path: '/user-articles/:id/withdraw',
+      path: '/user-articles/:documentId/withdraw',
       handler: 'user-article.withdrawFromReview',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'DELETE',
-      path: '/user-articles/:id',
+      path: '/user-articles/:documentId',
       handler: 'user-article.deleteArticle',
       config: { policies: [], middlewares: [] },
     },
@@ -41,7 +41,7 @@ module.exports = {
     },
     {
       method: 'GET',
-      path: '/user-articles/:id',
+      path: '/user-articles/:documentId',
       handler: 'user-article.getMyArticle',
       config: { policies: [], middlewares: [] },
     },

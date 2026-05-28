@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-05-28T19:52:25.078Z"
+    "x-generation-date": "2026-05-28T23:00:14.832Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -9371,7 +9371,7 @@
         }
       }
     },
-    "/user-articles/{id}": {
+    "/user-articles/{documentId}": {
       "patch": {
         "responses": {
           "200": {
@@ -9440,7 +9440,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "documentId",
             "in": "path",
             "description": "",
             "deprecated": false,
@@ -9450,7 +9450,7 @@
             }
           }
         ],
-        "operationId": "patch/user-articles/{id}"
+        "operationId": "patch/user-articles/{documentId}"
       },
       "delete": {
         "responses": {
@@ -9521,7 +9521,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "documentId",
             "in": "path",
             "description": "",
             "deprecated": false,
@@ -9531,7 +9531,7 @@
             }
           }
         ],
-        "operationId": "delete/user-articles/{id}"
+        "operationId": "delete/user-articles/{documentId}"
       },
       "get": {
         "responses": {
@@ -9601,7 +9601,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "documentId",
             "in": "path",
             "description": "",
             "deprecated": false,
@@ -9611,10 +9611,10 @@
             }
           }
         ],
-        "operationId": "get/user-articles/{id}"
+        "operationId": "get/user-articles/{documentId}"
       }
     },
-    "/user-articles/{id}/submit": {
+    "/user-articles/{documentId}/submit": {
       "post": {
         "responses": {
           "200": {
@@ -9683,7 +9683,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "documentId",
             "in": "path",
             "description": "",
             "deprecated": false,
@@ -9693,7 +9693,7 @@
             }
           }
         ],
-        "operationId": "post/user-articles/{id}/submit",
+        "operationId": "post/user-articles/{documentId}/submit",
         "requestBody": {
           "required": true,
           "content": {
@@ -9706,7 +9706,7 @@
         }
       }
     },
-    "/user-articles/{id}/withdraw": {
+    "/user-articles/{documentId}/withdraw": {
       "post": {
         "responses": {
           "200": {
@@ -9775,7 +9775,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "documentId",
             "in": "path",
             "description": "",
             "deprecated": false,
@@ -9785,7 +9785,7 @@
             }
           }
         ],
-        "operationId": "post/user-articles/{id}/withdraw",
+        "operationId": "post/user-articles/{documentId}/withdraw",
         "requestBody": {
           "required": true,
           "content": {
