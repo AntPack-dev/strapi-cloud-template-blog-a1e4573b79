@@ -14,6 +14,22 @@ function isEmptyRichText(value) {
   return stripped.length === 0;
 }
 
+// Resolves a relation field that may come as { connect, disconnect } (Content Manager)
+// or as a direct { id } / number (programmatic API).
+function resolveRelationId(relation, currentId) {
+  if (relation === null || relation === undefined) return null;
+  if (typeof relation === 'number') return relation;
+  if (typeof relation === 'object') {
+    if ('connect' in relation) {
+      if (relation.disconnect?.length > 0) return null;
+      if (relation.connect?.length > 0) return relation.connect[0]?.id ?? null;
+      return currentId ?? null; // empty connect + empty disconnect = no change
+    }
+    return relation.id ?? null;
+  }
+  return null;
+}
+
 async function createEvent(strapi, data) {
   try {
     await strapi.db.query(EVENT_UID).create({ data });
@@ -36,7 +52,7 @@ module.exports = {
 
     if (data.currentStatus === 'requires-changes' && current.currentStatus !== 'requires-changes') {
       const finalReviewerId = data.reviewer !== undefined
-        ? (typeof data.reviewer === 'object' ? data.reviewer?.id ?? null : data.reviewer)
+        ? resolveRelationId(data.reviewer, current.reviewer?.id)
         : current.reviewer?.id ?? null;
       const finalComments = data.reviewComments !== undefined
         ? data.reviewComments
