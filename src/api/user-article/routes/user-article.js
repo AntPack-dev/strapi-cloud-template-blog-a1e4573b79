@@ -28,6 +28,12 @@ module.exports = {
       config: { policies: [], middlewares: [] },
     },
     {
+      method: 'POST',
+      path: '/user-articles/:documentId/unpublish',
+      handler: 'user-article.unpublishArticle',
+      config: { policies: [], middlewares: [] },
+    },
+    {
       method: 'DELETE',
       path: '/user-articles/:documentId',
       handler: 'user-article.deleteArticle',

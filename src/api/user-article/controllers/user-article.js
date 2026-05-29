@@ -85,6 +85,25 @@ const FULL_POPULATE = {
   seo: true,
 };
 
+// Same as FULL_POPULATE but without reviewer (admin::user manyToOne — Document Service bug)
+const PUBLIC_POPULATE = {
+  cover: true,
+  imageCard: true,
+  userAuthor: { fields: ['id', 'firstName', 'lastName', 'imageUrl'] },
+  main_category: { fields: ['id', 'name', 'slug', 'backgroundColor'] },
+  sub_categories: { fields: ['id', 'name', 'slug', 'description'] },
+  countries: { fields: ['id', 'name', 'slug'] },
+  blocks: {
+    on: {
+      'shared.rich-text': true,
+      'shared.subtitle': true,
+      'shared.media': { populate: { file: true } },
+      'shared.user-quote': true,
+    },
+  },
+  seo: true,
+};
+
 const LIST_POPULATE = {
   cover: true,
   imageCard: true,
@@ -93,7 +112,7 @@ const LIST_POPULATE = {
 };
 
 const EDITABLE_STATUSES = ['draft', 'requires-changes'];
-const DELETABLE_STATUSES = ['draft', 'requires-changes', 'in-review'];
+const DELETABLE_STATUSES = ['draft', 'requires-changes', 'in-review', 'approved'];
 
 async function findOwnedEntry(documentId, userId, locale, select = ['id', 'documentId', 'currentStatus', 'locale']) {
   const where = { documentId, userAuthor: userId };
@@ -314,6 +333,46 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
     }
   },
 
+  async unpublishArticle(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Debes iniciar sesión');
+
+    const { documentId } = ctx.params;
+    const locale = getLocale(ctx);
+
+    const existing = await findOwnedEntry(documentId, userId, locale);
+    if (!existing) return ctx.forbidden('No tenés permiso sobre este artículo');
+    if (existing.currentStatus !== 'approved') {
+      return ctx.badRequest('Solo se puede despublicar un artículo en estado "approved"');
+    }
+
+    try {
+      const updated = await strapi.documents(UA_UID).update({
+        documentId,
+        locale,
+        data: { currentStatus: 'draft' },
+        populate: LIST_POPULATE,
+      });
+
+      await strapi.db.query(EVENT_UID).create({
+        data: {
+          type: 'status-changed',
+          user_article: existing.id,
+          actorUser: userId,
+          fromStatus: 'approved',
+          toStatus: 'draft',
+          locale: existing.locale,
+        },
+      });
+
+      await attachMainCategory(updated);
+      return ctx.send({ data: updated });
+    } catch (error) {
+      strapi.log.error('[user-article] unpublishArticle error:', error);
+      return ctx.badRequest('Error al despublicar el artículo: ' + error.message);
+    }
+  },
+
   async deleteArticle(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión');
@@ -342,10 +401,27 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
 
   async getMyArticle(ctx) {
     const userId = ctx.state.user?.id;
-    if (!userId) return ctx.unauthorized('Debes iniciar sesión');
-
     const { documentId } = ctx.params;
     const locale = getLocale(ctx);
+
+    // Public access: only approved articles are visible without auth
+    if (!userId) {
+      try {
+        const article = await strapi.documents(UA_UID).findOne({
+          documentId,
+          locale,
+          populate: PUBLIC_POPULATE,
+        });
+        if (!article || article.currentStatus !== 'approved') {
+          return ctx.notFound('Artículo no encontrado');
+        }
+        await attachMainCategory(article);
+        return ctx.send({ data: article });
+      } catch (error) {
+        strapi.log.error('[user-article] getMyArticle (public) error:', error);
+        return ctx.badRequest('Error al obtener el artículo: ' + error.message);
+      }
+    }
 
     const check = await findOwnedEntry(documentId, userId, locale, ['id', 'documentId']);
     if (!check) return ctx.forbidden('No tenés permiso para ver este artículo');
