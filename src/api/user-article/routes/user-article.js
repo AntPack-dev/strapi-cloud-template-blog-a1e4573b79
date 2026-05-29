@@ -41,6 +41,12 @@ module.exports = {
     },
     {
       method: 'GET',
+      path: '/user-articles',
+      handler: 'user-article.findApproved',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'GET',
       path: '/user-articles/my-articles',
       handler: 'user-article.getMyArticles',
       config: { policies: [], middlewares: [] },

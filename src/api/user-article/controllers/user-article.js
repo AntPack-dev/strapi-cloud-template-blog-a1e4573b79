@@ -469,6 +469,53 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
     }
   },
 
+  async findApproved(ctx) {
+    const locale = getLocale(ctx);
+    const page     = Math.max(1, parseInt(ctx.query.page     ?? 1,  10));
+    const pageSize = Math.min(50, Math.max(1, parseInt(ctx.query.pageSize ?? 10, 10)));
+    const mainCategorySlug = ctx.query.filters?.main_category?.slug?.$eq;
+
+    const where = {
+      currentStatus: 'approved',
+      ...(locale ? { locale } : {}),
+      ...(mainCategorySlug ? { main_category: { slug: mainCategorySlug } } : {}),
+    };
+
+    try {
+      const [records, total] = await Promise.all([
+        strapi.db.query(UA_UID).findMany({
+          where,
+          populate: {
+            cover: true,
+            imageCard: true,
+            userAuthor: { select: ['id', 'firstName', 'lastName', 'imageUrl'] },
+            main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
+            countries: { select: ['id', 'name', 'slug'] },
+          },
+          orderBy: { createdAt: 'desc' },
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+        }),
+        strapi.db.query(UA_UID).count({ where }),
+      ]);
+
+      return ctx.send({
+        data: records,
+        meta: {
+          pagination: {
+            page,
+            pageSize,
+            total,
+            pageCount: Math.ceil(total / pageSize),
+          },
+        },
+      });
+    } catch (error) {
+      strapi.log.error('[user-article] findApproved error:', error);
+      return ctx.badRequest('Error al obtener los artículos: ' + error.message);
+    }
+  },
+
   async getMyArticles(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Debes iniciar sesión para ver tus artículos');

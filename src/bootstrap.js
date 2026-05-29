@@ -312,6 +312,7 @@ async function ensurePublicPermissions() {
     'api::country.country.find',
     'api::country.country.findOne',
     // User articles approved — for the public "User Stories" feed
+    'api::user-article.user-article.findApproved',
     'api::user-article.user-article.getMyArticle',
   ]);
 }

@@ -16,16 +16,17 @@ Guía completa para integrar el flujo de creación de artículos por usuarios le
 8. [Auto-guardar (PATCH)](#8-auto-guardar-patch)
 9. [Enviar a revisión](#9-enviar-a-revisión)
 10. [Retirar revisión](#10-retirar-revisión)
-11. [Eliminar historia](#11-eliminar-historia)
-12. [Ver / previsualizar un artículo](#12-ver--previsualizar-un-artículo)
-13. [Mis artículos](#13-mis-artículos)
-14. [Feed público de historias aprobadas](#14-feed-público-de-historias-aprobadas)
-15. [Selectores de categorías y países](#15-selectores-de-categorías-y-países)
-16. [Detalles de la revisión y historial](#16-detalles-de-la-revisión-y-historial)
-17. [Manejo de errores](#17-manejo-de-errores)
-18. [Flujo completo paso a paso](#18-flujo-completo-paso-a-paso)
-19. [Consideraciones importantes](#19-consideraciones-importantes)
-20. [Cambios respecto a versiones anteriores](#20-cambios-respecto-a-versiones-anteriores)
+11. [Despublicar historia (approved → draft)](#11-despublicar-historia-approved--draft)
+12. [Eliminar historia](#12-eliminar-historia)
+13. [Ver / previsualizar un artículo](#13-ver--previsualizar-un-artículo)
+14. [Mis artículos](#14-mis-artículos)
+15. [Feed público de historias aprobadas](#15-feed-público-de-historias-aprobadas)
+16. [Selectores de categorías y países](#16-selectores-de-categorías-y-países)
+17. [Detalles de la revisión y historial](#17-detalles-de-la-revisión-y-historial)
+18. [Manejo de errores](#18-manejo-de-errores)
+19. [Flujo completo paso a paso](#19-flujo-completo-paso-a-paso)
+20. [Consideraciones importantes](#20-consideraciones-importantes)
+21. [Cambios respecto a versiones anteriores](#21-cambios-respecto-a-versiones-anteriores)
 
 ---
 
@@ -117,21 +118,21 @@ El JWT se obtiene al hacer login. Ver `OAUTH_FRONTEND_GUIDE.md` y `USER_PROFILE_
 
 ```
 draft ──► in-review ──► approved
-  ▲            │
-  │◄───────────┘ (withdraw)
-  ▲            │
-  └────────────┘
+  ▲            │             │
+  │◄───────────┘ (withdraw)  │ (unpublish)
+  ▲            │             ▼
+  └────────────┘           draft
         requires-changes
 ```
 
-| Estado | Quién lo asigna | El usuario puede editar | El usuario puede retirar |
-|---|---|---|---|
-| `draft` | Backend al crear | ✅ Sí | — |
-| `in-review` | Usuario al solicitar revisión | ❌ No | ✅ Sí |
-| `requires-changes` | Equipo editorial | ✅ Sí | — |
-| `approved` | Equipo editorial | ❌ No | ❌ No |
+| Estado | Quién lo asigna | El usuario puede editar | El usuario puede eliminar | El usuario puede despublicar |
+|---|---|---|---|---|
+| `draft` | Backend al crear | ✅ Sí | ✅ Sí | — |
+| `in-review` | Usuario al solicitar revisión | ❌ No | ✅ Sí | — |
+| `requires-changes` | Equipo editorial | ✅ Sí | ✅ Sí | — |
+| `approved` | Equipo editorial | ❌ No directo | ✅ Sí | ✅ Sí (vuelve a `draft`) |
 
-**Regla clave**: `PATCH` y `POST .../submit` solo funcionan cuando el artículo está en `draft` o `requires-changes`. Intentar editar o enviar un artículo `in-review` o `approved` devuelve `403 Forbidden`.
+**Regla clave**: `PATCH` y `POST .../submit` solo funcionan cuando el artículo está en `draft` o `requires-changes`. Para editar un artículo `approved`, primero hay que despublicarlo (`POST .../unpublish`) para volver a `draft`.
 
 **El estado es por idioma.** Si la versión en `es-US` está `approved` pero el editor aún no terminó la versión en `en`, los estados son independientes.
 
@@ -436,7 +437,45 @@ Authorization: Bearer <jwt>
 
 ---
 
-## 11. Eliminar historia
+## 11. Despublicar historia (approved → draft)
+
+Mueve el artículo de `approved` a `draft` en el locale especificado, habilitando la edición nuevamente. **Genera automáticamente un evento `status-changed` (approved → draft) en el historial.**
+
+### Endpoint
+
+```
+POST /api/user-articles/{documentId}/unpublish?locale=es-US
+Authorization: Bearer <jwt>
+```
+
+No requiere body.
+
+### Restricciones
+
+- Solo funciona si el artículo pertenece al usuario autenticado
+- Solo funciona si `currentStatus` en ese locale es `approved`
+- Devuelve `400` si el artículo no está en `approved`
+
+### Respuesta exitosa `200 OK`
+
+```json
+{
+  "data": {
+    "id": 101,
+    "documentId": "abc123xyz",
+    "locale": "es-US",
+    "currentStatus": "draft",
+    "cover": { "..." },
+    "main_category": { "..." }
+  }
+}
+```
+
+> Después de despublicar, el artículo vuelve al flujo normal: el usuario puede editarlo y volver a enviarlo a revisión. El historial de eventos previos se conserva.
+
+---
+
+## 12. Eliminar historia
 
 Elimina **la versión en el locale especificado**, junto con sus eventos del historial (cascade delete). Si solo existe esa versión, el documento entero queda sin entradas.
 
@@ -450,8 +489,7 @@ Authorization: Bearer <jwt>
 ### Restricciones
 
 - Solo funciona si el artículo pertenece al usuario autenticado
-- Solo funciona si `currentStatus` en ese locale es `draft` o `requires-changes`
-- Devuelve `403` si el artículo está `in-review` o `approved` en ese locale
+- Funciona en **cualquier estado** (`draft`, `in-review`, `requires-changes`, `approved`)
 
 ### Respuesta exitosa `200 OK`
 
@@ -467,16 +505,21 @@ Authorization: Bearer <jwt>
 
 ---
 
-## 12. Ver / previsualizar un artículo
+## 13. Ver / previsualizar un artículo
 
-Devuelve el artículo completo en el locale especificado. Solo accesible por el propietario.
+Devuelve el artículo completo en el locale especificado. El comportamiento varía según autenticación:
+
+- **Con JWT de usuario**: devuelve el artículo si pertenece al usuario (cualquier estado).
+- **Sin JWT** (API token público): devuelve el artículo solo si `currentStatus === 'approved'`. Cualquier otro estado devuelve `404` (sin revelar que el artículo existe).
 
 ### Endpoint
 
 ```
 GET /api/user-articles/{documentId}?locale=es-US
-Authorization: Bearer <jwt>
+Authorization: Bearer <jwt>   ← omitir para acceso público a artículos aprobados
 ```
+
+> **Nota**: cuando se accede sin JWT, el campo `reviewer` **no se incluye** en la respuesta (limitación del bug manyToOne de Strapi v5 con `admin::user`).
 
 ### Respuesta exitosa `200 OK`
 
@@ -592,29 +635,35 @@ GET /api/user-articles/my-articles?locale=es-US&page=2&pageSize=5
 
 ---
 
-## 14. Feed público de historias aprobadas
+## 15. Feed público de historias aprobadas
 
-Devuelve los artículos de usuarios aprobados, filtrados por idioma. No requiere autenticación.
+Devuelve los artículos de usuarios **aprobados**, filtrados por idioma. No requiere autenticación. El filtro `currentStatus = approved` está **forzado server-side** — no hace falta (ni sirve) enviarlo en el query.
+
+### Query params
+
+| Param | Tipo | Default | Descripción |
+|---|---|---|---|
+| `locale` | string | default del sistema | `es-US` o `en` |
+| `page` | number | `1` | Página actual |
+| `pageSize` | number | `10` | Artículos por página (máximo 50) |
+| `filters[main_category][slug][$eq]` | string | — | Filtrar por slug de categoría principal |
 
 ### Endpoint base
 
 ```
-GET /api/user-articles?filters[currentStatus][$eq]=approved&locale=es-US
+GET /api/user-articles?locale=es-US
 ```
 
 ### Filtrar por sección (`main_category`)
 
 ```
-GET /api/user-articles
-  ?filters[currentStatus][$eq]=approved
-  &filters[main_category][slug][$eq]=el-feed-que-importa
-  &locale=es-US
-  &populate[cover]=true
-  &populate[main_category]=true
-  &populate[sub_categories]=true
-  &populate[userAuthor][fields][0]=firstName
-  &populate[userAuthor][fields][1]=lastName
-  &populate[userAuthor][fields][2]=imageUrl
+GET /api/user-articles?locale=es-US&filters[main_category][slug][$eq]=el-feed-que-importa
+```
+
+### Con paginación
+
+```
+GET /api/user-articles?locale=es-US&page=2&pageSize=5
 ```
 
 **Importante para la UI**: si `data.length === 0`, **no mostrar la sección**.
@@ -817,9 +866,9 @@ const historyEvents = events.map(e => ({
 | Estado | Acciones disponibles |
 |---|---|
 | `draft` | Editar, Enviar a revisión, Eliminar |
-| `in-review` | Ver detalles, Retirar revisión |
+| `in-review` | Ver detalles, Retirar revisión, Eliminar |
 | `requires-changes` | Editar, Ver comentarios, Enviar a revisión, Eliminar |
-| `approved` | Solo lectura |
+| `approved` | Ver (público sin JWT), Despublicar (→ draft), Eliminar |
 
 ---
 
@@ -925,7 +974,10 @@ Editor en modo solo lectura. Mostrar panel "Detalles de la revisión" con histor
 Edición habilitada. Mostrar panel con `reviewComments` y datos del `reviewer`. Botón "Solicitar aprobación" disponible.
 
 ### Eliminar historia
-Solo cuando `currentStatus` es `draft` o `requires-changes`. El backend rechaza con `403` en otros estados. El delete es irreversible.
+Funciona en **cualquier estado**. El delete es irreversible — mostrar modal de confirmación.
+
+### Despublicar historia
+Solo cuando `currentStatus` es `approved`. Mueve a `draft` y genera evento `status-changed`. Después el usuario puede editar y re-enviar a revisión.
 
 ### `wordCount` y `readingTime` son automáticos
 Calculados en el backend al actualizar `blocks`. **No enviarlos en el payload.**
@@ -983,5 +1035,8 @@ El historial de eventos (`user-article-events`) también es por locale. Filtrar 
 | `reviewer.firstName / lastName / username` | `reviewer.firstname / lastname` (minúscula, sin email) |
 | Estado `rejected` | `requires-changes` |
 | Sin `wordCount` | `wordCount` (automático) |
-
-Ver [sección 17 de la versión anterior](https://git/log) o git history para detalles.
+| `approved` bloqueaba eliminación y edición | `approved` permite eliminar y despublicar (→ draft) |
+| `in-review` bloqueaba eliminación | `in-review` permite eliminar |
+| Feed público requería `filters[currentStatus][$eq]=approved` | Filtro server-side forzado — no enviar en query |
+| `GET /api/user-articles/{documentId}` requería JWT siempre | Sin JWT devuelve artículo si `approved`, 404 si no |
+| Sin endpoint `/unpublish` | `POST /api/user-articles/{documentId}/unpublish` — mueve `approved` → `draft` |
