@@ -93,7 +93,7 @@ const LIST_POPULATE = {
 };
 
 const EDITABLE_STATUSES = ['draft', 'requires-changes'];
-const DELETABLE_STATUSES = ['draft', 'requires-changes'];
+const DELETABLE_STATUSES = ['draft', 'requires-changes', 'in-review'];
 
 async function findOwnedEntry(documentId, userId, locale, select = ['id', 'documentId', 'currentStatus', 'locale']) {
   const where = { documentId, userAuthor: userId };
