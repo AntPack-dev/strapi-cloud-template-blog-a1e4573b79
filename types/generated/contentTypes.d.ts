@@ -719,10 +719,6 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    users_main_category: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::users-main-category.users-main-category'
-    >;
   };
 }
 
@@ -1034,10 +1030,6 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    users_main_categories: Schema.Attribute.Relation<
-      'manyToMany',
-      'api::users-main-category.users-main-category'
-    >;
   };
 }
 
@@ -1600,10 +1592,64 @@ export interface ApiSubscriptionSectionSubscriptionSection
   };
 }
 
+export interface ApiUserArticleEventUserArticleEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'user_article_events';
+  info: {
+    description: 'Eventos del flujo de revisi\u00F3n editorial de art\u00EDculos de usuarios';
+    displayName: 'User Article Event';
+    pluralName: 'user-article-events';
+    singularName: 'user-article-event';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    actorAdmin: Schema.Attribute.Relation<'manyToOne', 'admin::user'>;
+    actorUser: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    comment: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fromStatus: Schema.Attribute.String;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-article-event.user-article-event'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    toStatus: Schema.Attribute.String;
+    type: Schema.Attribute.Enumeration<
+      ['submitted', 'assigned', 'comments-added', 'status-changed', 'withdrawn']
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user_article: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::user-article.user-article'
+    >;
+  };
+}
+
 export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
   collectionName: 'user_articles';
   info: {
-    description: 'Ownership record \u2014 tracks which user created which article';
+    description: 'Art\u00EDculos creados por usuarios lectores \u2014 flujo completo de revisi\u00F3n editorial';
     displayName: 'User Article';
     pluralName: 'user-articles';
     singularName: 'user-article';
@@ -1611,35 +1657,144 @@ export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: false;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
-    article: Schema.Attribute.Relation<'oneToOne', 'api::article.article'>;
+    blocks: Schema.Attribute.DynamicZone<
+      [
+        'shared.rich-text',
+        'shared.media',
+        'shared.user-quote',
+        'shared.subtitle',
+      ]
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    countries: Schema.Attribute.Relation<'manyToMany', 'api::country.country'>;
+    cover: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    creationDate: Schema.Attribute.Date;
+    currentStatus: Schema.Attribute.Enumeration<
+      ['draft', 'in-review', 'requires-changes', 'approved']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<'draft'>;
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    events: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-article-event.user-article-event'
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        'content-manager': {
+          visible: false;
+        };
+        'content-type-builder': {
+          visible: false;
+        };
+        i18n: {
+          localized: true;
+        };
+      }>;
+    imageCard: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::user-article.user-article'
-    > &
-      Schema.Attribute.Private;
+    >;
+    main_category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::main-category.main-category'
+    >;
     publishedAt: Schema.Attribute.DateTime;
+    readingTime: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<1>;
+    reviewComments: Schema.Attribute.RichText &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    reviewer: Schema.Attribute.Relation<'manyToOne', 'admin::user'> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    seo: Schema.Attribute.Component<'shared.seo', false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    slug: Schema.Attribute.UID<'title'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    sub_categories: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::user-sub-category.user-sub-category'
+    >;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<
+    userAuthor: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    wordCount: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.DefaultTo<0>;
   };
 }
 
-export interface ApiUsersMainCategoryUsersMainCategory
+export interface ApiUserSubCategoryUserSubCategory
   extends Struct.CollectionTypeSchema {
-  collectionName: 'users_main_categories';
+  collectionName: 'user_sub_categories';
   info: {
-    displayName: 'UsersMainCategory';
-    pluralName: 'users-main-categories';
-    singularName: 'users-main-category';
+    description: 'Subcategor\u00EDas exclusivas para art\u00EDculos creados por usuarios';
+    displayName: 'User SubCategory';
+    pluralName: 'user-sub-categories';
+    singularName: 'user-sub-category';
   };
   options: {
     draftAndPublish: true;
@@ -1650,21 +1805,19 @@ export interface ApiUsersMainCategoryUsersMainCategory
     };
   };
   attributes: {
-    backgroundColor: Schema.Attribute.String &
-      Schema.Attribute.Required &
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
         };
       }>;
-    countries: Schema.Attribute.Relation<'manyToMany', 'api::country.country'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
     locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::users-main-category.users-main-category'
+      'api::user-sub-category.user-sub-category'
     >;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
@@ -2348,8 +2501,9 @@ declare module '@strapi/strapi' {
       'api::metadata-page.metadata-page': ApiMetadataPageMetadataPage;
       'api::sub-category.sub-category': ApiSubCategorySubCategory;
       'api::subscription-section.subscription-section': ApiSubscriptionSectionSubscriptionSection;
+      'api::user-article-event.user-article-event': ApiUserArticleEventUserArticleEvent;
       'api::user-article.user-article': ApiUserArticleUserArticle;
-      'api::users-main-category.users-main-category': ApiUsersMainCategoryUsersMainCategory;
+      'api::user-sub-category.user-sub-category': ApiUserSubCategoryUserSubCategory;
       'api::video-baner.video-baner': ApiVideoBanerVideoBaner;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

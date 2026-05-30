@@ -303,20 +303,43 @@ async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
     'api::sub-category.sub-category.find',
     'api::sub-category.sub-category.findOne',
+    'api::user-sub-category.user-sub-category.find',
+    'api::user-sub-category.user-sub-category.findOne',
     'api::country.country.find',
     'api::country.country.findOne',
+    // User articles approved — for the public "User Stories" feed
+    'api::user-article.user-article.findApproved',
+    'api::user-article.user-article.getMyArticle',
   ]);
 }
 
 async function ensureAuthenticatedPermissions() {
   await ensureRolePermissions('authenticated', [
+    'api::main-category.main-category.find',
+    'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
+    'api::sub-category.sub-category.find',
+    'api::sub-category.sub-category.findOne',
+    'api::user-sub-category.user-sub-category.find',
+    'api::user-sub-category.user-sub-category.findOne',
+    'api::country.country.find',
+    'api::country.country.findOne',
     'api::user-article.user-article.createArticle',
     'api::user-article.user-article.updateArticle',
     'api::user-article.user-article.submitForReview',
+    'api::user-article.user-article.withdrawFromReview',
+    'api::user-article.user-article.deleteArticle',
+    'api::user-article.user-article.unpublishArticle',
+    'api::user-article-event.user-article-event.find',
+    'api::user-article-event.user-article-event.findOne',
     'api::user-article.user-article.getMyArticles',
     'api::user-article.user-article.getMyArticle',
+    'api::user-article.user-article.getMyArticleEvents',
     'api::image-upload.image-upload.uploadUserImage',
   ]);
 }

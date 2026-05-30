@@ -11,14 +11,38 @@ module.exports = {
     },
     {
       method: 'PATCH',
-      path: '/user-articles/:id',
+      path: '/user-articles/:documentId',
       handler: 'user-article.updateArticle',
       config: { policies: [], middlewares: [] },
     },
     {
       method: 'POST',
-      path: '/user-articles/:id/submit',
+      path: '/user-articles/:documentId/submit',
       handler: 'user-article.submitForReview',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'POST',
+      path: '/user-articles/:documentId/withdraw',
+      handler: 'user-article.withdrawFromReview',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'POST',
+      path: '/user-articles/:documentId/unpublish',
+      handler: 'user-article.unpublishArticle',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'DELETE',
+      path: '/user-articles/:documentId',
+      handler: 'user-article.deleteArticle',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'GET',
+      path: '/user-articles',
+      handler: 'user-article.findApproved',
       config: { policies: [], middlewares: [] },
     },
     {
@@ -29,7 +53,13 @@ module.exports = {
     },
     {
       method: 'GET',
-      path: '/user-articles/:id',
+      path: '/user-articles/:documentId/events',
+      handler: 'user-article.getMyArticleEvents',
+      config: { policies: [], middlewares: [] },
+    },
+    {
+      method: 'GET',
+      path: '/user-articles/:documentId',
       handler: 'user-article.getMyArticle',
       config: { policies: [], middlewares: [] },
     },

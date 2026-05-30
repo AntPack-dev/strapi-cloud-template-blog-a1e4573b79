@@ -1,10 +1,11 @@
 {
   "kind": "collectionType",
-  "collectionName": "users_main_categories",
+  "collectionName": "user_sub_categories",
   "info": {
-    "singularName": "users-main-category",
-    "pluralName": "users-main-categories",
-    "displayName": "UsersMainCategory"
+    "singularName": "user-sub-category",
+    "pluralName": "user-sub-categories",
+    "displayName": "User SubCategory",
+    "description": "Subcategorías exclusivas para artículos creados por usuarios"
   },
   "options": {
     "draftAndPublish": true
@@ -17,37 +18,30 @@
   "attributes": {
     "name": {
       "type": "string",
+      "required": true,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      },
-      "required": true
+      }
     },
     "slug": {
       "type": "uid",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
       "targetField": "name",
-      "required": true
-    },
-    "countries": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::country.country",
-      "inversedBy": "users_main_categories"
-    },
-    "backgroundColor": {
-      "type": "string",
+      "required": true,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
-      },
-      "required": true
+      }
+    },
+    "description": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
     }
   }
 }

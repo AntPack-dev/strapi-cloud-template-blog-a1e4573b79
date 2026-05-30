@@ -420,7 +420,6 @@ module.exports = createCoreController('api::article.article', ({ strapi }) => ({
         where: {
           publishedAt: { $notNull: true },
           currentStatus: 'approved',
-          users_main_category: { $null: true },
         },
         populate: { main_category: true },
         select: ['id', 'documentId', 'locale', 'title', 'isFeatured'],
