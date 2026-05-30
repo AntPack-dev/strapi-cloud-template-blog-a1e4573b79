@@ -4,6 +4,31 @@ const { createCoreController } = require('@strapi/strapi').factories;
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
+// Cached folder id — resolved once per process lifetime
+let _userArticlesFolderId = null;
+
+async function getOrCreateUserArticlesFolder() {
+  if (_userArticlesFolderId) return _userArticlesFolderId;
+
+  const existing = await strapi.db.query('plugin::upload.folder').findOne({
+    where: { name: 'user-articles', parent: null },
+    select: ['id'],
+  });
+
+  if (existing) {
+    _userArticlesFolderId = existing.id;
+    return _userArticlesFolderId;
+  }
+
+  const created = await strapi.plugin('upload').service('folder').create({
+    name: 'user-articles',
+    parent: null,
+  });
+
+  _userArticlesFolderId = created.id;
+  return _userArticlesFolderId;
+}
+
 module.exports = createCoreController('api::image-upload.image-upload', ({ strapi }) => ({
   // Métodos por defecto requeridos por Strapi
   async find(ctx) {
@@ -114,6 +139,8 @@ module.exports = createCoreController('api::image-upload.image-upload', ({ strap
         return ctx.badRequest('El archivo supera el tamaño máximo permitido de 5MB');
       }
 
+      const folderId = await getOrCreateUserArticlesFolder();
+
       const uploaded = await strapi.plugin('upload').service('upload').upload({
         files: file,
         data: {
@@ -121,6 +148,7 @@ module.exports = createCoreController('api::image-upload.image-upload', ({ strap
             name: fileName,
             caption: null,
             alternativeText: null,
+            folder: folderId,
           },
         },
       });
