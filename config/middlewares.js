@@ -40,13 +40,18 @@ module.exports = ({ env }) => {
       name: 'strapi::cors',
       config: {
         enabled: true,
-        origin: env('CORS_ALLOWED_ORIGINS')
-          ? env('CORS_ALLOWED_ORIGINS').split(',')
-          : [
-              'http://localhost:3000',
-              'http://localhost:1337',
-              'http://localhost:8080',
-            ],
+        origin: [
+          'https://latilde.co',
+          'https://www.latilde.co',
+          'https://qa.latilde.co',
+          'https://dev.latilde.co',
+          'https://dynamic.latilde.co',
+          'https://panama.latilde.co',
+          'https://qa.panama.latilde.co',
+          'http://localhost:3000',
+          'http://localhost:1337',
+          'http://localhost:8080',
+        ],
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
         headers: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'x-nonce'],
         keepHeaderOnError: true,
