@@ -302,6 +302,8 @@ async function ensureRolePermissions(roleType, actions) {
 async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
     'api::parameter.parameter.getAll',
+    'api::article.article.findEnhanced',
+    'api::article.article.findOneEnhanced',
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
     'api::category.category.find',
@@ -342,6 +344,20 @@ async function ensureAuthenticatedPermissions() {
     'api::user-article.user-article.getMyArticle',
     'api::user-article.user-article.getMyArticleEvents',
     'api::image-upload.image-upload.uploadUserImage',
+    // Like interactions
+    'api::like.like.toggleInteraction',
+    'api::like.like.getMyInteractions',
+    // Favorite lists
+    'api::favorite-list.favorite-list.getUserLists',
+    'api::favorite-list.favorite-list.createOrGetDefault',
+    'api::favorite-list.favorite-list.addArticle',
+    'api::favorite-list.favorite-list.removeArticle',
+    'api::favorite-list.favorite-list.removeMultipleArticles',
+    'api::favorite-list.favorite-list.clearList',
+    'api::favorite-list.favorite-list.getListById',
+    'api::favorite-list.favorite-list.checkArticleFavorite',
+    'api::favorite-list.favorite-list.deleteFavoriteList',
+    'api::favorite-list.favorite-list.create',
   ]);
 }
 
