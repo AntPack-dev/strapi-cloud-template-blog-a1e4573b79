@@ -1450,6 +1450,41 @@ export interface ApiMetadataPageMetadataPage
   };
 }
 
+export interface ApiParameterParameter extends Struct.CollectionTypeSchema {
+  collectionName: 'parameters';
+  info: {
+    description: 'Feature flags managed by superadmin. Read-only via public API.';
+    displayName: 'Parameter';
+    pluralName: 'parameters';
+    singularName: 'parameter';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    key: Schema.Attribute.UID &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::parameter.parameter'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    value: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+  };
+}
+
 export interface ApiSubCategorySubCategory extends Struct.CollectionTypeSchema {
   collectionName: 'sub_categories';
   info: {
@@ -2499,6 +2534,7 @@ declare module '@strapi/strapi' {
       'api::like.like': ApiLikeLike;
       'api::main-category.main-category': ApiMainCategoryMainCategory;
       'api::metadata-page.metadata-page': ApiMetadataPageMetadataPage;
+      'api::parameter.parameter': ApiParameterParameter;
       'api::sub-category.sub-category': ApiSubCategorySubCategory;
       'api::subscription-section.subscription-section': ApiSubscriptionSectionSubscriptionSection;
       'api::user-article-event.user-article-event': ApiUserArticleEventUserArticleEvent;

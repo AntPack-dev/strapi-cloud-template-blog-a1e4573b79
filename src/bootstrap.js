@@ -301,6 +301,7 @@ async function ensureRolePermissions(roleType, actions) {
 
 async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
+    'api::parameter.parameter.getAll',
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
     'api::category.category.find',

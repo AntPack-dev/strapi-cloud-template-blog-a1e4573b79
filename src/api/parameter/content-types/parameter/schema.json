@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "parameters",
+  "info": {
+    "singularName": "parameter",
+    "pluralName": "parameters",
+    "displayName": "Parameter",
+    "description": "Feature flags managed by superadmin. Read-only via public API."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "key": {
+      "type": "uid",
+      "required": true,
+      "unique": true
+    },
+    "value": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "description": {
+      "type": "text"
+    }
+  }
+}
