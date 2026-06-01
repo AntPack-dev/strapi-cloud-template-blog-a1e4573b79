@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "likes",
+  "info": {
+    "singularName": "like",
+    "pluralName": "likes",
+    "displayName": "Like",
+    "description": "User interactions on articles"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "article": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::article.article"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::interaction-types.interaction-type",
+      "inversedBy": "likes",
+      "required": true
+    }
+  }
+}

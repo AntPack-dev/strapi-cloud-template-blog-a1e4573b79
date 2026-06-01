@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "favorite_lists",
+  "info": {
+    "name": "favorite-list",
+    "description": "User favorite lists for organizing articles",
+    "displayName": "Favorite List",
+    "singularName": "favorite-list",
+    "pluralName": "favorite-lists"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "text",
+      "required": false
+    },
+    "isDefault": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "favoriteLists"
+    },
+    "articles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::article.article",
+      "inversedBy": "favoriteLists"
+    }
+  }
+}

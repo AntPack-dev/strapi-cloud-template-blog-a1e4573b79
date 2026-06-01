@@ -1,0 +1,170 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_articles",
+  "info": {
+    "singularName": "user-article",
+    "pluralName": "user-articles",
+    "displayName": "User Article",
+    "description": "Artículos creados por usuarios lectores — flujo completo de revisión editorial"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "description": {
+      "type": "text",
+      "maxLength": 80,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "cover": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "imageCard": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "userAuthor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "main_category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::main-category.main-category"
+    },
+    "sub_categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::user-sub-category.user-sub-category"
+    },
+    "countries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::country.country"
+    },
+    "blocks": {
+      "type": "dynamiczone",
+      "components": [
+        "shared.rich-text",
+        "shared.media",
+        "shared.user-quote",
+        "shared.subtitle"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "currentStatus": {
+      "type": "enumeration",
+      "enum": ["draft", "in-review", "requires-changes", "approved"],
+      "default": "draft",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "reviewer": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "admin::user",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "reviewComments": {
+      "type": "richtext",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "events": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-article-event.user-article-event",
+      "mappedBy": "user_article",
+      "pluginOptions": {
+        "content-manager": {
+          "visible": false
+        },
+        "content-type-builder": {
+          "visible": false
+        },
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "readingTime": {
+      "type": "integer",
+      "default": 1,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "wordCount": {
+      "type": "integer",
+      "default": 0,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "creationDate": {
+      "type": "date"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

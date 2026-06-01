@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "interaction_types",
+  "info": {
+    "singularName": "interaction-type",
+    "pluralName": "interaction-types",
+    "displayName": "Interaction Type",
+    "description": "Types of user interactions with articles"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "display_name_en": {
+      "type": "string",
+      "required": true
+    },
+    "display_name": {
+      "type": "string",
+      "required": true
+    },
+    "icon": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "likes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::like.like",
+      "private": true,
+      "mappedBy": "type"
+    }
+  }
+}

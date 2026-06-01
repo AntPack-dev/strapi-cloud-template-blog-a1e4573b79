@@ -167,7 +167,9 @@
       "components": [
         "shared.media",
         "shared.quote",
-        "shared.rich-text"
+        "shared.rich-text",
+        "shared.subtitle",
+        "shared.user-quote"
       ]
     },
     "global_checks": {
@@ -185,6 +187,22 @@
       },
       "required": true
     },
+    "comments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::comment.comment"
+    },
+    "likes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::like.like"
+    },
+    "favoriteLists": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::favorite-list.favorite-list",
+      "mappedBy": "articles"
+    },
     "creationDate": {
       "type": "date",
       "pluginOptions": {
@@ -192,6 +210,11 @@
           "localized": true
         }
       }
+    },
+    "userAuthor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
     }
   }
 }

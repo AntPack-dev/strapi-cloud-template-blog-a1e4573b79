@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "article_ratings",
+  "info": {
+    "singularName": "article-rating",
+    "pluralName": "article-ratings",
+    "displayName": "Article Rating",
+    "description": "Content quality ratings per article tracked by IP"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "indexes": [
+    {
+      "name": "unique_ip_article_rating",
+      "columns": ["ip_address", "article_id"],
+      "unique": true
+    }
+  ],
+  "attributes": {
+    "article_id": {
+      "type": "integer",
+      "required": true
+    },
+    "ip_address": {
+      "type": "string",
+      "required": true
+    },
+    "rating": {
+      "type": "enumeration",
+      "enum": ["cinco_tildes", "neutral", "sin_tilde"],
+      "required": true
+    }
+  }
+}

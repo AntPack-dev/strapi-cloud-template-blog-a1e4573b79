@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_shared_subtitles",
+  "info": {
+    "displayName": "Subtitle",
+    "icon": "heading"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

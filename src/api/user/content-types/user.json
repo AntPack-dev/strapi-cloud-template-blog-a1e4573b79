@@ -1,0 +1,13 @@
+{
+  "kind": "collectionType",
+  "collectionName": "users",
+  "info": {
+    "singularName": "user",
+    "pluralName": "users",
+    "displayName": "User"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {}
+}

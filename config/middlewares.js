@@ -36,12 +36,38 @@ module.exports = ({ env }) => {
         },
       },
     },
-    'strapi::cors',
+    {
+      name: 'strapi::cors',
+      config: {
+        origin: ['http://localhost:3000', 'http://localhost:1337', 'http://localhost:8080'],
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+        headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+        credentials: true,
+      },
+    },
     'strapi::poweredBy',
     'strapi::query',
-    'strapi::body',
+    {
+      name: 'strapi::body',
+      config: {
+        formLimit: '512mb',
+        jsonLimit: '512mb',
+        textLimit: '512mb',
+        formidable: {
+          maxFileSize: 512 * 1024 * 1024,
+        },
+      },
+    },
     'strapi::session',
     'strapi::favicon',
     'strapi::public',
+    {
+      name: 'global::auth-transform',
+      config: {},
+    },
+    {
+      name: 'global::oauth-callback',
+      config: {},
+    },
   ];
 };

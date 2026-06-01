@@ -254,7 +254,6 @@ async function importSeedData() {
   });
 
   if (publicRole) {
-    // Permisos para marketing
     const marketingPermissions = [
       'api::marketing.marketing.sendNewsletter',
       'api::marketing.marketing.contact',
@@ -262,19 +261,12 @@ async function importSeedData() {
     ];
 
     for (const action of marketingPermissions) {
-      const existingPermission = await strapi.query('plugin::users-permissions.permission').findOne({
-        where: {
-          action: action,
-          role: publicRole.id,
-        },
+      const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+        where: { action, role: publicRole.id },
       });
-
-      if (!existingPermission) {
+      if (!existing) {
         await strapi.query('plugin::users-permissions.permission').create({
-          data: {
-            action: action,
-            role: publicRole.id,
-          },
+          data: { action, role: publicRole.id },
         });
       }
     }
@@ -286,6 +278,71 @@ async function importSeedData() {
   await importArticles();
   await importGlobal();
   await importAbout();
+}
+
+async function ensureRolePermissions(roleType, actions) {
+  const role = await strapi.query('plugin::users-permissions.role').findOne({
+    where: { type: roleType },
+  });
+  if (!role) return;
+
+  for (const action of actions) {
+    const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+      where: { action, role: role.id },
+    });
+    if (!existing) {
+      await strapi.query('plugin::users-permissions.permission').create({
+        data: { action, role: role.id },
+      });
+      strapi.log.info(`[Bootstrap] Permiso registrado (${roleType}): ${action}`);
+    }
+  }
+}
+
+async function ensurePublicPermissions() {
+  await ensureRolePermissions('public', [
+    'api::parameter.parameter.getAll',
+    'api::main-category.main-category.find',
+    'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
+    'api::sub-category.sub-category.find',
+    'api::sub-category.sub-category.findOne',
+    'api::user-sub-category.user-sub-category.find',
+    'api::user-sub-category.user-sub-category.findOne',
+    'api::country.country.find',
+    'api::country.country.findOne',
+    // User articles approved — for the public "User Stories" feed
+    'api::user-article.user-article.findApproved',
+    'api::user-article.user-article.getMyArticle',
+  ]);
+}
+
+async function ensureAuthenticatedPermissions() {
+  await ensureRolePermissions('authenticated', [
+    'api::main-category.main-category.find',
+    'api::main-category.main-category.findOne',
+    'api::category.category.find',
+    'api::category.category.findOne',
+    'api::sub-category.sub-category.find',
+    'api::sub-category.sub-category.findOne',
+    'api::user-sub-category.user-sub-category.find',
+    'api::user-sub-category.user-sub-category.findOne',
+    'api::country.country.find',
+    'api::country.country.findOne',
+    'api::user-article.user-article.createArticle',
+    'api::user-article.user-article.updateArticle',
+    'api::user-article.user-article.submitForReview',
+    'api::user-article.user-article.withdrawFromReview',
+    'api::user-article.user-article.deleteArticle',
+    'api::user-article.user-article.unpublishArticle',
+    'api::user-article-event.user-article-event.find',
+    'api::user-article-event.user-article-event.findOne',
+    'api::user-article.user-article.getMyArticles',
+    'api::user-article.user-article.getMyArticle',
+    'api::user-article.user-article.getMyArticleEvents',
+    'api::image-upload.image-upload.uploadUserImage',
+  ]);
 }
 
 async function main() {
@@ -303,6 +360,7 @@ async function main() {
 }
 
 module.exports = async () => {
+  strapi.log.info('[Bootstrap] Interceptando servicio de upload...');
   try {
     const uploadService = strapi.plugin('upload').service('upload');
     strapi.log.info(`[Bootstrap] Servicio de upload encontrado: ${JSON.stringify(!!uploadService)}`);
@@ -314,7 +372,6 @@ module.exports = async () => {
         const startTime = Date.now();
 
         try {
-          // Log completo del config para debugging
           strapi.log.info(`[Upload Service] Config recibido: ${JSON.stringify({
             hasData: !!config.data,
             hasFileInfo: !!config.data?.fileInfo,
@@ -323,13 +380,11 @@ module.exports = async () => {
             actionOptions: config.actionOptions,
           }, null, 2)}`);
 
-          // Obtener información del folder si está presente
           let folderPath = null;
           let folderId = null;
 
-          // Intentar obtener el folder de diferentes formas
           if (config?.data?.fileInfo?.folder) {
-            folderId = typeof config.data.fileInfo.folder === 'object' 
+            folderId = typeof config.data.fileInfo.folder === 'object'
               ? config.data.fileInfo.folder.id || config.data.fileInfo.folder
               : config.data.fileInfo.folder;
           } else if (config?.data?.folder) {
@@ -346,7 +401,7 @@ module.exports = async () => {
                 where: { id: folderId },
                 populate: ['parent'],
               });
-              
+
               strapi.log.info(`[Upload Service] Folder encontrado: ${JSON.stringify({
                 id: folder?.id,
                 name: folder?.name,
@@ -364,39 +419,26 @@ module.exports = async () => {
             }
           }
 
-          // Si hay un folderPath, guardarlo para usar en el provider
           if (folderPath) {
-            // Normalizar el folderPath (eliminar barras iniciales y asegurar barra final)
-            const normalizedPath = folderPath.startsWith('/') 
-              ? folderPath.substring(1) 
+            const normalizedPath = folderPath.startsWith('/')
+              ? folderPath.substring(1)
               : folderPath;
-            const s3Path = normalizedPath.endsWith('/') 
-              ? normalizedPath 
+            const s3Path = normalizedPath.endsWith('/')
+              ? normalizedPath
               : `${normalizedPath}/`;
 
-            // Guardar el path en el config para que el provider lo use
-            if (!config.actionOptions) {
-              config.actionOptions = {};
-            }
-            if (!config.actionOptions.upload) {
-              config.actionOptions.upload = {};
-            }
-            
-            // El provider de S3 puede usar el campo 'path' en actionOptions.upload
+            if (!config.actionOptions) config.actionOptions = {};
+            if (!config.actionOptions.upload) config.actionOptions.upload = {};
+
             config.actionOptions.upload.path = s3Path;
-            config._folderPath = s3Path; // También guardarlo aquí para acceso directo
-            
-            // También guardar el path en los files para que el provider lo pueda acceder
+            config._folderPath = s3Path;
+
             if (config.files && Array.isArray(config.files)) {
-              config.files.forEach(file => {
-                if (file) {
-                  file._folderPath = s3Path;
-                }
-              });
+              config.files.forEach(file => { if (file) file._folderPath = s3Path; });
             } else if (config.files) {
               config.files._folderPath = s3Path;
             }
-            
+
             strapi.log.info(`[Upload Service] Archivo se guardará en S3 con path: ${s3Path}`);
           } else {
             strapi.log.info(`[Upload Service] No se detectó folder, archivo se guardará en la raíz de S3`);
@@ -469,11 +511,11 @@ module.exports = async () => {
       const uploadPlugin = strapi.plugin('upload');
       if (uploadPlugin) {
         const providerService = uploadPlugin.service('provider');
-        
+
         if (providerService && providerService.upload) {
           const originalProviderUpload = providerService.upload.bind(providerService);
-          
-          providerService.upload = async function (file, customParams = {}) {
+
+          providerService.upload = async function(file, customParams = {}) {
             strapi.log.info(`[S3 Provider] Upload llamado con customParams: ${JSON.stringify({
               hasPath: !!customParams.path,
               path: customParams.path,
@@ -483,52 +525,35 @@ module.exports = async () => {
               fileName: file?.name,
             }, null, 2)}`);
 
-            // Obtener el path del folder desde customParams o desde el file si está disponible
             let folderPath = customParams.path;
-            
-            // Si no hay path en customParams, intentar obtenerlo del file
+
             if (!folderPath && file && file._folderPath) {
               folderPath = file._folderPath;
             }
 
-            // Si hay un folderPath, construir la Key con el path
             if (folderPath) {
-              // Asegurar que el path termine con /
-              const pathPrefix = folderPath.endsWith('/') 
-                ? folderPath 
-                : `${folderPath}/`;
-              
-              // Obtener la Key original (el provider de S3 puede haberla construido ya)
-              // Si no existe, construirla desde el hash o nombre del archivo
+              const pathPrefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+
               let originalKey = customParams.Key;
-              
               if (!originalKey) {
-                // El provider de S3 normalmente usa el hash del archivo
                 originalKey = file.hash || file.name;
                 if (file.ext) {
                   originalKey = `${originalKey}${file.ext.startsWith('.') ? '' : '.'}${file.ext}`;
                 }
               }
-              
-              // Construir la nueva Key con el path del folder
+
               const newKey = `${pathPrefix}${originalKey}`;
-              
               strapi.log.info(`[S3 Provider] Key original: ${originalKey}`);
               strapi.log.info(`[S3 Provider] Key con folder: ${newKey}`);
-              
-              // Modificar customParams para incluir la Key con el path
-              customParams = {
-                ...customParams,
-                Key: newKey,
-                path: pathPrefix, // También mantener el path para referencia
-              };
+
+              customParams = { ...customParams, Key: newKey, path: pathPrefix };
             } else {
               strapi.log.info(`[S3 Provider] No hay folder path, usando Key original: ${customParams.Key || file.hash || file.name}`);
             }
-            
+
             return originalProviderUpload(file, customParams);
           };
-          
+
           strapi.log.info('[Bootstrap] Provider de S3 interceptado correctamente para soportar folders');
         } else {
           strapi.log.warn('[Bootstrap] No se encontró el método upload en el provider service');
@@ -557,7 +582,6 @@ module.exports = async () => {
 
       // Obtener el dominio de la API para detectar URLs mal formadas
       const apiUrl = process.env.API_URL || process.env.PUBLIC_URL || '';
-
       strapi.log.info(`[Bootstrap] CDN URL configurado: ${cdnUrl}`);
       strapi.log.info(`[Bootstrap] API URL: ${apiUrl}`);
 
@@ -566,9 +590,9 @@ module.exports = async () => {
         if (!url || typeof url !== 'string') return url;
 
         // Si la URL ya es del CDN correcto, devolverla tal cual
-        if (url.startsWith(cdnUrl))
+        if (url.startsWith(cdnUrl)) {
           return url;
-
+        }
         // Si la URL contiene el dominio de la API seguido del CDN (caso del error)
         if (apiUrl && url.includes(apiUrl) && url.includes(resourcesCdn.replace(/^https?:\/\//, ''))) {
           // Extraer la ruta del archivo después del CDN
@@ -601,7 +625,7 @@ module.exports = async () => {
       if (fileService) {
         const originalFormatFileInfo = fileService.formatFileInfo?.bind(fileService);
         if (originalFormatFileInfo) {
-          fileService.formatFileInfo = function (file) {
+          fileService.formatFileInfo = function(file) {
             const formatted = originalFormatFileInfo(file);
             if (formatted && formatted.url) {
               formatted.url = transformFileUrl(formatted.url);
@@ -622,5 +646,9 @@ module.exports = async () => {
 
   strapi.log.info('[Bootstrap] Ejecutando seedExampleApp...');
   await seedExampleApp();
+
+  await ensurePublicPermissions();
+  await ensureAuthenticatedPermissions();
+
   strapi.log.info('[Bootstrap] ===== Bootstrap completado =====');
 };

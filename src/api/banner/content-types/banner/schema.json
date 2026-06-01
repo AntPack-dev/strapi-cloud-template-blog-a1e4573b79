@@ -48,6 +48,11 @@
       },
       "component": "shared.articles",
       "repeatable": false
+    },
+    "video_baner": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::video-baner.video-baner"
     }
   }
 }
