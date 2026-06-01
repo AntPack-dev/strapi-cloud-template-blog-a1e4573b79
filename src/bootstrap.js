@@ -304,6 +304,7 @@ async function ensurePublicPermissions() {
     'api::parameter.parameter.getAll',
     'api::article.article.findEnhanced',
     'api::article.article.findOneEnhanced',
+    'api::comment.comment.getCommentsByArticle',
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
     'api::category.category.find',
@@ -344,6 +345,11 @@ async function ensureAuthenticatedPermissions() {
     'api::user-article.user-article.getMyArticle',
     'api::user-article.user-article.getMyArticleEvents',
     'api::image-upload.image-upload.uploadUserImage',
+    // Comments
+    'api::comment.comment.create',
+    'api::comment.comment.update',
+    'api::comment.comment.delete',
+    'api::comment.comment.getMyComments',
     // Like interactions
     'api::like.like.toggleInteraction',
     'api::like.like.getMyInteractions',
