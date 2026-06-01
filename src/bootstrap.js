@@ -302,8 +302,8 @@ async function ensureRolePermissions(roleType, actions) {
 async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
     'api::parameter.parameter.getAll',
-    'api::article.article.findEnhanced',
-    'api::article.article.findOneEnhanced',
+    'api::article.article-enhanced.findEnhanced',
+    'api::article.article-enhanced.findOneEnhanced',
     'api::comment.comment.getCommentsByArticle',
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
