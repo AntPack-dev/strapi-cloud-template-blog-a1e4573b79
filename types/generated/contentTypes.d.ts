@@ -2422,6 +2422,11 @@ export interface PluginUsersPermissionsUser
   options: {
     draftAndPublish: false;
   };
+  pluginOptions: {
+    'content-manager': {
+      mainField: 'username';
+    };
+  };
   attributes: {
     biography: Schema.Attribute.Text;
     blocked: Schema.Attribute.Boolean &
