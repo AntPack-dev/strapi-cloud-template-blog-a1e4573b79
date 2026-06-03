@@ -364,7 +364,7 @@ module.exports = {
         }
         
         params.append('client_id', clientId);
-        params.append('redirect_uri', `http://localhost:4060/en/auth/google/callback`);
+        params.append('redirect_uri', process.env.GOOGLE_FRONT_REDIRECT || 'http://localhost:4060/en/auth/google/callback');
         params.append('response_type', 'code');
         params.append('scope', 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
         params.append('access_type', 'offline');
@@ -376,7 +376,7 @@ module.exports = {
         }
         
         params.append('client_id', appId);
-        params.append('redirect_uri', `http://localhost:4060/en/auth/facebook/callback`);
+        params.append('redirect_uri', process.env.FACEBOOK_FRONT_REDIRECT || 'http://localhost:4060/en/auth/facebook/callback');
         params.append('response_type', 'code');
         params.append('scope', 'email');
       }
