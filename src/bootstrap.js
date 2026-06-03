@@ -326,6 +326,15 @@ async function ensurePublicPermissions() {
 
 async function ensureAuthenticatedPermissions() {
   await ensureRolePermissions('authenticated', [
+    // Read-only endpoints accessible to any user (logged in or not)
+    'api::parameter.parameter.getAll',
+    'api::article.article-enhanced.findEnhanced',
+    'api::article.article-enhanced.findOneEnhanced',
+    'api::article.article.findOneWithUserInteraction',
+    'api::comment.comment.getCommentsByArticle',
+    'api::interaction-types.interaction-type.find',
+    'api::interaction-types.interaction-type.findOne',
+    'api::user-article.user-article.findApproved',
     'api::main-category.main-category.find',
     'api::main-category.main-category.findOne',
     'api::category.category.find',
