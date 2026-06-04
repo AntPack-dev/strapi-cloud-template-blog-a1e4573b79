@@ -21,15 +21,15 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
       return ctx.badRequest('Invalid rating value');
     }
 
-    const articleId = parseInt(data.article, 10);
-    if (isNaN(articleId)) {
-      return ctx.badRequest('Article ID must be a number');
+    const articleDocumentId = String(data.article).trim();
+    if (!articleDocumentId) {
+      return ctx.badRequest('Article documentId is required');
     }
 
     try {
       const existing = await strapi.db.query('api::article-rating.article-rating').findOne({
         where: {
-          article_id: articleId,
+          article_document_id: articleDocumentId,
           ip_address: ip,
         },
       });
@@ -40,7 +40,7 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
 
       const rating = await strapi.db.query('api::article-rating.article-rating').create({
         data: {
-          article_id: articleId,
+          article_document_id: articleDocumentId,
           ip_address: ip,
           rating: data.rating,
         },
@@ -61,18 +61,15 @@ module.exports = createCoreController('api::article-rating.article-rating', ({ s
     const ip = ctx.request.headers['x-forwarded-for']?.split(',')[0]?.trim() || ctx.request.ip;
 
     if (!article) {
-      return ctx.badRequest('Article ID is required');
+      return ctx.badRequest('Article documentId is required');
     }
 
-    const articleId = parseInt(article, 10);
-    if (isNaN(articleId)) {
-      return ctx.badRequest('Article ID must be a number');
-    }
+    const articleDocumentId = String(article).trim();
 
     try {
       const existing = await strapi.db.query('api::article-rating.article-rating').findOne({
         where: {
-          article_id: articleId,
+          article_document_id: articleDocumentId,
           ip_address: ip,
         },
       });
