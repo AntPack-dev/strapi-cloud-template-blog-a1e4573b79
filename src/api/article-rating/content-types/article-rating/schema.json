@@ -14,13 +14,13 @@
   "indexes": [
     {
       "name": "unique_ip_article_rating",
-      "columns": ["ip_address", "article_id"],
+      "columns": ["ip_address", "article_document_id"],
       "unique": true
     }
   ],
   "attributes": {
-    "article_id": {
-      "type": "integer",
+    "article_document_id": {
+      "type": "string",
       "required": true
     },
     "ip_address": {
