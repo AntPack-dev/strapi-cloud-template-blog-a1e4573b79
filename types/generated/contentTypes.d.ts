@@ -549,7 +549,7 @@ export interface ApiArticleRatingArticleRating
     draftAndPublish: false;
   };
   attributes: {
-    article_id: Schema.Attribute.Integer & Schema.Attribute.Required;
+    article_document_id: Schema.Attribute.String & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
