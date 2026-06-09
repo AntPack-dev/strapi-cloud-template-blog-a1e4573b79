@@ -299,6 +299,26 @@ async function ensureRolePermissions(roleType, actions) {
   }
 }
 
+async function publishApprovedUserArticles() {
+  const UA_UID = 'api::user-article.user-article';
+  const unpublished = await strapi.db.query(UA_UID).findMany({
+    where: { currentStatus: 'approved', publishedAt: null },
+    select: ['id', 'documentId'],
+  });
+
+  if (unpublished.length === 0) return;
+
+  strapi.log.info(`[Bootstrap] Publicando ${unpublished.length} user-article(s) aprobados sin publishedAt...`);
+  for (const entry of unpublished) {
+    try {
+      await strapi.documents(UA_UID).publish({ documentId: entry.documentId });
+      strapi.log.info(`[Bootstrap] Publicado: ${entry.documentId}`);
+    } catch (err) {
+      strapi.log.error(`[Bootstrap] Error al publicar ${entry.documentId}: ${err.message}`);
+    }
+  }
+}
+
 async function ensurePublicPermissions() {
   await ensureRolePermissions('public', [
     'api::parameter.parameter.getAll',
@@ -742,6 +762,7 @@ module.exports = async () => {
 
   await ensurePublicPermissions();
   await ensureAuthenticatedPermissions();
+  await publishApprovedUserArticles();
 
   strapi.log.info('[Bootstrap] ===== Bootstrap completado =====');
 };
