@@ -208,6 +208,18 @@ export interface SharedUserQuote extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedVideoEmbed extends Struct.ComponentSchema {
+  collectionName: 'components_shared_video_embeds';
+  info: {
+    displayName: 'Video Embed';
+    icon: 'play-circle';
+  };
+  attributes: {
+    caption: Schema.Attribute.String;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
@@ -226,6 +238,7 @@ declare module '@strapi/strapi' {
       'shared.social-media-link': SharedSocialMediaLink;
       'shared.subtitle': SharedSubtitle;
       'shared.user-quote': SharedUserQuote;
+      'shared.video-embed': SharedVideoEmbed;
     }
   }
 }

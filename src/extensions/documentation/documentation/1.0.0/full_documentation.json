@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-06-04T23:55:26.704Z"
+    "x-generation-date": "2026-06-09T23:10:12.822Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -15444,6 +15444,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   ]
                 },
@@ -15454,7 +15457,8 @@
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                     "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                   }
                 }
               },
@@ -17557,6 +17561,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                               }
                                             ]
                                           },
@@ -17567,7 +17574,8 @@
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                               "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                               "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                              "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           }
                                         },
@@ -19152,6 +19160,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                 }
               ]
             },
@@ -19162,7 +19173,8 @@
                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
                 "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                 "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
               }
             }
           },
@@ -19651,6 +19663,33 @@
             "type": "string"
           },
           "source": {
+            "type": "string"
+          }
+        }
+      },
+      "SharedVideoEmbedComponent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "__component": {
+            "type": "string",
+            "enum": [
+              "shared.video-embed"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "caption": {
             "type": "string"
           }
         }
@@ -22421,6 +22460,9 @@
                       },
                       {
                         "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                       }
                     ]
                   },
@@ -22431,7 +22473,8 @@
                       "shared.quote": "#/components/schemas/SharedQuoteComponent",
                       "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                       "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                      "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                      "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                      "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   }
                 },
@@ -24727,6 +24770,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           ]
                                         },
@@ -24737,7 +24783,8 @@
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                             "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                             "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                            "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                           }
                                         }
                                       },
@@ -28309,6 +28356,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                 }
                               ]
                             },
@@ -28319,7 +28369,8 @@
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                 "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                 "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                               }
                             }
                           },
@@ -31748,6 +31799,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   ]
                 },
@@ -31758,7 +31812,8 @@
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                     "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                   }
                 }
               },
@@ -34926,6 +34981,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                               }
                                             ]
                                           },
@@ -34936,7 +34994,8 @@
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                               "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                               "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                              "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           }
                                         },
@@ -38089,6 +38148,9 @@
                                   },
                                   {
                                     "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                  },
+                                  {
+                                    "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                   }
                                 ]
                               },
@@ -38099,7 +38161,8 @@
                                   "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                   "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                   "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                  "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                  "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                  "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                 }
                               }
                             },
@@ -40588,6 +40651,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           ]
                                         },
@@ -40598,7 +40664,8 @@
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                             "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                             "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                            "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                           }
                                         }
                                       },
@@ -44634,6 +44701,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                 }
                               ]
                             },
@@ -44644,7 +44714,8 @@
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                 "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                 "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                               }
                             }
                           },
@@ -47447,6 +47518,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           ]
                                         },
@@ -47457,7 +47531,8 @@
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                             "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                             "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                            "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                           }
                                         }
                                       },
@@ -50807,6 +50882,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           ]
                                         },
@@ -50817,7 +50895,8 @@
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                             "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                             "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                            "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                           }
                                         }
                                       },
@@ -55017,6 +55096,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   ]
                 },
@@ -55027,7 +55109,8 @@
                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                     "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                   }
                 }
               },
@@ -57384,6 +57467,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                               }
                                             ]
                                           },
@@ -57394,7 +57480,8 @@
                                               "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                               "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                               "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                              "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                              "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           }
                                         },
@@ -60039,6 +60126,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                             }
                                           ]
                                         },
@@ -60049,7 +60139,8 @@
                                             "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                             "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                             "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                            "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                            "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                           }
                                         }
                                       },
@@ -63406,6 +63497,9 @@
                                     },
                                     {
                                       "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                    },
+                                    {
+                                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                     }
                                   ]
                                 },
@@ -63416,7 +63510,8 @@
                                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                     "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                   }
                                 }
                               },
@@ -67071,6 +67166,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedSubtitleComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   ]
                 },
@@ -67080,7 +67178,8 @@
                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                     "shared.media": "#/components/schemas/SharedMediaComponent",
                     "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
-                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent"
+                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                   }
                 }
               },
@@ -69782,6 +69881,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                 }
                               ]
                             },
@@ -69792,7 +69894,8 @@
                                 "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                 "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                 "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                               }
                             }
                           },
@@ -70756,6 +70859,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/SharedSubtitleComponent"
+                },
+                {
+                  "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                 }
               ]
             },
@@ -70765,7 +70871,8 @@
                 "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                 "shared.media": "#/components/schemas/SharedMediaComponent",
                 "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
-                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent"
+                "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
               }
             }
           },
@@ -71289,6 +71396,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/SharedSubtitleComponent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                           }
                         ]
                       },
@@ -71298,7 +71408,8 @@
                           "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                           "shared.media": "#/components/schemas/SharedMediaComponent",
                           "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
-                          "shared.subtitle": "#/components/schemas/SharedSubtitleComponent"
+                          "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                          "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                         }
                       }
                     },
@@ -74428,6 +74539,9 @@
                                     },
                                     {
                                       "$ref": "#/components/schemas/SharedUserQuoteComponent"
+                                    },
+                                    {
+                                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                                     }
                                   ]
                                 },
@@ -74438,7 +74552,8 @@
                                     "shared.quote": "#/components/schemas/SharedQuoteComponent",
                                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                                     "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
-                                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent"
+                                    "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
+                                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                                   }
                                 }
                               },
@@ -75402,6 +75517,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/SharedSubtitleComponent"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SharedVideoEmbedComponent"
                     }
                   ]
                 },
@@ -75411,7 +75529,8 @@
                     "shared.rich-text": "#/components/schemas/SharedRichTextComponent",
                     "shared.media": "#/components/schemas/SharedMediaComponent",
                     "shared.user-quote": "#/components/schemas/SharedUserQuoteComponent",
-                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent"
+                    "shared.subtitle": "#/components/schemas/SharedSubtitleComponent",
+                    "shared.video-embed": "#/components/schemas/SharedVideoEmbedComponent"
                   }
                 }
               },
