@@ -540,7 +540,13 @@ module.exports = createCoreController(UA_UID, ({ strapi }) => ({
       const [records, total] = await Promise.all([
         strapi.db.query(UA_UID).findMany({
           where,
-          populate: LIST_POPULATE,
+          populate: {
+            cover: true,
+            imageCard: true,
+            userAuthor: { select: ['id', 'firstName', 'lastName', 'imageUrl'] },
+            main_category: { select: ['id', 'documentId', 'name', 'slug', 'backgroundColor'] },
+            countries: { select: ['id', 'name', 'slug'] },
+          },
           orderBy: { createdAt: 'desc' },
           limit: pageSize,
           offset: (page - 1) * pageSize,
