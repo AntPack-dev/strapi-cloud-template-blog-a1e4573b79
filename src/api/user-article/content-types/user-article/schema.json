@@ -81,7 +81,8 @@
         "shared.rich-text",
         "shared.media",
         "shared.user-quote",
-        "shared.subtitle"
+        "shared.subtitle",
+        "shared.video-embed"
       ],
       "pluginOptions": {
         "i18n": {

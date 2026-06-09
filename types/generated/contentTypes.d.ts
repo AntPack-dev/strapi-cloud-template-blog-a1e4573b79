@@ -596,6 +596,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         'shared.rich-text',
         'shared.subtitle',
         'shared.user-quote',
+        'shared.video-embed',
       ]
     > &
       Schema.Attribute.SetPluginOptions<{
@@ -1704,6 +1705,7 @@ export interface ApiUserArticleUserArticle extends Struct.CollectionTypeSchema {
         'shared.media',
         'shared.user-quote',
         'shared.subtitle',
+        'shared.video-embed',
       ]
     > &
       Schema.Attribute.SetPluginOptions<{
