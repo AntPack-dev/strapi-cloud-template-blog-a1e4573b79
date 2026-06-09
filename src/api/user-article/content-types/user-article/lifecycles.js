@@ -87,7 +87,7 @@ module.exports = {
 
     const updated = await strapi.db.query(UA_UID).findOne({
       where: { id: where.id },
-      select: ['id', 'locale', 'currentStatus', 'reviewComments'],
+      select: ['id', 'documentId', 'locale', 'currentStatus', 'reviewComments'],
       populate: { reviewer: { select: ['id'] } },
     });
     if (!updated) return;
@@ -131,6 +131,25 @@ module.exports = {
         toStatus: updated.currentStatus,
         locale: updated.locale,
       });
+    }
+
+    if (data.currentStatus !== undefined && updated.documentId) {
+      const wasApproved = prev.currentStatus === 'approved';
+      const isApproved  = updated.currentStatus === 'approved';
+
+      if (isApproved && !wasApproved) {
+        try {
+          await strapi.documents(UA_UID).publish({ documentId: updated.documentId });
+        } catch (err) {
+          strapi.log.error('[user-article] failed to publish after approval:', err.message);
+        }
+      } else if (!isApproved && wasApproved) {
+        try {
+          await strapi.documents(UA_UID).unpublish({ documentId: updated.documentId });
+        } catch (err) {
+          strapi.log.error('[user-article] failed to unpublish after status change:', err.message);
+        }
+      }
     }
   },
 
