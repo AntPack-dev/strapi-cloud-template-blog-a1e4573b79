@@ -169,7 +169,8 @@
         "shared.quote",
         "shared.rich-text",
         "shared.subtitle",
-        "shared.user-quote"
+        "shared.user-quote",
+        "shared.video-embed"
       ]
     },
     "global_checks": {
